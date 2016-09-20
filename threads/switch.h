@@ -44,4 +44,4 @@
 #define StartupPC       %ecx
 
 
-#endif // SWITCH_H
+#endif /* SWITCH_H */
