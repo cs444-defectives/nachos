@@ -64,6 +64,7 @@ class Semaphore {
 // may release it.  As with semaphores, you can't read the lock value
 // (because the value might change immediately after you read it).  
 
+
 class Lock {
   public:
     Lock(const char* debugName);  		// initialize lock to be FREE
@@ -79,8 +80,12 @@ class Lock {
 					// Condition variable ops below.
 
   private:
-    const char* name;				// for debugging
-    // plus some other stuff you'll need to define
+    const char *name;				// for debugging
+
+    List *threads;  // list of threads waiting on Lock
+
+    enum Status { BUSY, FREE }; //
+    Status status; //
 };
 
 // The following class defines a "condition variable".  A condition

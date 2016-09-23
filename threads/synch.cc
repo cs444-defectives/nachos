@@ -100,13 +100,62 @@ Semaphore::V()
 // Dummy functions -- so we can compile our later assignments 
 // Note -- without a correct implementation of Condition::Wait(), 
 // the test case in the network assignment won't work!
-Lock::Lock(const char* debugName) {}
-Lock::~Lock() {}
-void Lock::Acquire() {}
-void Lock::Release() {}
 
+//----------------------------------------------------------------------
+//----------------------------------------------------------------------
+Lock::Lock(const char* debugName) 
+{
+    IntStatus oldLevel = interrupt->SetLevel(IntOff);	// disable interrupts
+    status = FREE;
+    threads = new List();
+    (void) interrupt->SetLevel(oldLevel);	// re-enable interrupts
+}
+
+//----------------------------------------------------------------------
+//----------------------------------------------------------------------
+Lock::~Lock()
+{
+    delete threads;
+}
+
+//----------------------------------------------------------------------
+//----------------------------------------------------------------------
+void Lock::Acquire()
+{
+    IntStatus oldLevel = interrupt->SetLevel(IntOff);	// disable interrupts
+    if (status == FREE) {
+        status = BUSY;
+    } else {
+        threads->Append(currentThread);
+        currentThread->Sleep();
+    }
+    (void) interrupt->SetLevel(oldLevel);	// re-enable interrupts
+}
+
+//----------------------------------------------------------------------
+//----------------------------------------------------------------------
+void wakeThread(int thread)
+{
+    ((Thread*) thread)->setStatus(READY);
+}
+
+void Lock::Release()
+{
+    IntStatus oldLevel = interrupt->SetLevel(IntOff);	// disable interrupts
+    status = FREE;
+    if (!threads->IsEmpty()) {
+        threads->Mapcar(wakeThread);
+        delete threads;
+        threads = new List();
+    }
+    (void) interrupt->SetLevel(oldLevel);	// re-enable interrupts
+}
+
+//----------------------------------------------------------------------
+//----------------------------------------------------------------------
 Condition::Condition(const char* debugName) { }
 Condition::~Condition() { }
 void Condition::Wait(Lock* conditionLock) { ASSERT(false); }
 void Condition::Signal(Lock* conditionLock) { }
 void Condition::Broadcast(Lock* conditionLock) { }
+
