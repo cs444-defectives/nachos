@@ -127,7 +127,9 @@ void Lock::Acquire()
         status = BUSY;
     } else {
         threads->Append(currentThread);
-        currentThread->Sleep();
+        do {
+            currentThread->Sleep();
+        } while (status == BUSY);
     }
     (void) interrupt->SetLevel(oldLevel);	// re-enable interrupts
 }
@@ -153,9 +155,24 @@ void Lock::Release()
 
 //----------------------------------------------------------------------
 //----------------------------------------------------------------------
-Condition::Condition(const char* debugName) { }
+Condition::Condition(const char* debugName)
+{
+
+}
+
+//----------------------------------------------------------------------
+//----------------------------------------------------------------------
 Condition::~Condition() { }
+
+//----------------------------------------------------------------------
+//----------------------------------------------------------------------
 void Condition::Wait(Lock* conditionLock) { ASSERT(false); }
+
+//----------------------------------------------------------------------
+//----------------------------------------------------------------------
 void Condition::Signal(Lock* conditionLock) { }
+
+//----------------------------------------------------------------------
+//----------------------------------------------------------------------
 void Condition::Broadcast(Lock* conditionLock) { }
 
