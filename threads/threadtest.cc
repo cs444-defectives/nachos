@@ -11,41 +11,43 @@
 
 #include "copyright.h"
 #include "system.h"
+#include "synch.h"
 
-//----------------------------------------------------------------------
-// SimpleThread
-// 	Loop 5 times, yielding the CPU to another ready thread 
-//	each iteration.
-//
-//	"which" is simply a number identifying the thread, for debugging
-//	purposes.
-//----------------------------------------------------------------------
+Lock *lock;
 
 void
-SimpleThread(int which)
+SimpleThread(int _)
 {
-    int num;
-    
-    for (num = 0; num < 5; num++) {
-	printf("*** thread %d looped %d times\n", which, num);
+    for (int i = 0; i < 5; i++) {
+        lock->Acquire();
+        printf("- Forked thread has the lock\n");
+        lock->Release();
         currentThread->Yield();
     }
 }
 
-//----------------------------------------------------------------------
-// ThreadTest
-// 	Set up a ping-pong between two threads, by forking a thread 
-//	to call SimpleThread, and then calling SimpleThread ourselves.
-//----------------------------------------------------------------------
-
 void
 ThreadTest()
 {
-    DEBUG('t', "Entering SimpleTest");
-
     Thread *t = new(std::nothrow) Thread("forked thread");
 
-    t->Fork(SimpleThread, 1);
-    SimpleThread(0);
-}
+    lock = new Lock("harambe");
+    printf("- Main is taking the lock\n");
+    lock->Acquire();
 
+    t->Fork(SimpleThread, 0);
+    currentThread->Yield();
+    printf("- Forked thread has been spawned, but is stuck because it doesn't have the lock!\n");
+
+    printf("- Main is releasing the lock\n");
+    lock->Release();
+    currentThread->Yield();
+
+    for (int i = 0; i < 20; i++) {
+        printf("- Main thread ticks\n");
+        currentThread->Yield();
+    }
+
+    printf("- Main thread cleaning up...\n");
+    delete lock;
+}

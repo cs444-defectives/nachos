@@ -7,6 +7,7 @@
 
 #ifndef SYSTEM_H
 #define SYSTEM_H
+#define ARRAY_SIZE(a) (sizeof(a) / sizeof(*(a)))
 
 #include "copyright.h"
 #include "utility.h"
