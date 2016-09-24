@@ -57,7 +57,7 @@ class List {
     // Routines to put/get items on/off list in order (sorted by key)
     void SortedInsert(void *item, long long unsigned sortKey); // Put item into list
     void *SortedRemove(long long unsigned *keyPtr);            // Remove first item from list
-  private:
+
     ListElement *first;  	// Head of the list, NULL if list is empty
     ListElement *last;		// Last element of list
 };
