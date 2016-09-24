@@ -79,6 +79,8 @@ class Lock {
 					// checking in Release, and in
 					// Condition variable ops below.
 
+    void Print() { printf("%s, ", name); }
+
   private:
     const char *name;				// for debugging
 
