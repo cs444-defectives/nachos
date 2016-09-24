@@ -126,11 +126,13 @@ void Lock::Acquire()
     IntStatus oldLevel = interrupt->SetLevel(IntOff);	// disable interrupts
 
     while (status == BUSY) {
+        DEBUG('L', "Thread '%s' couldn't get Lock '%s'\n", currentThread->getName(), getName());
         threads->Append(currentThread);
 
         /* Sleep assumes that interrupts are already disabled */
         currentThread->Sleep();
     }
+    DEBUG('L', "Thread '%s' got Lock '%s'\n", currentThread->getName(), getName());
     status = BUSY;
 
     (void) interrupt->SetLevel(oldLevel);	// re-enable interrupts
