@@ -117,38 +117,43 @@ Lock::~Lock()
     delete threads;
 }
 
-//----------------------------------------------------------------------
-//----------------------------------------------------------------------
+/*
+ * Gets a lock. If no lock available, the thread sleeps until it becomes
+ * available.
+ */
 void Lock::Acquire()
 {
     IntStatus oldLevel = interrupt->SetLevel(IntOff);	// disable interrupts
-    if (status == FREE) {
-        status = BUSY;
-    } else {
+
+    while (status == BUSY) {
         threads->Append(currentThread);
-        do {
-            currentThread->Sleep();
-        } while (status == BUSY);
+
+        /* Sleep assumes that interrupts are already disabled */
+        currentThread->Sleep();
     }
+    status = BUSY;
+
     (void) interrupt->SetLevel(oldLevel);	// re-enable interrupts
 }
 
-//----------------------------------------------------------------------
-//----------------------------------------------------------------------
-static void wakeThread(int thread)
-{
-    ((Thread*) thread)->setStatus(READY);
-}
-
+/*
+ * Releases a lock. This wakes up all threads sleeping on the lock, so they can
+ * check again whether the lock is available.
+ */
 void Lock::Release()
 {
     IntStatus oldLevel = interrupt->SetLevel(IntOff);	// disable interrupts
+
     status = FREE;
-    if (!threads->IsEmpty()) {
-        threads->Mapcar(wakeThread);
-        delete threads;
-        threads = new List();
+
+    Thread *t;
+    while (!threads->IsEmpty()) {
+        t = (Thread *) threads->Remove();
+
+        /* ReadyToRun assumes that interrupts are already disabled */
+	scheduler->ReadyToRun(t);
     }
+
     (void) interrupt->SetLevel(oldLevel);	// re-enable interrupts
 }
 
