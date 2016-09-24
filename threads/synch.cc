@@ -135,7 +135,7 @@ void Lock::Acquire()
 
 //----------------------------------------------------------------------
 //----------------------------------------------------------------------
-void wakeThread(int thread)
+static void wakeThread(int thread)
 {
     ((Thread*) thread)->setStatus(READY);
 }
