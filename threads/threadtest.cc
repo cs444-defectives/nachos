@@ -15,39 +15,42 @@
 
 Lock *lock;
 
-void
-SimpleThread(int _)
+void SimpleThread(int _)
 {
     for (int i = 0; i < 5; i++) {
         lock->Acquire();
-        printf("- Forked thread has the lock\n");
         lock->Release();
         currentThread->Yield();
     }
 }
 
-void
-ThreadTest()
+static void multiyield(int n)
+{
+    for (int i = 0; i < n; i++)
+        currentThread->Yield();
+}
+
+void ThreadTest()
 {
     Thread *t = new(std::nothrow) Thread("forked thread");
 
     lock = new Lock("harambe");
-    printf("- Main is taking the lock\n");
     lock->Acquire();
 
     t->Fork(SimpleThread, 0);
-    currentThread->Yield();
-    printf("- Forked thread has been spawned, but is stuck because it doesn't have the lock!\n");
 
-    printf("- Main is releasing the lock\n");
+    /* give the forked thread many chances to run so we can prove it can't */
+    multiyield(10);
+
+    DEBUG('L', "\nProof of Lock correctness:\nForked thread has been spawned, but is stuck because it doesn't have the lock!\n\n");
+
+    DEBUG('L', "Main is releasing the lock\n");
     lock->Release();
     currentThread->Yield();
 
-    for (int i = 0; i < 20; i++) {
-        printf("- Main thread ticks\n");
-        currentThread->Yield();
-    }
+    /* give the forked thread many chances to finish its task */
+    multiyield(10);
 
-    printf("- Main thread cleaning up...\n");
+    DEBUG('L', "Main thread cleaning up...\n");
     delete lock;
 }
