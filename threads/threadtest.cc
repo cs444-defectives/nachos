@@ -44,7 +44,6 @@ void ThreadTest()
 
     DEBUG('L', "\nProof of Lock correctness:\nForked thread has been spawned, but is stuck because it doesn't have the lock!\n\n");
 
-    DEBUG('L', "Main is releasing the lock\n");
     lock->Release();
     currentThread->Yield();
 
