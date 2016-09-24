@@ -132,8 +132,8 @@ void Lock::Acquire()
         /* Sleep assumes that interrupts are already disabled */
         currentThread->Sleep();
     }
-    DEBUG('L', "Thread '%s' got Lock '%s'\n", currentThread->getName(), getName());
     status = BUSY;
+    DEBUG('L', "Thread '%s' got Lock '%s'\n", currentThread->getName(), getName());
 
     (void) interrupt->SetLevel(oldLevel);	// re-enable interrupts
 }
@@ -147,6 +147,7 @@ void Lock::Release()
     IntStatus oldLevel = interrupt->SetLevel(IntOff);	// disable interrupts
 
     status = FREE;
+    DEBUG('L', "Thread '%s' released Lock '%s'\n", currentThread->getName(), getName());
 
     Thread *t;
     while (!threads->IsEmpty()) {
