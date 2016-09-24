@@ -8,7 +8,8 @@
 //
 // 	Most of this file is not needed until later assignments.
 //
-// Usage: nachos -d <debugflags> -rs <random seed #>
+// Usage: nachos -P <problem>
+//		-d <debugflags> -rs <random seed #>
 //		-s -x <nachos file> -c <consoleIn> <consoleOut>
 //		-f -cp <unix file> <nachos file>
 //		-p <nachos file> -r <nachos file> -l -D -t
@@ -16,6 +17,7 @@
 //              -o <other machine id>
 //              -z
 //
+//    -P demonstrates the solution of a particular problem
 //    -d causes certain debugging messages to be printed (cf. utility.h)
 //    -rs causes Yield to occur at random (but repeatable) spots
 //    -z prints the copyright message
@@ -55,7 +57,13 @@
 
 // External functions used by this file
 
-extern void ThreadTest(void), Copy(char *unixFile, char *nachosFile);
+extern void ThreadTest(void);
+extern void TestLocksConditions(void);
+extern void TestProducerConsumer(void);
+extern void TestElevator(void);
+extern void TestVdot(void);
+
+extern void Copy(char *unixFile, char *nachosFile);
 extern void Print(char *file), PerformanceTest(void);
 extern void StartProcess(char *file), ConsoleTest(char *in, char *out);
 extern void MailTest(int networkID);
@@ -82,15 +90,31 @@ main(int argc, char **argv)
 
     DEBUG('t', "Entering main");
     (void) Initialize(argc, argv);
-    
+
 #ifdef THREADS
-    ThreadTest();
+    int which_test = 0;
+    void (*test_fns[]) (void) = {
+	ThreadTest,
+	TestLocksConditions,
+	TestProducerConsumer,
+	TestElevator,
+	TestVdot,
+    };
 #endif
 
     for (argc--, argv++; argc > 0; argc -= argCount, argv += argCount) {
 	argCount = 1;
         if (!strcmp(*argv, "-z"))               // print copyright
             printf("%s", copyright);
+
+#ifdef THREADS
+	/* show the test for a particular problem solution */
+        if (!strcmp(argv[0], "-P")) {
+	    ASSERT(argc > 1);
+	    which_test = atoi(argv[1]);
+	    argCount = 2;
+	}
+#endif
 #ifdef USER_PROGRAM
         if (!strcmp(*argv, "-x")) {        	// run a user program
 	    ASSERT(argc > 1);
@@ -141,6 +165,10 @@ main(int argc, char **argv)
         }
 #endif // NETWORK
     }
+
+#ifdef THREADS
+    (*test_fns[which_test])();
+#endif
 
     currentThread->Finish();	// NOTE: if the procedure "main" 
 				// returns, then the program "nachos"

@@ -11,45 +11,41 @@
 
 #include "copyright.h"
 #include "system.h"
-#include "synch.h"
 
-Lock *lock;
+//----------------------------------------------------------------------
+// SimpleThread
+// 	Loop 5 times, yielding the CPU to another ready thread 
+//	each iteration.
+//
+//	"which" is simply a number identifying the thread, for debugging
+//	purposes.
+//----------------------------------------------------------------------
 
-void SimpleThread(int _)
+void
+SimpleThread(int which)
 {
-    for (int i = 0; i < 5; i++) {
-        lock->Acquire();
-        lock->Release();
+    int num;
+    
+    for (num = 0; num < 5; num++) {
+	printf("*** thread %d looped %d times\n", which, num);
         currentThread->Yield();
     }
 }
 
-static void multiyield(int n)
-{
-    for (int i = 0; i < n; i++)
-        currentThread->Yield();
-}
+//----------------------------------------------------------------------
+// ThreadTest
+// 	Set up a ping-pong between two threads, by forking a thread 
+//	to call SimpleThread, and then calling SimpleThread ourselves.
+//----------------------------------------------------------------------
 
-void ThreadTest()
+void
+ThreadTest()
 {
+    DEBUG('t', "Entering SimpleTest");
+
     Thread *t = new(std::nothrow) Thread("forked thread");
 
-    lock = new Lock("harambe");
-    lock->Acquire();
-
-    t->Fork(SimpleThread, 0);
-
-    /* give the forked thread many chances to run so we can prove it can't */
-    multiyield(10);
-
-    DEBUG('L', "\nProof of Lock correctness:\nForked thread has been spawned, but is stuck because it doesn't have the lock!\n\n");
-
-    lock->Release();
-    currentThread->Yield();
-
-    /* give the forked thread many chances to finish its task */
-    multiyield(10);
-
-    DEBUG('L', "Main thread cleaning up...\n");
-    delete lock;
+    t->Fork(SimpleThread, 1);
+    SimpleThread(0);
 }
+
