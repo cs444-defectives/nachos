@@ -105,10 +105,9 @@ Semaphore::V()
 //----------------------------------------------------------------------
 Lock::Lock(const char* debugName) 
 {
-    IntStatus oldLevel = interrupt->SetLevel(IntOff);	// disable interrupts
+    name = debugName;
     status = FREE;
     threads = new List();
-    (void) interrupt->SetLevel(oldLevel);	// re-enable interrupts
 }
 
 //----------------------------------------------------------------------
