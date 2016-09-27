@@ -142,12 +142,111 @@ void Lock::Release()
     (void) interrupt->SetLevel(oldLevel);
 }
 
-Condition::Condition(const char* debugName) { }
+Condition::Condition(const char* debugName)
+{
+    name = debugName;
+    threads = new List();
+}
 
-Condition::~Condition() { }
+Condition::~Condition()
+{
+    delete threads;
+}
 
-void Condition::Wait(Lock* conditionLock) { ASSERT(false); }
+/*
+ * Wait on a condition. We wake up when someone hints that the condition MAY be
+ * true by calling Condition::Signal().
+ *
+ * Caller must follow the following pattern:
+ *
+ *     bool done;
+ *     Lock done_lock;
+ *     Condition done_cond;
+ *     ...
+ *
+ *     done_lock->Acquire();
+ *     while (!done)
+ *         done_cond->Wait(done_lock);
+ *     done_lock->Release();
+ *
+ * We assume that the given lock is in state BUSY when Condition::Wait() is
+ * called. We must then: release the lock, move to the wait queue, and sleep the
+ * thread.
+ *
+ * When awoken, we must reacquire the lock so that it returns to state BUSY as
+ * it was before the call.
+ */
+void Condition::Wait(Lock* conditionLock)
+{
+    IntStatus oldLevel = interrupt->SetLevel(IntOff);
 
-void Condition::Signal(Lock* conditionLock) { }
+    DEBUG('L', "Thread '%s' is waiting on Condition '%s'\n",
+          currentThread->getName(), getName());
 
-void Condition::Broadcast(Lock* conditionLock) { }
+    conditionLock->Release();
+    threads->Append(currentThread);
+    currentThread->Sleep();
+    conditionLock->Acquire();
+
+    (void) interrupt->SetLevel(oldLevel);
+}
+
+/*
+ * Indicates to a single process waiting on a condition that the condition is
+ * ready to be re-checked. To wake *all* waiting processes instead, use
+ * Condition::Broadcast().
+ *
+ * Caller must follow the following pattern:
+ *
+ *     bool done;
+ *     Lock done_lock;
+ *     Condition done_cond;
+ *     ...
+ *
+ *     done_lock->Acquire();
+ *     done = true;
+ *     done_cond->Signal(done_lock);
+ *     done_lock->Release();
+ *
+ * The lock does not *necessarily* need to be acquired to run
+ * Condition::Signal(), for example if there is only one possible signaling
+ * process, but please do so anyway, okay? It's good practice and will prevent
+ * subtle, hard-to-catch bugs if additional signalers are added in the future.
+ */
+void Condition::Signal(Lock* _)
+{
+    IntStatus oldLevel = interrupt->SetLevel(IntOff);
+
+    DEBUG('L', "Thread '%s' signaled Condition '%s'\n",
+          currentThread->getName(), getName());
+
+    /* ReadyToRun assumes that interrupts are already disabled */
+    if (!threads->IsEmpty())
+        scheduler->ReadyToRun((Thread *) threads->Remove());
+
+    (void) interrupt->SetLevel(oldLevel);
+}
+
+/*
+ * Indicates to a all processes waiting on a condition that the condition is
+ * ready to be re-checked. To wake a *single* waiting processes instead, use
+ * Condition::Signal(). Subject to the same caveats and calling pattern as
+ * Condition::Broadcast(), see comment there for details.
+ */
+void Condition::Broadcast(Lock* conditionLock)
+{
+    IntStatus oldLevel = interrupt->SetLevel(IntOff);
+
+    DEBUG('L', "Thread '%s' broadcasted Condition '%s'\n",
+          currentThread->getName(), getName());
+
+    Thread *t;
+    while (!threads->IsEmpty()) {
+        t = (Thread *) threads->Remove();
+
+        /* ReadyToRun assumes that interrupts are already disabled */
+        scheduler->ReadyToRun(t);
+    }
+
+    (void) interrupt->SetLevel(oldLevel);
+}

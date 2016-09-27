@@ -140,6 +140,8 @@ class Condition {
 
   private:
     const char* name;
-    // plus some other stuff you'll need to define
+    enum ConditionStatus { BLOCKED, READY };
+    ConditionStatus status;
+    List *threads;
 };
 #endif // SYNCH_H
