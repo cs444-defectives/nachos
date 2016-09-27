@@ -82,12 +82,13 @@ class Lock {
     void Print() { printf("%s, ", name); }
 
   private:
-    const char *name;				// for debugging
+    const char *name;
 
-    List *threads;  // list of threads waiting on Lock
+    enum LockStatus { BUSY, FREE };
+    LockStatus status;
 
-    enum Status { BUSY, FREE }; //
-    Status status; //
+    /* list of threads waiting on Lock */
+    List *threads;
 };
 
 // The following class defines a "condition variable".  A condition
