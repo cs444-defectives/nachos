@@ -87,7 +87,7 @@ void Semaphore::V()
 Lock::Lock(const char* debugName)
 {
     name = debugName;
-    status = LockStatus::FREE;
+    status = FREE;
     threads = new List();
 }
 
@@ -104,7 +104,7 @@ void Lock::Acquire()
 {
     IntStatus oldLevel = interrupt->SetLevel(IntOff);
 
-    while (status == LockStatus::BUSY) {
+    while (status == BUSY) {
         DEBUG('L', "Thread '%s' couldn't get Lock '%s'\n",
               currentThread->getName(), getName());
         threads->Append(currentThread);
