@@ -4,8 +4,8 @@ An extension of the provided NACHOS code to be a """""real""""" operating system
 
 ## TODO
 
-- extend producer/consumer to multiple producers/consumers
-- write README for producers/consumers
+- finish demonstration of producer/consumer
+- finish README for producers/consumers
 - begin elevator problem
 - begin VDOT problem
 - prepare for submission: (Quint's responsibility)
