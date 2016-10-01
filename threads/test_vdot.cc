@@ -9,7 +9,7 @@
 
 #define ARRAY_SIZE(X) (sizeof(X) / sizeof((X)[0]))
 
-static char **messages;
+static char **thread_names;
 
 BridgeMonitor::BridgeMonitor()
 {
@@ -23,7 +23,8 @@ void BridgeMonitor::Arrive(int direction_desired)
 {
     bool wrong_way, full;
 
-    printf("# cars: %d\n", cars);
+    printf("arriving: %s\n", currentThread->getName());
+
     lock->Acquire();
     while ((wrong_way = (direction_desired != direction)) ||
            (full = (cars == MAX_CARS))) {
@@ -41,6 +42,7 @@ void BridgeMonitor::Arrive(int direction_desired)
 void BridgeMonitor::Depart()
 {
     lock->Acquire();
+    printf("departing: %s\n", currentThread->getName());
     cars--;
     depart->Broadcast(lock);
     lock->Release();
@@ -48,7 +50,7 @@ void BridgeMonitor::Depart()
 
 void BridgeMonitor::CrossBridge(int dir)
 {
-   printf("crossing bridge in %d direction\n", dir);
+    printf("crossing: %s\n", currentThread->getName());
 }
 
 // TODO: revise this
@@ -87,8 +89,8 @@ void TestVdot(void)
     for (int round = 0; round < rounds; round++)
         total_cars += cars_per_round[round];
 
-    messages = new char*[total_cars];
-    char *buffer;
+    thread_names = new char*[total_cars];
+    char *buffer, **next_car_name = thread_names;
 
     for (int round = 0; round < rounds; round++) {
 
@@ -96,10 +98,11 @@ void TestVdot(void)
         int dir = round % 2;
 
         /* fire off each car */
-        for (int car = 0; car < cars_per_round[round]; car++) {
+        for (int car = 0; car < cars_per_round[round]; car++, next_car_name++) {
             buffer = new char[64];
-            messages[car] = buffer;
-            snprintf(buffer, 64, "car thread - dir: %d, num: %d", dir, car);
+            *next_car_name = buffer;
+            snprintf(buffer, 64, "%sbound car (%d of %d in round %d)",
+                     dir ? "east" : "west", car, cars_per_round[round], round);
             Thread *car_thread = new Thread(buffer);
             car_thread->Fork(OneVehicle, dir);
         }
