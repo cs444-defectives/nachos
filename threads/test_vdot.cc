@@ -7,6 +7,10 @@
 #include "system.h"
 #include "test_vdot.h"
 
+#define ARRAY_SIZE(X) (sizeof(X) / sizeof((X)[0]))
+
+static char **messages;
+
 BridgeMonitor::BridgeMonitor()
 {
     cars = 0;
@@ -77,12 +81,17 @@ void TestVdot(void)
     int j, k, dir, count = 0;
 
     int directions[] = {6, 5, 4, 3, 2, 1};
+
+    messages = new char*[ARRAY_SIZE(directions)];
+    char *buffer;
+
     for (j = 0; j < 6; j++) { // alternate direction
         dir = j % 2;
         for (k = 0; k < directions[j]; k++) { // how many go in given direction
             count++;
-            char buffer[50];
-            sprintf(buffer, "car thread - dir: %d, num: %d", dir, k);
+            buffer = new char[64];
+            messages[k] = buffer;
+            snprintf(buffer, 64, "car thread - dir: %d, num: %d", dir, k);
             Thread* car = new Thread(buffer);
             car->Fork(OneVehicle, dir);
         }
