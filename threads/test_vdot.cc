@@ -24,6 +24,7 @@ void BridgeMonitor::Arrive(int direction_desired)
     bool wrong_way, full;
 
     printf("# cars: %d\n", cars);
+    lock->Acquire();
     while ((wrong_way = (direction_desired != direction)) ||
            (full = (cars == MAX_CARS))) {
         if (full)
@@ -34,6 +35,7 @@ void BridgeMonitor::Arrive(int direction_desired)
             depart->Wait(lock);
     }
     cars++;
+    lock->Release();
 }
 
 void BridgeMonitor::Depart()
