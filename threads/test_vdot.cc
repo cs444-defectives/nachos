@@ -77,23 +77,29 @@ void OneVehicle(int direc){
 
 void TestVdot(void)
 {
-    // create new threads that act as a single car each
-    int j, k, dir, count = 0;
+    /* create new threads that act as a single car each */
+    int cars_per_round[] = {6, 5, 4, 3, 2, 1};
+    const int rounds = ARRAY_SIZE(cars_per_round);
 
-    int directions[] = {6, 5, 4, 3, 2, 1};
+    int total_cars = 0;
+    for (int round = 0; round < rounds; round++)
+        total_cars += cars_per_round[round];
 
-    messages = new char*[ARRAY_SIZE(directions)];
+    messages = new char*[total_cars];
     char *buffer;
 
-    for (j = 0; j < 6; j++) { // alternate direction
-        dir = j % 2;
-        for (k = 0; k < directions[j]; k++) { // how many go in given direction
-            count++;
+    for (int round = 0; round < rounds; round++) {
+
+        /* alternate direction */
+        int dir = round % 2;
+
+        /* fire off each car */
+        for (int car = 0; car < cars_per_round[round]; car++) {
             buffer = new char[64];
-            messages[k] = buffer;
-            snprintf(buffer, 64, "car thread - dir: %d, num: %d", dir, k);
-            Thread* car = new Thread(buffer);
-            car->Fork(OneVehicle, dir);
+            messages[car] = buffer;
+            snprintf(buffer, 64, "car thread - dir: %d, num: %d", dir, car);
+            Thread *car_thread = new Thread(buffer);
+            car_thread->Fork(OneVehicle, dir);
         }
     }
 }
