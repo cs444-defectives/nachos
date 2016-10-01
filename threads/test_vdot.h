@@ -14,7 +14,8 @@ class BridgeMonitor
 public:
     BridgeMonitor();
     void Arrive(int dir);
-    void Depart(int dir);
+    void Depart();
+    void CrossBridge(int dir);
 };
 
 #endif
