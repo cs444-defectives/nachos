@@ -19,6 +19,7 @@ void BridgeMonitor::Arrive(int direction_desired)
 {
     bool wrong_way, full;
 
+    printf("# cars: %d\n", cars);
     while ((wrong_way = (direction_desired != direction)) ||
            (full = (cars == MAX_CARS))) {
         if (full)
@@ -29,7 +30,6 @@ void BridgeMonitor::Arrive(int direction_desired)
             depart->Wait(lock);
     }
     cars++;
-    //printf("# on brige: %d\n", cars);
 }
 
 void BridgeMonitor::Depart()
@@ -42,10 +42,10 @@ void BridgeMonitor::Depart()
 
 void BridgeMonitor::CrossBridge(int dir)
 {
-    //printf("crossing bridge in %d direction\n", dir);
+   printf("crossing bridge in %d direction\n", dir);
 }
 
-// TODO revise
+// TODO: revise this
 BridgeMonitor* myBridgeMonitor = new BridgeMonitor();
 
 void OneVehicle(int direc){
@@ -54,6 +54,7 @@ void OneVehicle(int direc){
     int crossingTime = 1 + (int)(100000.0 * rand() / (RAND_MAX + 1.0));
 
     for(i = 0; i <arrivalDelay; i++){
+        currentThread->Yield();
         interrupt->SetLevel(IntOff);
         interrupt->SetLevel(IntOn);
     }
@@ -62,6 +63,7 @@ void OneVehicle(int direc){
     myBridgeMonitor->CrossBridge(direc);
 
     for(i = 0; i< crossingTime; i++){
+        currentThread->Yield();
         interrupt->SetLevel(IntOff);
         interrupt->SetLevel(IntOn);
     }
@@ -72,10 +74,8 @@ void OneVehicle(int direc){
 void TestVdot(void)
 {
     // create new threads that act as a single car each
-    int j, k;
-    // control car directions here
-    int dir;
-    int count = 0;
+    int j, k, dir, count = 0;
+
     int directions[] = {6, 5, 4, 3, 2, 1};
     for (j = 0; j < 6; j++) { // alternate direction
         dir = j % 2;
