@@ -4,6 +4,8 @@
  * Demonstrates the correctness of our implementation of the elevator problem.
  */
 
+#ifdef CHANGED
+
 #include "system.h"
 #include "synch.h"
 
@@ -178,3 +180,5 @@ void TestElevator(void)
         passengers[i]->Fork(passenge, 0);
     }
 }
+
+#endif /* ifdef CHANGED */

@@ -5,6 +5,8 @@
  * variables.
  */
 
+#ifdef CHANGED
+
 #include "system.h"
 #include "synch.h"
 
@@ -48,3 +50,5 @@ void TestLocksConditions(void)
     DEBUG('L', "Main thread cleaning up...\n");
     delete lock;
 }
+
+#endif /* ifdef CHANGED */

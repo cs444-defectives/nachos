@@ -9,6 +9,8 @@
  * consumers, the output display will be gibberish.
  */
 
+#ifdef CHANGED
+
 #include "system.h"
 #include "synch.h"
 
@@ -101,3 +103,5 @@ void TestProducerConsumer(void)
         consumers[i]->Fork(consume, 0);
     }
 }
+
+#endif /* ifdef CHANGED */

@@ -1,3 +1,5 @@
+#ifdef CHANGED
+
 #ifndef TEST_VDOT_H
 #define TEST_VDOT_H
 
@@ -18,4 +20,5 @@ public:
     void CrossBridge(int dir);
 };
 
-#endif
+#endif /* ifndef TEST_VDOT_H */
+#endif /* ifdef CHANGED */

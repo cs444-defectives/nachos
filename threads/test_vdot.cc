@@ -4,6 +4,8 @@
  * Demonstrates the correctness of our implementation of the bridge problem.
  */
 
+#ifdef CHANGED
+
 #include "system.h"
 #include "test_vdot.h"
 
@@ -108,3 +110,5 @@ void TestVdot(void)
         }
     }
 }
+
+#endif /* ifdef CHANGED */
