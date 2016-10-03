@@ -86,7 +86,13 @@ You can change the `static const` parameters at the top of `threads/test_produce
   - the number of elements in the ring buffer (`static const int ring_size = 5`)
   - the message to produce (`static const char *const message = "Hello world\n"`)
 
-**TODO: Producers/Consumers README**
+When the buffer is empty, consumer threads wait on a condition upon which producers
+broadcast whenever they produce. Similarly, when the buffer is full, producer
+threads wait on a condition upon which consumers broadcast whenever they consume.
+A lock is used to protect the buffer. Producers and consumers randomly yield in
+order to simulate a schedule.
+
+
 
 ## MGSt Hall Elevator
 
@@ -106,7 +112,6 @@ condition, they leave the elevator. Our elevator is dumb and stops at every floo
 which ensures that every passenger will eventually be picked up and dropped off,
 within a certain amount of time. The elevator thread yields the CPU on every floor
 in order to allow passengers to embark and disembark the elevator.
-
 
 
 ## VDOT Bridge Traffic
