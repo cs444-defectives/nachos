@@ -8,7 +8,7 @@
 #include "synch.h"
 
 #define NUM_FLOORS 4
-#define NUM_PASSENGERS 4
+#define NUM_PASSENGERS 10
 
 /**
  * this variable maintains a count of passengers yet to ride the elevator
