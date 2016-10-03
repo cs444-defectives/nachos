@@ -28,6 +28,7 @@ We have added the following files to the project:
   - `threads/test_elevator.cc`
   - `threads/test_locks_conditions.cc`
   - `threads/test_vdot.cc`
+  - `threads/test_vdot.h`
 
 ## Note on the `-P` switch
 
@@ -89,9 +90,8 @@ You can change the `static const` parameters at the top of `threads/test_produce
 When the buffer is empty, consumer threads wait on a condition upon which producers
 broadcast whenever they produce. Similarly, when the buffer is full, producer
 threads wait on a condition upon which consumers broadcast whenever they consume.
-A lock is used to protect the buffer. Producers and consumers randomly yield in
-order to simulate a schedule.
-
+All access to the buffer is protected by a lock. Producers and consumers randomly yield 
+in order to simulate a schedule.
 
 
 ## MGSt Hall Elevator
@@ -121,7 +121,7 @@ you that our solution is appropriate. Again, you may turn on lock and condition
 DEBUG messages if you like by appending the flag `-d L`, but note that this
 will produce *a lot* of output.
 
-Relevant code is in `threads/test_vdot.cc`.
+Relevant code is in `threads/test_vdot.cc` and `threads/test_vdot.h`.
 
 Our implementation of the solution ot the bridge traffic control problem
 uses a monitor. It is encapsulated mostly in the following pseudocode:
@@ -137,6 +137,8 @@ Arrive(direction_desired)
             wait on departure condition
 ```
 
+Cars broadcast on a `depart` condition when they leave the bridge to notify
+waiting cars that it is time to check the status of the bridge again.
 
 The main drawback of this solution is that it does not take into consideration
 the arrival time of cars so it is not necessarily "fair". The direction
