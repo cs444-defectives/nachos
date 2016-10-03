@@ -97,7 +97,17 @@ produce *a lot* of output.
 
 Relevant code is in `threads/test_elevator.cc`.
 
-**TODO: Elevator README**
+Our elevator and each of it's passengers run in individual threads. 
+Passengers waiting for the elevator on a floor wait on a condition specific to
+their floor. When the elevator arrives, it broadcasts on that condition and
+passengers get on the elevator. Passengers on the elevator wait on the condition
+of their destination floor. When the elevator arrives and broadcasts on that
+condition, they leave the elevator. Our elevator is dumb and stops at every floor, 
+which ensures that every passenger will eventually be picked up and dropped off,
+within a certain amount of time. The elevator thread yields the CPU on every floor
+in order to allow passengers to embark and disembark the elevator.
+
+
 
 ## VDOT Bridge Traffic
 

@@ -96,7 +96,6 @@ static void getOffElevator(void)
            currentThread->getName(), floor);
 }
 
-/* I did not name this function */
 void ArrivingGoingFromTo(int atFloor, int toFloor)
 {
     printf("%s waits at floor %d to go to floor %d\n",
