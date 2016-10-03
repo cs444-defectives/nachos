@@ -13,7 +13,7 @@
 #include "synch.h"
 
 /* the number of producer/consumer pairs created */
-static const int n = 1;
+static const int n = 3;
 
 static const int ring_size = 5;
 static const char *const message = "Hello world\n";
@@ -29,6 +29,10 @@ static char **m;
 static void produce(int _)
 {
     for (const char *c = message; *c; c++) {
+        /* yield randomly to simulate scheduler */
+        if (rand() < RAND_MAX / 2)
+            currentThread->Yield();
+
         ring_lock->Acquire();
 
         /* if the buffer is full, wait until an item is consumed */
@@ -51,6 +55,10 @@ static void consume(int _)
 {
     char c;
     while (true) {
+        /* yield randomly to simulate scheduler */
+        if (rand() < RAND_MAX / 2)
+            currentThread->Yield();
+
         ring_lock->Acquire();
 
         /* if the buffer is empty, wait until an item is produced */
