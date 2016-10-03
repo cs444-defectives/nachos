@@ -13,7 +13,7 @@
 #include "synch.h"
 
 /* the number of producer/consumer pairs created */
-static const int n = 3;
+static const int n = 1;
 
 static const int ring_size = 5;
 static const char *const message = "Hello world\n";
