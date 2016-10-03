@@ -29,10 +29,6 @@ static char **m;
 static void produce(int _)
 {
     for (const char *c = message; *c; c++) {
-        /* yield randomly to simulate scheduler */
-        if (rand() < RAND_MAX / 2)
-            currentThread->Yield();
-
         ring_lock->Acquire();
 
         /* if the buffer is full, wait until an item is consumed */
@@ -55,10 +51,6 @@ static void consume(int _)
 {
     char c;
     while (true) {
-        /* yield randomly to simulate scheduler */
-        if (rand() < RAND_MAX / 2)
-            currentThread->Yield();
-
         ring_lock->Acquire();
 
         /* if the buffer is empty, wait until an item is produced */

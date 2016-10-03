@@ -38,7 +38,6 @@ We have designed the `-P` flag such that running the nachos executable with:
   - `-P 3` executes `TestElevator()` in `threads/test_elevator.cc`
   - `-P 4` executes `TestVdot()` in `threads/test_vdot.cc`
 
-
 ## Locks
 
 All lock methods ensure mutual exclusion by disabling interrupts.
@@ -68,7 +67,6 @@ Condition methods are also mutually exclusive by disabling interrupts.
 - `::Broadcast`: when this method is called, all threads on the sleeper list
                 are awoken.
 
-
 ## Producers/Consumers
 
 Run with `nachos -P 2 -d L` along with whatever randomization flags
@@ -88,9 +86,7 @@ You can change the `static const` parameters at the top of `threads/test_produce
 When the buffer is empty, consumer threads wait on a condition upon which producers
 broadcast whenever they produce. Similarly, when the buffer is full, producer
 threads wait on a condition upon which consumers broadcast whenever they consume.
-All access to the buffer is protected by a lock. Producers and consumers randomly yield
-in order to simulate a schedule.
-
+All access to the buffer is protected by a lock.
 
 ## MGSt Hall Elevator
 
@@ -110,7 +106,6 @@ condition, they leave the elevator. Our elevator is dumb and stops at every floo
 which ensures that every passenger will eventually be picked up and dropped off,
 within a certain amount of time. The elevator thread yields the CPU on every floor
 in order to allow passengers to embark and disembark the elevator.
-
 
 ## VDOT Bridge Traffic
 
