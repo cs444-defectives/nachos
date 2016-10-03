@@ -1,13 +1,11 @@
 # nachos
 
-An extension of the provided NACHOS code to be a """""real""""" operating system.
+An extension of the provided NACHOS code to be a ~real~ operating system.
 
 ## TODO
 
 - finish demonstration of producer/consumer
 - finish README for producers/consumers
-- begin elevator problem
-- begin VDOT problem
 - prepare for submission: (Quint's responsibility)
   - #ifdef CHANGED
   - copy Project 1 README section over to `threads/README`
@@ -41,9 +39,40 @@ We have designed the `-P` flag such that running the nachos executable with:
   - `-P 3` executes `TestElevator()` in `threads/test_elevator.cc`
   - `-P 4` executes `TestVdot()` in `threads/test_vdot.cc`
 
+
+## Locks
+
+All lock methods ensure mutual exclusion by disabling interrupts.
+
+- `::Acquire`: when this method is called, if the lock is `FREE`,
+               it is sets it to `BUSY` and execution continues. However,
+               if the lock is already `BUSY`, the thread is put to sleep
+               and added to a list of threads waiting on the lock.
+
+- `::Release`: when this method is called, the lock becomes `FREE` and
+               all threads on the sleeper list are awoken and they all
+               attempt to acquire the lock again (all but one thread will)
+               go back to sleep.
+
+## Conditions
+
+Condition methods are also mutually exclusive by disabling interrupts.
+
+- `::Wait`: when this method is called, the passed in lock is released to
+            allow other threads a chance to acquire the lock. The current
+            thread is added to a list of threads waiting on the condition
+            and put to sleep. When the thread is awoken it reacquires the lock.
+
+- `::Signal`: when this method is called, one thread is called from the
+              sleeper list and put back on the ready to run list.
+
+- `::Broadcast`: when this method is called, all threads on the sleeper list
+                are awoken.
+
+
 ## Producers/Consumers
 
-Please run with `nachos -P 2 -d L` along with whatever randomization flags
+Run with `nachos -P 2 -d L` along with whatever randomization flags
 convince you that our solution is appropriate. It is important to turn on debug
 output of type 'L' because no information relevant to the demonstration is
 printed otherwise.
@@ -61,7 +90,7 @@ You can change the `static const` parameters at the top of `threads/test_produce
 
 ## MGSt Hall Elevator
 
-Please run with `nachos -P 3` along with whatever randomization flags convince
+Run with `nachos -P 3` along with whatever randomization flags convince
 you that our solution is appropriate. You may turn on lock and condition DEBUG
 messages if you like by appending the flag `-d L`, but note that this will
 produce *a lot* of output.
@@ -72,11 +101,37 @@ Relevant code is in `threads/test_elevator.cc`.
 
 ## VDOT Bridge Traffic
 
-Please run with `nachos -P 4` along with whatever randomization flags convince
+Run with `nachos -P 4` along with whatever randomization flags convince
 you that our solution is appropriate. Again, you may turn on lock and condition
 DEBUG messages if you like by appending the flag `-d L`, but note that this
 will produce *a lot* of output.
 
 Relevant code is in `threads/test_vdot.cc`.
 
-**TODO: VDOT Bridge README**
+Our implementation of the solution ot the bridge traffic control problem
+uses a monitor. It is encapsulated mostly in the following pseudocode:
+
+```
+Arrive(direction_desired)
+    while direction_desired != direction or cars == max cars
+        if bridge is full
+            wait on departure condition
+        else if wrong_way and no cars on bridge
+            change active direction
+        else if (wrong_way)
+            wait on departure condition
+```
+
+
+The main drawback of this solution is that it does not take into consideration
+the arrival time of cars so it is not necessarily "fair". The direction
+of traffic flow on the bridge only changes when the bridge is empty.
+That is, as long as cars continue to queue up on the side of the current flow
+traffic will continue in that direction (so cars on the other side have to wait
+indefinitely).
+
+If a car arrives while traffic is currently moving in its direction, but there
+is another car already waiting to cross in the opposite direction, the new arrival
+well have precedence over the waiting car.
+
+
