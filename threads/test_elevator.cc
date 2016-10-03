@@ -10,6 +10,13 @@
 #define NUM_FLOORS 4
 #define NUM_PASSENGERS 4
 
+/**
+ * this variable maintains a count of passengers yet to ride the elevator
+ * in order to know when to terminate the program
+ */
+int passengers_remaining = NUM_PASSENGERS;
+Lock *passengers_remaining_lock = new Lock("waiting passengers count lock");
+
 static Lock *arrived_lock[NUM_FLOORS];
 static Condition *arrived[NUM_FLOORS];
 static int floor;
@@ -44,7 +51,13 @@ static void elevate(int _)
     floor = 0;
     int direction = 0;
 
-    while (true) {
+    /**
+     * we don't need to protect access to this variable using its lock because
+     * when it becomes 0 all other threads will have terminated and any other time
+     * the elevator will just continue
+    */
+    while (passengers_remaining) {
+
         printf("Elevator at floor %d\n", floor);
 
         /* tell passengers they may leave or enter */
@@ -119,6 +132,10 @@ static void passenge(int _)
     while (to == from);
 
     ArrivingGoingFromTo(from, to);
+
+    passengers_remaining_lock->Acquire();
+    passengers_remaining--;
+    passengers_remaining_lock->Release();
 }
 
 void TestElevator(void)
