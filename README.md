@@ -4,8 +4,6 @@ An extension of the provided NACHOS code to be a ~real~ operating system.
 
 ## TODO
 
-- finish demonstration of producer/consumer
-- finish README for producers/consumers
 - prepare for submission: (Quint's responsibility)
   - #ifdef CHANGED
   - copy Project 1 README section over to `threads/README`
@@ -90,7 +88,7 @@ You can change the `static const` parameters at the top of `threads/test_produce
 When the buffer is empty, consumer threads wait on a condition upon which producers
 broadcast whenever they produce. Similarly, when the buffer is full, producer
 threads wait on a condition upon which consumers broadcast whenever they consume.
-All access to the buffer is protected by a lock. Producers and consumers randomly yield 
+All access to the buffer is protected by a lock. Producers and consumers randomly yield
 in order to simulate a schedule.
 
 
@@ -103,12 +101,12 @@ produce *a lot* of output.
 
 Relevant code is in `threads/test_elevator.cc`.
 
-Our elevator and each of it's passengers run in individual threads. 
+Our elevator and each of its passengers run in individual threads.
 Passengers waiting for the elevator on a floor wait on a condition specific to
 their floor. When the elevator arrives, it broadcasts on that condition and
 passengers get on the elevator. Passengers on the elevator wait on the condition
 of their destination floor. When the elevator arrives and broadcasts on that
-condition, they leave the elevator. Our elevator is dumb and stops at every floor, 
+condition, they leave the elevator. Our elevator is dumb and stops at every floor,
 which ensures that every passenger will eventually be picked up and dropped off,
 within a certain amount of time. The elevator thread yields the CPU on every floor
 in order to allow passengers to embark and disembark the elevator.
@@ -124,7 +122,7 @@ will produce *a lot* of output.
 Relevant code is in `threads/test_vdot.cc` and `threads/test_vdot.h`.
 
 Our implementation of the solution ot the bridge traffic control problem
-uses a monitor. It is encapsulated mostly in the following pseudocode:
+uses a proper monitor class. It is encapsulated mostly in the following pseudocode:
 
 ```
 Arrive(direction_desired)
@@ -145,10 +143,7 @@ the arrival time of cars so it is not necessarily "fair". The direction
 of traffic flow on the bridge only changes when the bridge is empty.
 That is, as long as cars continue to queue up on the side of the current flow
 traffic will continue in that direction (so cars on the other side have to wait
-indefinitely).
-
-If a car arrives while traffic is currently moving in its direction, but there
-is another car already waiting to cross in the opposite direction, the new arrival
-well have precedence over the waiting car.
-
-
+indefinitely). For this reason, if a car arrives while traffic is currently
+moving in its direction, but there is another car already waiting to cross in
+the opposite direction, the new arrival will cross *before* the car waiting on
+the other side.
