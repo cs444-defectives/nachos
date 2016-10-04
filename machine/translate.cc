@@ -88,15 +88,15 @@ bool
 Machine::ReadMem(int addr, int size, int *value)
 {
     int data;
-    ExceptionType exception;
+    ExceptionType Exception;
     int physicalAddress;
     
     DEBUG('a', "Reading VA 0x%x, size %d\n", addr, size);
     
-    exception = Translate(addr, &physicalAddress, size, FALSE);
-    if (exception != NoException) {
-	machine->RaiseException(exception, addr);
-	return FALSE;
+    Exception = Translate(addr, &physicalAddress, size, false);
+    if (Exception != NoException) {
+	machine->RaiseException(Exception, addr);
+	return false;
     }
     switch (size) {
       case 1:
@@ -114,11 +114,11 @@ Machine::ReadMem(int addr, int size, int *value)
 	*value = WordToHost(data);
 	break;
 
-      default: ASSERT(FALSE);
+      default: ASSERT(false);
     }
     
     DEBUG('a', "\tvalue read = %8.8x\n", *value);
-    return (TRUE);
+    return (true);
 }
 
 //----------------------------------------------------------------------
@@ -137,15 +137,15 @@ Machine::ReadMem(int addr, int size, int *value)
 bool
 Machine::WriteMem(int addr, int size, int value)
 {
-    ExceptionType exception;
+    ExceptionType Exception;
     int physicalAddress;
      
     DEBUG('a', "Writing VA 0x%x, size %d, value 0x%x\n", addr, size, value);
 
-    exception = Translate(addr, &physicalAddress, size, TRUE);
-    if (exception != NoException) {
-	machine->RaiseException(exception, addr);
-	return FALSE;
+    Exception = Translate(addr, &physicalAddress, size, true);
+    if (Exception != NoException) {
+	machine->RaiseException(Exception, addr);
+	return false;
     }
     switch (size) {
       case 1:
@@ -162,10 +162,10 @@ Machine::WriteMem(int addr, int size, int value)
 		= WordToMachine((unsigned int) value);
 	break;
 	
-      default: ASSERT(FALSE);
+      default: ASSERT(false);
     }
     
-    return TRUE;
+    return true;
 }
 
 //----------------------------------------------------------------------
@@ -214,8 +214,8 @@ Machine::Translate(int virtAddr, int* physAddr, int size, bool writing)
 			virtAddr, pageTableSize);
 	    return AddressErrorException;
 	} else if (!pageTable[vpn].valid) {
-	    DEBUG('a', "virtual page # %d too large for page table size %d!\n", 
-			virtAddr, pageTableSize);
+	    DEBUG('a', "Page table miss, virtual address  %d!\n", 
+			virtAddr);
 	    return PageFaultException;
 	}
 	entry = &pageTable[vpn];
@@ -245,9 +245,9 @@ Machine::Translate(int virtAddr, int* physAddr, int size, bool writing)
 	DEBUG('a', "*** frame %d > %d!\n", pageFrame, NumPhysPages);
 	return BusErrorException;
     }
-    entry->use = TRUE;		// set the use, dirty bits
+    entry->use = false;		// set the use, dirty bits
     if (writing)
-	entry->dirty = TRUE;
+	entry->dirty = true;
     *physAddr = pageFrame * PageSize + offset;
     ASSERT((*physAddr >= 0) && ((*physAddr + size) <= MemorySize));
     DEBUG('a', "phys addr = 0x%x\n", *physAddr);

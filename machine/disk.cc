@@ -51,7 +51,7 @@ Disk::Disk(char* name, VoidFunctionPtr callWhenDone, int callArg)
     lastSector = 0;
     bufferInit = 0;
     
-    fileno = OpenForReadWrite(name, FALSE);
+    fileno = OpenForReadWrite(name, false);
     if (fileno >= 0) {		 	// file exists, check magic number 
 	Read(fileno, (char *) &magicNum, MagicSize);
 	ASSERT(magicNum == MagicNumber);
@@ -64,7 +64,7 @@ Disk::Disk(char* name, VoidFunctionPtr callWhenDone, int callArg)
         Lseek(fileno, DiskSize - sizeof(int), 0);	
 	WriteFile(fileno, (char *)&tmp, sizeof(int));  
     }
-    active = FALSE;
+    active = false;
 }
 
 //----------------------------------------------------------------------
@@ -115,7 +115,7 @@ PrintSector (bool writing, int sector, char *data)
 void
 Disk::ReadRequest(int sectorNumber, char* data)
 {
-    int ticks = ComputeLatency(sectorNumber, FALSE);
+    int ticks = ComputeLatency(sectorNumber, false);
 
     ASSERT(!active);				// only one request at a time
     ASSERT((sectorNumber >= 0) && (sectorNumber < NumSectors));
@@ -124,9 +124,9 @@ Disk::ReadRequest(int sectorNumber, char* data)
     Lseek(fileno, SectorSize * sectorNumber + MagicSize, 0);
     Read(fileno, data, SectorSize);
     if (DebugIsEnabled('d'))
-	PrintSector(FALSE, sectorNumber, data);
+	PrintSector(false, sectorNumber, data);
     
-    active = TRUE;
+    active = true;
     UpdateLast(sectorNumber);
     stats->numDiskReads++;
     interrupt->Schedule(DiskDone, (int) this, ticks, DiskInt);
@@ -135,7 +135,7 @@ Disk::ReadRequest(int sectorNumber, char* data)
 void
 Disk::WriteRequest(int sectorNumber, char* data)
 {
-    int ticks = ComputeLatency(sectorNumber, TRUE);
+    int ticks = ComputeLatency(sectorNumber, true);
 
     ASSERT(!active);
     ASSERT((sectorNumber >= 0) && (sectorNumber < NumSectors));
@@ -144,9 +144,9 @@ Disk::WriteRequest(int sectorNumber, char* data)
     Lseek(fileno, SectorSize * sectorNumber + MagicSize, 0);
     WriteFile(fileno, data, SectorSize);
     if (DebugIsEnabled('d'))
-	PrintSector(TRUE, sectorNumber, data);
+	PrintSector(true, sectorNumber, data);
     
-    active = TRUE;
+    active = true;
     UpdateLast(sectorNumber);
     stats->numDiskWrites++;
     interrupt->Schedule(DiskDone, (int) this, ticks, DiskInt);
@@ -161,7 +161,7 @@ Disk::WriteRequest(int sectorNumber, char* data)
 void
 Disk::HandleInterrupt ()
 { 
-    active = FALSE;
+    active = false;
     (*handler)(handlerArg);
 }
 
@@ -238,7 +238,7 @@ Disk::ComputeLatency(int newSector, bool writing)
 
 #ifndef NOTRACKBUF	// turn this on if you don't want the track buffer stuff
     // check if track buffer applies
-    if ((writing == FALSE) && (seek == 0) 
+    if ((writing == false) && (seek == 0) 
 		&& (((timeAfter - bufferInit) / RotationTime) 
 	     		> ModuloDiff(newSector, bufferInit / RotationTime))) {
         DEBUG('d', "Request latency = %d\n", RotationTime);

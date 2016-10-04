@@ -42,7 +42,7 @@ Console::Console(char *readFile, char *writeFile, VoidFunctionPtr readAvail,
     if (readFile == NULL)
 	readFileNo = 0;					// keyboard = stdin
     else
-    	readFileNo = OpenForReadWrite(readFile, TRUE);	// should be read-only
+    	readFileNo = OpenForReadWrite(readFile, true);	// should be read-only
     if (writeFile == NULL)
 	writeFileNo = 1;				// display = stdout
     else
@@ -52,7 +52,7 @@ Console::Console(char *readFile, char *writeFile, VoidFunctionPtr readAvail,
     writeHandler = writeDone;
     readHandler = readAvail;
     handlerArg = callArg;
-    putBusy = FALSE;
+    putBusy = false;
     incoming = EOF;
 
     // start polling for incoming packets
@@ -113,7 +113,7 @@ Console::CheckCharAvail()
 void
 Console::WriteDone()
 {
-    putBusy = FALSE;
+    putBusy = false;
     stats->numConsoleCharsWritten++;
     (*writeHandler)(handlerArg);
 }
@@ -142,9 +142,9 @@ Console::GetChar()
 void
 Console::PutChar(char ch)
 {
-    ASSERT(putBusy == FALSE);
+    ASSERT(putBusy == false);
     WriteFile(writeFileNo, &ch, sizeof(char));
-    putBusy = TRUE;
+    putBusy = true;
     interrupt->Schedule(ConsoleWriteDone, (int)this, ConsoleTime,
 					ConsoleWriteInt);
 }
