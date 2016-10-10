@@ -92,7 +92,6 @@ void updatePC()
  * "which" is the kind of exception. The list of possible exceptions are in
  * machine.h.
  */
-
 void ExceptionHandler(ExceptionType which)
 {
     int type = machine->ReadRegister(2);
@@ -102,6 +101,9 @@ void ExceptionHandler(ExceptionType which)
         switch (type) {
         case SC_Halt:
             DEBUG('a', "Shutdown, initiated by user program.\n");
+            interrupt->Halt();
+        case SC_Exit:
+            DEBUG('a', "Shutdown, initiated by user code exit.\n");
             interrupt->Halt();
         case SC_Create:
             DEBUG('a', "Create file, initiated by user program.\n");
