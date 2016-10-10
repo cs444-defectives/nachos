@@ -94,6 +94,8 @@ void updatePC()
  */
 void ExceptionHandler(ExceptionType which)
 {
+    int arg1;
+    char stringarg[128];
     int type = machine->ReadRegister(2);
 
     switch (which) {
@@ -107,7 +109,12 @@ void ExceptionHandler(ExceptionType which)
             interrupt->Halt();
         case SC_Create:
             DEBUG('a', "Create file, initiated by user program.\n");
-            Create((char*)machine->ReadRegister(4));
+            arg1 = machine->ReadRegister(4);
+            // TODO: check to make sure file name isn't too long
+            for (int i = 0; i < 127; i++)
+                if ((stringarg[i] = machine->mainMemory[arg1++]) == '\0') break;
+            stringarg[127] = '\0';
+            Create(stringarg);
             updatePC();
             break;
         default:
