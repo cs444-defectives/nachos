@@ -90,6 +90,10 @@ void ExceptionHandler(ExceptionType which)
         case SC_Halt:
             DEBUG('a', "Shutdown, initiated by user program.\n");
             interrupt->Halt();
+        case SC_Create:
+            DEBUG('a', "Create file, initiated by user program.\n");
+            Create((char*)machine->ReadRegister(4));
+            break;
         default:
             printf("Undefined SYSCALL %d\n", type);
             ASSERT(false);
