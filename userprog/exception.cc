@@ -59,6 +59,19 @@ void HandleTLBFault(int vaddr)
 
 #endif
 
+/**
+ * Update the program counter
+ */
+void updatePC()
+{
+    int pc = machine->ReadRegister(PCReg);
+    machine->WriteRegister(PrevPCReg, pc);
+    pc = machine->ReadRegister(NextPCReg);
+    machine->WriteRegister(PCReg, pc);
+    pc += 4;
+    machine->WriteRegister(NextPCReg, pc);
+}
+
 /*
  * Entry point into the Nachos kernel. Called when a user program is executing,
  * and either does a syscall, or generates an addressing or arithmetic
@@ -93,6 +106,7 @@ void ExceptionHandler(ExceptionType which)
         case SC_Create:
             DEBUG('a', "Create file, initiated by user program.\n");
             Create((char*)machine->ReadRegister(4));
+            updatePC();
             break;
         default:
             printf("Undefined SYSCALL %d\n", type);
