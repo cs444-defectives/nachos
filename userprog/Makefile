@@ -27,12 +27,12 @@ include ../Makefile.dep
 #-----------------------------------------------------------------
 # DO NOT DELETE THIS LINE -- make depend uses it
 # DEPENDENCIES MUST END AT END OF FILE
-main.o: ../threads/main.cc /usr/include/stdc-predef.h \
- ../threads/copyright.h ../threads/utility.h ../machine/sysdep.h \
- ../threads/copyright.h /usr/include/stdlib.h /usr/include/features.h \
+main.o: ../threads/main.cc ../threads/copyright.h ../threads/utility.h \
+ ../machine/sysdep.h ../threads/copyright.h /usr/include/stdlib.h \
+ /usr/include/features.h /usr/include/stdc-predef.h \
  /usr/include/sys/cdefs.h /usr/include/bits/wordsize.h \
  /usr/include/gnu/stubs.h /usr/include/gnu/stubs-64.h \
- /usr/lib64/gcc/x86_64-suse-linux/4.8/include/stddef.h \
+ /usr/lib64/gcc/x86_64-suse-linux/4.7/include/stddef.h \
  /usr/include/bits/waitflags.h /usr/include/bits/waitstatus.h \
  /usr/include/endian.h /usr/include/bits/endian.h \
  /usr/include/bits/byteswap.h /usr/include/bits/types.h \
@@ -44,26 +44,25 @@ main.o: ../threads/main.cc /usr/include/stdc-predef.h \
  /usr/include/alloca.h /usr/include/bits/stdlib-float.h \
  /usr/include/stdio.h /usr/include/libio.h /usr/include/_G_config.h \
  /usr/include/wchar.h \
- /usr/lib64/gcc/x86_64-suse-linux/4.8/include/stdarg.h \
+ /usr/lib64/gcc/x86_64-suse-linux/4.7/include/stdarg.h \
  /usr/include/bits/stdio_lim.h /usr/include/bits/sys_errlist.h \
  /usr/include/string.h ../threads/system.h ../threads/thread.h \
  ../machine/machine.h ../threads/utility.h ../machine/translate.h \
  ../machine/disk.h ../userprog/addrspace.h ../filesys/filesys.h \
- ../filesys/openfile.h /usr/include/c++/4.8/new \
- /usr/include/c++/4.8/x86_64-suse-linux/bits/c++config.h \
- /usr/include/c++/4.8/x86_64-suse-linux/bits/os_defines.h \
- /usr/include/c++/4.8/x86_64-suse-linux/bits/cpu_defines.h \
- /usr/include/c++/4.8/exception \
- /usr/include/c++/4.8/bits/atomic_lockfree_defines.h \
+ ../filesys/openfile.h /usr/include/c++/4.7/new \
+ /usr/include/c++/4.7/x86_64-suse-linux/bits/c++config.h \
+ /usr/include/c++/4.7/x86_64-suse-linux/bits/os_defines.h \
+ /usr/include/c++/4.7/x86_64-suse-linux/bits/cpu_defines.h \
+ /usr/include/c++/4.7/exception \
+ /usr/include/c++/4.7/bits/atomic_lockfree_defines.h \
  ../threads/scheduler.h ../threads/list.h ../machine/interrupt.h \
  ../threads/list.h ../machine/stats.h ../machine/timer.h
-list.o: ../threads/list.cc /usr/include/stdc-predef.h \
- ../threads/copyright.h ../threads/list.h ../threads/utility.h \
- ../machine/sysdep.h ../threads/copyright.h /usr/include/stdlib.h \
- /usr/include/features.h /usr/include/sys/cdefs.h \
- /usr/include/bits/wordsize.h /usr/include/gnu/stubs.h \
- /usr/include/gnu/stubs-64.h \
- /usr/lib64/gcc/x86_64-suse-linux/4.8/include/stddef.h \
+list.o: ../threads/list.cc ../threads/copyright.h ../threads/list.h \
+ ../threads/utility.h ../machine/sysdep.h ../threads/copyright.h \
+ /usr/include/stdlib.h /usr/include/features.h /usr/include/stdc-predef.h \
+ /usr/include/sys/cdefs.h /usr/include/bits/wordsize.h \
+ /usr/include/gnu/stubs.h /usr/include/gnu/stubs-64.h \
+ /usr/lib64/gcc/x86_64-suse-linux/4.7/include/stddef.h \
  /usr/include/bits/waitflags.h /usr/include/bits/waitstatus.h \
  /usr/include/endian.h /usr/include/bits/endian.h \
  /usr/include/bits/byteswap.h /usr/include/bits/types.h \
@@ -75,16 +74,16 @@ list.o: ../threads/list.cc /usr/include/stdc-predef.h \
  /usr/include/alloca.h /usr/include/bits/stdlib-float.h \
  /usr/include/stdio.h /usr/include/libio.h /usr/include/_G_config.h \
  /usr/include/wchar.h \
- /usr/lib64/gcc/x86_64-suse-linux/4.8/include/stdarg.h \
+ /usr/lib64/gcc/x86_64-suse-linux/4.7/include/stdarg.h \
  /usr/include/bits/stdio_lim.h /usr/include/bits/sys_errlist.h \
  /usr/include/string.h
-scheduler.o: ../threads/scheduler.cc /usr/include/stdc-predef.h \
- ../threads/copyright.h ../threads/scheduler.h ../threads/list.h \
- ../threads/utility.h ../machine/sysdep.h ../threads/copyright.h \
- /usr/include/stdlib.h /usr/include/features.h /usr/include/sys/cdefs.h \
- /usr/include/bits/wordsize.h /usr/include/gnu/stubs.h \
- /usr/include/gnu/stubs-64.h \
- /usr/lib64/gcc/x86_64-suse-linux/4.8/include/stddef.h \
+scheduler.o: ../threads/scheduler.cc ../threads/copyright.h \
+ ../threads/scheduler.h ../threads/list.h ../threads/utility.h \
+ ../machine/sysdep.h ../threads/copyright.h /usr/include/stdlib.h \
+ /usr/include/features.h /usr/include/stdc-predef.h \
+ /usr/include/sys/cdefs.h /usr/include/bits/wordsize.h \
+ /usr/include/gnu/stubs.h /usr/include/gnu/stubs-64.h \
+ /usr/lib64/gcc/x86_64-suse-linux/4.7/include/stddef.h \
  /usr/include/bits/waitflags.h /usr/include/bits/waitstatus.h \
  /usr/include/endian.h /usr/include/bits/endian.h \
  /usr/include/bits/byteswap.h /usr/include/bits/types.h \
@@ -96,26 +95,26 @@ scheduler.o: ../threads/scheduler.cc /usr/include/stdc-predef.h \
  /usr/include/alloca.h /usr/include/bits/stdlib-float.h \
  /usr/include/stdio.h /usr/include/libio.h /usr/include/_G_config.h \
  /usr/include/wchar.h \
- /usr/lib64/gcc/x86_64-suse-linux/4.8/include/stdarg.h \
+ /usr/lib64/gcc/x86_64-suse-linux/4.7/include/stdarg.h \
  /usr/include/bits/stdio_lim.h /usr/include/bits/sys_errlist.h \
  /usr/include/string.h ../threads/thread.h ../machine/machine.h \
  ../threads/utility.h ../machine/translate.h ../machine/disk.h \
  ../userprog/addrspace.h ../filesys/filesys.h ../filesys/openfile.h \
- /usr/include/c++/4.8/new \
- /usr/include/c++/4.8/x86_64-suse-linux/bits/c++config.h \
- /usr/include/c++/4.8/x86_64-suse-linux/bits/os_defines.h \
- /usr/include/c++/4.8/x86_64-suse-linux/bits/cpu_defines.h \
- /usr/include/c++/4.8/exception \
- /usr/include/c++/4.8/bits/atomic_lockfree_defines.h ../threads/system.h \
+ /usr/include/c++/4.7/new \
+ /usr/include/c++/4.7/x86_64-suse-linux/bits/c++config.h \
+ /usr/include/c++/4.7/x86_64-suse-linux/bits/os_defines.h \
+ /usr/include/c++/4.7/x86_64-suse-linux/bits/cpu_defines.h \
+ /usr/include/c++/4.7/exception \
+ /usr/include/c++/4.7/bits/atomic_lockfree_defines.h ../threads/system.h \
  ../machine/interrupt.h ../threads/list.h ../machine/stats.h \
  ../machine/timer.h
-synch.o: ../threads/synch.cc /usr/include/stdc-predef.h \
- ../threads/copyright.h ../threads/synch.h ../threads/thread.h \
- ../threads/utility.h ../machine/sysdep.h ../threads/copyright.h \
- /usr/include/stdlib.h /usr/include/features.h /usr/include/sys/cdefs.h \
+synch.o: ../threads/synch.cc ../threads/copyright.h ../threads/synch.h \
+ ../threads/thread.h ../threads/utility.h ../machine/sysdep.h \
+ ../threads/copyright.h /usr/include/stdlib.h /usr/include/features.h \
+ /usr/include/stdc-predef.h /usr/include/sys/cdefs.h \
  /usr/include/bits/wordsize.h /usr/include/gnu/stubs.h \
  /usr/include/gnu/stubs-64.h \
- /usr/lib64/gcc/x86_64-suse-linux/4.8/include/stddef.h \
+ /usr/lib64/gcc/x86_64-suse-linux/4.7/include/stddef.h \
  /usr/include/bits/waitflags.h /usr/include/bits/waitstatus.h \
  /usr/include/endian.h /usr/include/bits/endian.h \
  /usr/include/bits/byteswap.h /usr/include/bits/types.h \
@@ -127,25 +126,25 @@ synch.o: ../threads/synch.cc /usr/include/stdc-predef.h \
  /usr/include/alloca.h /usr/include/bits/stdlib-float.h \
  /usr/include/stdio.h /usr/include/libio.h /usr/include/_G_config.h \
  /usr/include/wchar.h \
- /usr/lib64/gcc/x86_64-suse-linux/4.8/include/stdarg.h \
+ /usr/lib64/gcc/x86_64-suse-linux/4.7/include/stdarg.h \
  /usr/include/bits/stdio_lim.h /usr/include/bits/sys_errlist.h \
  /usr/include/string.h ../machine/machine.h ../threads/utility.h \
  ../machine/translate.h ../machine/disk.h ../userprog/addrspace.h \
- ../filesys/filesys.h ../filesys/openfile.h /usr/include/c++/4.8/new \
- /usr/include/c++/4.8/x86_64-suse-linux/bits/c++config.h \
- /usr/include/c++/4.8/x86_64-suse-linux/bits/os_defines.h \
- /usr/include/c++/4.8/x86_64-suse-linux/bits/cpu_defines.h \
- /usr/include/c++/4.8/exception \
- /usr/include/c++/4.8/bits/atomic_lockfree_defines.h ../threads/list.h \
+ ../filesys/filesys.h ../filesys/openfile.h /usr/include/c++/4.7/new \
+ /usr/include/c++/4.7/x86_64-suse-linux/bits/c++config.h \
+ /usr/include/c++/4.7/x86_64-suse-linux/bits/os_defines.h \
+ /usr/include/c++/4.7/x86_64-suse-linux/bits/cpu_defines.h \
+ /usr/include/c++/4.7/exception \
+ /usr/include/c++/4.7/bits/atomic_lockfree_defines.h ../threads/list.h \
  ../threads/system.h ../threads/scheduler.h ../machine/interrupt.h \
  ../threads/list.h ../machine/stats.h ../machine/timer.h
-synchlist.o: ../threads/synchlist.cc /usr/include/stdc-predef.h \
- ../threads/copyright.h ../threads/synchlist.h ../threads/list.h \
- ../threads/utility.h ../machine/sysdep.h ../threads/copyright.h \
- /usr/include/stdlib.h /usr/include/features.h /usr/include/sys/cdefs.h \
- /usr/include/bits/wordsize.h /usr/include/gnu/stubs.h \
- /usr/include/gnu/stubs-64.h \
- /usr/lib64/gcc/x86_64-suse-linux/4.8/include/stddef.h \
+synchlist.o: ../threads/synchlist.cc ../threads/copyright.h \
+ ../threads/synchlist.h ../threads/list.h ../threads/utility.h \
+ ../machine/sysdep.h ../threads/copyright.h /usr/include/stdlib.h \
+ /usr/include/features.h /usr/include/stdc-predef.h \
+ /usr/include/sys/cdefs.h /usr/include/bits/wordsize.h \
+ /usr/include/gnu/stubs.h /usr/include/gnu/stubs-64.h \
+ /usr/lib64/gcc/x86_64-suse-linux/4.7/include/stddef.h \
  /usr/include/bits/waitflags.h /usr/include/bits/waitstatus.h \
  /usr/include/endian.h /usr/include/bits/endian.h \
  /usr/include/bits/byteswap.h /usr/include/bits/types.h \
@@ -157,24 +156,23 @@ synchlist.o: ../threads/synchlist.cc /usr/include/stdc-predef.h \
  /usr/include/alloca.h /usr/include/bits/stdlib-float.h \
  /usr/include/stdio.h /usr/include/libio.h /usr/include/_G_config.h \
  /usr/include/wchar.h \
- /usr/lib64/gcc/x86_64-suse-linux/4.8/include/stdarg.h \
+ /usr/lib64/gcc/x86_64-suse-linux/4.7/include/stdarg.h \
  /usr/include/bits/stdio_lim.h /usr/include/bits/sys_errlist.h \
  /usr/include/string.h ../threads/synch.h ../threads/thread.h \
  ../machine/machine.h ../threads/utility.h ../machine/translate.h \
  ../machine/disk.h ../userprog/addrspace.h ../filesys/filesys.h \
- ../filesys/openfile.h /usr/include/c++/4.8/new \
- /usr/include/c++/4.8/x86_64-suse-linux/bits/c++config.h \
- /usr/include/c++/4.8/x86_64-suse-linux/bits/os_defines.h \
- /usr/include/c++/4.8/x86_64-suse-linux/bits/cpu_defines.h \
- /usr/include/c++/4.8/exception \
- /usr/include/c++/4.8/bits/atomic_lockfree_defines.h
-system.o: ../threads/system.cc /usr/include/stdc-predef.h \
- ../threads/copyright.h ../threads/system.h ../threads/utility.h \
- ../machine/sysdep.h ../threads/copyright.h /usr/include/stdlib.h \
- /usr/include/features.h /usr/include/sys/cdefs.h \
- /usr/include/bits/wordsize.h /usr/include/gnu/stubs.h \
- /usr/include/gnu/stubs-64.h \
- /usr/lib64/gcc/x86_64-suse-linux/4.8/include/stddef.h \
+ ../filesys/openfile.h /usr/include/c++/4.7/new \
+ /usr/include/c++/4.7/x86_64-suse-linux/bits/c++config.h \
+ /usr/include/c++/4.7/x86_64-suse-linux/bits/os_defines.h \
+ /usr/include/c++/4.7/x86_64-suse-linux/bits/cpu_defines.h \
+ /usr/include/c++/4.7/exception \
+ /usr/include/c++/4.7/bits/atomic_lockfree_defines.h
+system.o: ../threads/system.cc ../threads/copyright.h ../threads/system.h \
+ ../threads/utility.h ../machine/sysdep.h ../threads/copyright.h \
+ /usr/include/stdlib.h /usr/include/features.h /usr/include/stdc-predef.h \
+ /usr/include/sys/cdefs.h /usr/include/bits/wordsize.h \
+ /usr/include/gnu/stubs.h /usr/include/gnu/stubs-64.h \
+ /usr/lib64/gcc/x86_64-suse-linux/4.7/include/stddef.h \
  /usr/include/bits/waitflags.h /usr/include/bits/waitstatus.h \
  /usr/include/endian.h /usr/include/bits/endian.h \
  /usr/include/bits/byteswap.h /usr/include/bits/types.h \
@@ -186,26 +184,25 @@ system.o: ../threads/system.cc /usr/include/stdc-predef.h \
  /usr/include/alloca.h /usr/include/bits/stdlib-float.h \
  /usr/include/stdio.h /usr/include/libio.h /usr/include/_G_config.h \
  /usr/include/wchar.h \
- /usr/lib64/gcc/x86_64-suse-linux/4.8/include/stdarg.h \
+ /usr/lib64/gcc/x86_64-suse-linux/4.7/include/stdarg.h \
  /usr/include/bits/stdio_lim.h /usr/include/bits/sys_errlist.h \
  /usr/include/string.h ../threads/thread.h ../machine/machine.h \
  ../threads/utility.h ../machine/translate.h ../machine/disk.h \
  ../userprog/addrspace.h ../filesys/filesys.h ../filesys/openfile.h \
- /usr/include/c++/4.8/new \
- /usr/include/c++/4.8/x86_64-suse-linux/bits/c++config.h \
- /usr/include/c++/4.8/x86_64-suse-linux/bits/os_defines.h \
- /usr/include/c++/4.8/x86_64-suse-linux/bits/cpu_defines.h \
- /usr/include/c++/4.8/exception \
- /usr/include/c++/4.8/bits/atomic_lockfree_defines.h \
+ /usr/include/c++/4.7/new \
+ /usr/include/c++/4.7/x86_64-suse-linux/bits/c++config.h \
+ /usr/include/c++/4.7/x86_64-suse-linux/bits/os_defines.h \
+ /usr/include/c++/4.7/x86_64-suse-linux/bits/cpu_defines.h \
+ /usr/include/c++/4.7/exception \
+ /usr/include/c++/4.7/bits/atomic_lockfree_defines.h \
  ../threads/scheduler.h ../threads/list.h ../machine/interrupt.h \
  ../threads/list.h ../machine/stats.h ../machine/timer.h
-thread.o: ../threads/thread.cc /usr/include/stdc-predef.h \
- ../threads/copyright.h ../threads/thread.h ../threads/utility.h \
- ../machine/sysdep.h ../threads/copyright.h /usr/include/stdlib.h \
- /usr/include/features.h /usr/include/sys/cdefs.h \
- /usr/include/bits/wordsize.h /usr/include/gnu/stubs.h \
- /usr/include/gnu/stubs-64.h \
- /usr/lib64/gcc/x86_64-suse-linux/4.8/include/stddef.h \
+thread.o: ../threads/thread.cc ../threads/copyright.h ../threads/thread.h \
+ ../threads/utility.h ../machine/sysdep.h ../threads/copyright.h \
+ /usr/include/stdlib.h /usr/include/features.h /usr/include/stdc-predef.h \
+ /usr/include/sys/cdefs.h /usr/include/bits/wordsize.h \
+ /usr/include/gnu/stubs.h /usr/include/gnu/stubs-64.h \
+ /usr/lib64/gcc/x86_64-suse-linux/4.7/include/stddef.h \
  /usr/include/bits/waitflags.h /usr/include/bits/waitstatus.h \
  /usr/include/endian.h /usr/include/bits/endian.h \
  /usr/include/bits/byteswap.h /usr/include/bits/types.h \
@@ -217,25 +214,25 @@ thread.o: ../threads/thread.cc /usr/include/stdc-predef.h \
  /usr/include/alloca.h /usr/include/bits/stdlib-float.h \
  /usr/include/stdio.h /usr/include/libio.h /usr/include/_G_config.h \
  /usr/include/wchar.h \
- /usr/lib64/gcc/x86_64-suse-linux/4.8/include/stdarg.h \
+ /usr/lib64/gcc/x86_64-suse-linux/4.7/include/stdarg.h \
  /usr/include/bits/stdio_lim.h /usr/include/bits/sys_errlist.h \
  /usr/include/string.h ../machine/machine.h ../threads/utility.h \
  ../machine/translate.h ../machine/disk.h ../userprog/addrspace.h \
- ../filesys/filesys.h ../filesys/openfile.h /usr/include/c++/4.8/new \
- /usr/include/c++/4.8/x86_64-suse-linux/bits/c++config.h \
- /usr/include/c++/4.8/x86_64-suse-linux/bits/os_defines.h \
- /usr/include/c++/4.8/x86_64-suse-linux/bits/cpu_defines.h \
- /usr/include/c++/4.8/exception \
- /usr/include/c++/4.8/bits/atomic_lockfree_defines.h ../threads/switch.h \
+ ../filesys/filesys.h ../filesys/openfile.h /usr/include/c++/4.7/new \
+ /usr/include/c++/4.7/x86_64-suse-linux/bits/c++config.h \
+ /usr/include/c++/4.7/x86_64-suse-linux/bits/os_defines.h \
+ /usr/include/c++/4.7/x86_64-suse-linux/bits/cpu_defines.h \
+ /usr/include/c++/4.7/exception \
+ /usr/include/c++/4.7/bits/atomic_lockfree_defines.h ../threads/switch.h \
  ../threads/synch.h ../threads/list.h ../threads/system.h \
  ../threads/scheduler.h ../machine/interrupt.h ../threads/list.h \
  ../machine/stats.h ../machine/timer.h
-utility.o: ../threads/utility.cc /usr/include/stdc-predef.h \
- ../threads/copyright.h ../threads/utility.h ../machine/sysdep.h \
- ../threads/copyright.h /usr/include/stdlib.h /usr/include/features.h \
+utility.o: ../threads/utility.cc ../threads/copyright.h \
+ ../threads/utility.h ../machine/sysdep.h ../threads/copyright.h \
+ /usr/include/stdlib.h /usr/include/features.h /usr/include/stdc-predef.h \
  /usr/include/sys/cdefs.h /usr/include/bits/wordsize.h \
  /usr/include/gnu/stubs.h /usr/include/gnu/stubs-64.h \
- /usr/lib64/gcc/x86_64-suse-linux/4.8/include/stddef.h \
+ /usr/lib64/gcc/x86_64-suse-linux/4.7/include/stddef.h \
  /usr/include/bits/waitflags.h /usr/include/bits/waitstatus.h \
  /usr/include/endian.h /usr/include/bits/endian.h \
  /usr/include/bits/byteswap.h /usr/include/bits/types.h \
@@ -247,16 +244,16 @@ utility.o: ../threads/utility.cc /usr/include/stdc-predef.h \
  /usr/include/alloca.h /usr/include/bits/stdlib-float.h \
  /usr/include/stdio.h /usr/include/libio.h /usr/include/_G_config.h \
  /usr/include/wchar.h \
- /usr/lib64/gcc/x86_64-suse-linux/4.8/include/stdarg.h \
+ /usr/lib64/gcc/x86_64-suse-linux/4.7/include/stdarg.h \
  /usr/include/bits/stdio_lim.h /usr/include/bits/sys_errlist.h \
  /usr/include/string.h
-threadtest.o: ../threads/threadtest.cc /usr/include/stdc-predef.h \
- ../threads/copyright.h ../threads/system.h ../threads/utility.h \
- ../machine/sysdep.h ../threads/copyright.h /usr/include/stdlib.h \
- /usr/include/features.h /usr/include/sys/cdefs.h \
+threadtest.o: ../threads/threadtest.cc ../threads/copyright.h \
+ ../threads/system.h ../threads/utility.h ../machine/sysdep.h \
+ ../threads/copyright.h /usr/include/stdlib.h /usr/include/features.h \
+ /usr/include/stdc-predef.h /usr/include/sys/cdefs.h \
  /usr/include/bits/wordsize.h /usr/include/gnu/stubs.h \
  /usr/include/gnu/stubs-64.h \
- /usr/lib64/gcc/x86_64-suse-linux/4.8/include/stddef.h \
+ /usr/lib64/gcc/x86_64-suse-linux/4.7/include/stddef.h \
  /usr/include/bits/waitflags.h /usr/include/bits/waitstatus.h \
  /usr/include/endian.h /usr/include/bits/endian.h \
  /usr/include/bits/byteswap.h /usr/include/bits/types.h \
@@ -268,26 +265,26 @@ threadtest.o: ../threads/threadtest.cc /usr/include/stdc-predef.h \
  /usr/include/alloca.h /usr/include/bits/stdlib-float.h \
  /usr/include/stdio.h /usr/include/libio.h /usr/include/_G_config.h \
  /usr/include/wchar.h \
- /usr/lib64/gcc/x86_64-suse-linux/4.8/include/stdarg.h \
+ /usr/lib64/gcc/x86_64-suse-linux/4.7/include/stdarg.h \
  /usr/include/bits/stdio_lim.h /usr/include/bits/sys_errlist.h \
  /usr/include/string.h ../threads/thread.h ../machine/machine.h \
  ../threads/utility.h ../machine/translate.h ../machine/disk.h \
  ../userprog/addrspace.h ../filesys/filesys.h ../filesys/openfile.h \
- /usr/include/c++/4.8/new \
- /usr/include/c++/4.8/x86_64-suse-linux/bits/c++config.h \
- /usr/include/c++/4.8/x86_64-suse-linux/bits/os_defines.h \
- /usr/include/c++/4.8/x86_64-suse-linux/bits/cpu_defines.h \
- /usr/include/c++/4.8/exception \
- /usr/include/c++/4.8/bits/atomic_lockfree_defines.h \
+ /usr/include/c++/4.7/new \
+ /usr/include/c++/4.7/x86_64-suse-linux/bits/c++config.h \
+ /usr/include/c++/4.7/x86_64-suse-linux/bits/os_defines.h \
+ /usr/include/c++/4.7/x86_64-suse-linux/bits/cpu_defines.h \
+ /usr/include/c++/4.7/exception \
+ /usr/include/c++/4.7/bits/atomic_lockfree_defines.h \
  ../threads/scheduler.h ../threads/list.h ../machine/interrupt.h \
  ../threads/list.h ../machine/stats.h ../machine/timer.h
-interrupt.o: ../machine/interrupt.cc /usr/include/stdc-predef.h \
- ../threads/copyright.h ../machine/interrupt.h ../threads/list.h \
- ../threads/copyright.h ../threads/utility.h ../machine/sysdep.h \
- /usr/include/stdlib.h /usr/include/features.h /usr/include/sys/cdefs.h \
- /usr/include/bits/wordsize.h /usr/include/gnu/stubs.h \
- /usr/include/gnu/stubs-64.h \
- /usr/lib64/gcc/x86_64-suse-linux/4.8/include/stddef.h \
+interrupt.o: ../machine/interrupt.cc ../threads/copyright.h \
+ ../machine/interrupt.h ../threads/list.h ../threads/copyright.h \
+ ../threads/utility.h ../machine/sysdep.h /usr/include/stdlib.h \
+ /usr/include/features.h /usr/include/stdc-predef.h \
+ /usr/include/sys/cdefs.h /usr/include/bits/wordsize.h \
+ /usr/include/gnu/stubs.h /usr/include/gnu/stubs-64.h \
+ /usr/lib64/gcc/x86_64-suse-linux/4.7/include/stddef.h \
  /usr/include/bits/waitflags.h /usr/include/bits/waitstatus.h \
  /usr/include/endian.h /usr/include/bits/endian.h \
  /usr/include/bits/byteswap.h /usr/include/bits/types.h \
@@ -299,26 +296,26 @@ interrupt.o: ../machine/interrupt.cc /usr/include/stdc-predef.h \
  /usr/include/alloca.h /usr/include/bits/stdlib-float.h \
  /usr/include/stdio.h /usr/include/libio.h /usr/include/_G_config.h \
  /usr/include/wchar.h \
- /usr/lib64/gcc/x86_64-suse-linux/4.8/include/stdarg.h \
+ /usr/lib64/gcc/x86_64-suse-linux/4.7/include/stdarg.h \
  /usr/include/bits/stdio_lim.h /usr/include/bits/sys_errlist.h \
  /usr/include/string.h ../threads/system.h ../threads/thread.h \
  ../machine/machine.h ../threads/utility.h ../machine/translate.h \
  ../machine/disk.h ../userprog/addrspace.h ../filesys/filesys.h \
- ../filesys/openfile.h /usr/include/c++/4.8/new \
- /usr/include/c++/4.8/x86_64-suse-linux/bits/c++config.h \
- /usr/include/c++/4.8/x86_64-suse-linux/bits/os_defines.h \
- /usr/include/c++/4.8/x86_64-suse-linux/bits/cpu_defines.h \
- /usr/include/c++/4.8/exception \
- /usr/include/c++/4.8/bits/atomic_lockfree_defines.h \
+ ../filesys/openfile.h /usr/include/c++/4.7/new \
+ /usr/include/c++/4.7/x86_64-suse-linux/bits/c++config.h \
+ /usr/include/c++/4.7/x86_64-suse-linux/bits/os_defines.h \
+ /usr/include/c++/4.7/x86_64-suse-linux/bits/cpu_defines.h \
+ /usr/include/c++/4.7/exception \
+ /usr/include/c++/4.7/bits/atomic_lockfree_defines.h \
  ../threads/scheduler.h ../threads/list.h ../machine/interrupt.h \
  ../machine/stats.h ../machine/timer.h
-sysdep.o: ../machine/sysdep.cc /usr/include/stdc-predef.h \
- ../threads/copyright.h /usr/include/unistd.h /usr/include/features.h \
+sysdep.o: ../machine/sysdep.cc ../threads/copyright.h \
+ /usr/include/unistd.h /usr/include/features.h /usr/include/stdc-predef.h \
  /usr/include/sys/cdefs.h /usr/include/bits/wordsize.h \
  /usr/include/gnu/stubs.h /usr/include/gnu/stubs-64.h \
  /usr/include/bits/posix_opt.h /usr/include/bits/environments.h \
  /usr/include/bits/types.h /usr/include/bits/typesizes.h \
- /usr/lib64/gcc/x86_64-suse-linux/4.8/include/stddef.h \
+ /usr/lib64/gcc/x86_64-suse-linux/4.7/include/stddef.h \
  /usr/include/bits/confname.h /usr/include/getopt.h /usr/include/stdlib.h \
  /usr/include/bits/waitflags.h /usr/include/bits/waitstatus.h \
  /usr/include/endian.h /usr/include/bits/endian.h \
@@ -330,7 +327,7 @@ sysdep.o: ../machine/sysdep.cc /usr/include/stdc-predef.h \
  /usr/include/alloca.h /usr/include/bits/stdlib-float.h \
  /usr/include/stdio.h /usr/include/libio.h /usr/include/_G_config.h \
  /usr/include/wchar.h \
- /usr/lib64/gcc/x86_64-suse-linux/4.8/include/stdarg.h \
+ /usr/lib64/gcc/x86_64-suse-linux/4.7/include/stdarg.h \
  /usr/include/bits/stdio_lim.h /usr/include/bits/sys_errlist.h \
  /usr/include/string.h /usr/include/signal.h /usr/include/bits/signum.h \
  /usr/include/bits/siginfo.h /usr/include/bits/sigaction.h \
@@ -345,16 +342,15 @@ sysdep.o: ../machine/sysdep.cc /usr/include/stdc-predef.h \
  /usr/include/fcntl.h /usr/include/bits/fcntl.h \
  /usr/include/bits/fcntl-linux.h /usr/include/bits/stat.h \
  /usr/include/sys/un.h /usr/include/sys/mman.h /usr/include/bits/mman.h \
- /usr/include/bits/mman-linux.h /usr/include/sys/time.h \
- /usr/include/errno.h /usr/include/bits/errno.h \
+ /usr/include/sys/time.h /usr/include/errno.h /usr/include/bits/errno.h \
  /usr/include/linux/errno.h /usr/include/asm/errno.h \
  /usr/include/asm-generic/errno.h /usr/include/asm-generic/errno-base.h \
- /usr/include/c++/4.8/new \
- /usr/include/c++/4.8/x86_64-suse-linux/bits/c++config.h \
- /usr/include/c++/4.8/x86_64-suse-linux/bits/os_defines.h \
- /usr/include/c++/4.8/x86_64-suse-linux/bits/cpu_defines.h \
- /usr/include/c++/4.8/exception \
- /usr/include/c++/4.8/bits/atomic_lockfree_defines.h \
+ /usr/include/c++/4.7/new \
+ /usr/include/c++/4.7/x86_64-suse-linux/bits/c++config.h \
+ /usr/include/c++/4.7/x86_64-suse-linux/bits/os_defines.h \
+ /usr/include/c++/4.7/x86_64-suse-linux/bits/cpu_defines.h \
+ /usr/include/c++/4.7/exception \
+ /usr/include/c++/4.7/bits/atomic_lockfree_defines.h \
  ../machine/interrupt.h ../threads/list.h ../threads/copyright.h \
  ../threads/utility.h ../machine/sysdep.h ../threads/system.h \
  ../threads/thread.h ../machine/machine.h ../threads/utility.h \
@@ -362,12 +358,12 @@ sysdep.o: ../machine/sysdep.cc /usr/include/stdc-predef.h \
  ../filesys/filesys.h ../filesys/openfile.h ../threads/scheduler.h \
  ../threads/list.h ../machine/interrupt.h ../machine/stats.h \
  ../machine/timer.h
-stats.o: ../machine/stats.cc /usr/include/stdc-predef.h \
- ../threads/copyright.h ../threads/utility.h ../threads/copyright.h \
- ../machine/sysdep.h /usr/include/stdlib.h /usr/include/features.h \
+stats.o: ../machine/stats.cc ../threads/copyright.h ../threads/utility.h \
+ ../threads/copyright.h ../machine/sysdep.h /usr/include/stdlib.h \
+ /usr/include/features.h /usr/include/stdc-predef.h \
  /usr/include/sys/cdefs.h /usr/include/bits/wordsize.h \
  /usr/include/gnu/stubs.h /usr/include/gnu/stubs-64.h \
- /usr/lib64/gcc/x86_64-suse-linux/4.8/include/stddef.h \
+ /usr/lib64/gcc/x86_64-suse-linux/4.7/include/stddef.h \
  /usr/include/bits/waitflags.h /usr/include/bits/waitstatus.h \
  /usr/include/endian.h /usr/include/bits/endian.h \
  /usr/include/bits/byteswap.h /usr/include/bits/types.h \
@@ -379,16 +375,15 @@ stats.o: ../machine/stats.cc /usr/include/stdc-predef.h \
  /usr/include/alloca.h /usr/include/bits/stdlib-float.h \
  /usr/include/stdio.h /usr/include/libio.h /usr/include/_G_config.h \
  /usr/include/wchar.h \
- /usr/lib64/gcc/x86_64-suse-linux/4.8/include/stdarg.h \
+ /usr/lib64/gcc/x86_64-suse-linux/4.7/include/stdarg.h \
  /usr/include/bits/stdio_lim.h /usr/include/bits/sys_errlist.h \
  /usr/include/string.h ../machine/stats.h
-timer.o: ../machine/timer.cc /usr/include/stdc-predef.h \
- ../threads/copyright.h ../machine/timer.h ../threads/utility.h \
- ../threads/copyright.h ../machine/sysdep.h /usr/include/stdlib.h \
- /usr/include/features.h /usr/include/sys/cdefs.h \
- /usr/include/bits/wordsize.h /usr/include/gnu/stubs.h \
- /usr/include/gnu/stubs-64.h \
- /usr/lib64/gcc/x86_64-suse-linux/4.8/include/stddef.h \
+timer.o: ../machine/timer.cc ../threads/copyright.h ../machine/timer.h \
+ ../threads/utility.h ../threads/copyright.h ../machine/sysdep.h \
+ /usr/include/stdlib.h /usr/include/features.h /usr/include/stdc-predef.h \
+ /usr/include/sys/cdefs.h /usr/include/bits/wordsize.h \
+ /usr/include/gnu/stubs.h /usr/include/gnu/stubs-64.h \
+ /usr/lib64/gcc/x86_64-suse-linux/4.7/include/stddef.h \
  /usr/include/bits/waitflags.h /usr/include/bits/waitstatus.h \
  /usr/include/endian.h /usr/include/bits/endian.h \
  /usr/include/bits/byteswap.h /usr/include/bits/types.h \
@@ -400,26 +395,26 @@ timer.o: ../machine/timer.cc /usr/include/stdc-predef.h \
  /usr/include/alloca.h /usr/include/bits/stdlib-float.h \
  /usr/include/stdio.h /usr/include/libio.h /usr/include/_G_config.h \
  /usr/include/wchar.h \
- /usr/lib64/gcc/x86_64-suse-linux/4.8/include/stdarg.h \
+ /usr/lib64/gcc/x86_64-suse-linux/4.7/include/stdarg.h \
  /usr/include/bits/stdio_lim.h /usr/include/bits/sys_errlist.h \
  /usr/include/string.h ../threads/system.h ../threads/utility.h \
  ../threads/thread.h ../machine/machine.h ../machine/translate.h \
  ../machine/disk.h ../userprog/addrspace.h ../filesys/filesys.h \
- ../filesys/openfile.h /usr/include/c++/4.8/new \
- /usr/include/c++/4.8/x86_64-suse-linux/bits/c++config.h \
- /usr/include/c++/4.8/x86_64-suse-linux/bits/os_defines.h \
- /usr/include/c++/4.8/x86_64-suse-linux/bits/cpu_defines.h \
- /usr/include/c++/4.8/exception \
- /usr/include/c++/4.8/bits/atomic_lockfree_defines.h \
+ ../filesys/openfile.h /usr/include/c++/4.7/new \
+ /usr/include/c++/4.7/x86_64-suse-linux/bits/c++config.h \
+ /usr/include/c++/4.7/x86_64-suse-linux/bits/os_defines.h \
+ /usr/include/c++/4.7/x86_64-suse-linux/bits/cpu_defines.h \
+ /usr/include/c++/4.7/exception \
+ /usr/include/c++/4.7/bits/atomic_lockfree_defines.h \
  ../threads/scheduler.h ../threads/list.h ../machine/interrupt.h \
  ../threads/list.h ../machine/stats.h ../machine/timer.h
-addrspace.o: ../userprog/addrspace.cc /usr/include/stdc-predef.h \
- ../threads/copyright.h ../threads/system.h ../threads/copyright.h \
- ../threads/utility.h ../machine/sysdep.h /usr/include/stdlib.h \
- /usr/include/features.h /usr/include/sys/cdefs.h \
+addrspace.o: ../userprog/addrspace.cc ../threads/copyright.h \
+ ../threads/system.h ../threads/copyright.h ../threads/utility.h \
+ ../machine/sysdep.h /usr/include/stdlib.h /usr/include/features.h \
+ /usr/include/stdc-predef.h /usr/include/sys/cdefs.h \
  /usr/include/bits/wordsize.h /usr/include/gnu/stubs.h \
  /usr/include/gnu/stubs-64.h \
- /usr/lib64/gcc/x86_64-suse-linux/4.8/include/stddef.h \
+ /usr/lib64/gcc/x86_64-suse-linux/4.7/include/stddef.h \
  /usr/include/bits/waitflags.h /usr/include/bits/waitstatus.h \
  /usr/include/endian.h /usr/include/bits/endian.h \
  /usr/include/bits/byteswap.h /usr/include/bits/types.h \
@@ -431,27 +426,27 @@ addrspace.o: ../userprog/addrspace.cc /usr/include/stdc-predef.h \
  /usr/include/alloca.h /usr/include/bits/stdlib-float.h \
  /usr/include/stdio.h /usr/include/libio.h /usr/include/_G_config.h \
  /usr/include/wchar.h \
- /usr/lib64/gcc/x86_64-suse-linux/4.8/include/stdarg.h \
+ /usr/lib64/gcc/x86_64-suse-linux/4.7/include/stdarg.h \
  /usr/include/bits/stdio_lim.h /usr/include/bits/sys_errlist.h \
  /usr/include/string.h ../threads/thread.h ../machine/machine.h \
  ../threads/utility.h ../machine/translate.h ../machine/disk.h \
  ../userprog/addrspace.h ../filesys/filesys.h ../filesys/openfile.h \
- /usr/include/c++/4.8/new \
- /usr/include/c++/4.8/x86_64-suse-linux/bits/c++config.h \
- /usr/include/c++/4.8/x86_64-suse-linux/bits/os_defines.h \
- /usr/include/c++/4.8/x86_64-suse-linux/bits/cpu_defines.h \
- /usr/include/c++/4.8/exception \
- /usr/include/c++/4.8/bits/atomic_lockfree_defines.h \
+ /usr/include/c++/4.7/new \
+ /usr/include/c++/4.7/x86_64-suse-linux/bits/c++config.h \
+ /usr/include/c++/4.7/x86_64-suse-linux/bits/os_defines.h \
+ /usr/include/c++/4.7/x86_64-suse-linux/bits/cpu_defines.h \
+ /usr/include/c++/4.7/exception \
+ /usr/include/c++/4.7/bits/atomic_lockfree_defines.h \
  ../threads/scheduler.h ../threads/list.h ../machine/interrupt.h \
  ../threads/list.h ../machine/stats.h ../machine/timer.h \
  ../userprog/addrspace.h ../bin/noff.h
-bitmap.o: ../userprog/bitmap.cc /usr/include/stdc-predef.h \
- ../threads/copyright.h ../userprog/bitmap.h ../threads/utility.h \
- ../threads/copyright.h ../machine/sysdep.h /usr/include/stdlib.h \
- /usr/include/features.h /usr/include/sys/cdefs.h \
+bitmap.o: ../userprog/bitmap.cc ../threads/copyright.h \
+ ../userprog/bitmap.h ../threads/utility.h ../threads/copyright.h \
+ ../machine/sysdep.h /usr/include/stdlib.h /usr/include/features.h \
+ /usr/include/stdc-predef.h /usr/include/sys/cdefs.h \
  /usr/include/bits/wordsize.h /usr/include/gnu/stubs.h \
  /usr/include/gnu/stubs-64.h \
- /usr/lib64/gcc/x86_64-suse-linux/4.8/include/stddef.h \
+ /usr/lib64/gcc/x86_64-suse-linux/4.7/include/stddef.h \
  /usr/include/bits/waitflags.h /usr/include/bits/waitstatus.h \
  /usr/include/endian.h /usr/include/bits/endian.h \
  /usr/include/bits/byteswap.h /usr/include/bits/types.h \
@@ -463,26 +458,26 @@ bitmap.o: ../userprog/bitmap.cc /usr/include/stdc-predef.h \
  /usr/include/alloca.h /usr/include/bits/stdlib-float.h \
  /usr/include/stdio.h /usr/include/libio.h /usr/include/_G_config.h \
  /usr/include/wchar.h \
- /usr/lib64/gcc/x86_64-suse-linux/4.8/include/stdarg.h \
+ /usr/lib64/gcc/x86_64-suse-linux/4.7/include/stdarg.h \
  /usr/include/bits/stdio_lim.h /usr/include/bits/sys_errlist.h \
  /usr/include/string.h ../filesys/openfile.h ../threads/system.h \
  ../threads/utility.h ../threads/thread.h ../machine/machine.h \
  ../machine/translate.h ../machine/disk.h ../userprog/addrspace.h \
- ../filesys/filesys.h ../filesys/openfile.h /usr/include/c++/4.8/new \
- /usr/include/c++/4.8/x86_64-suse-linux/bits/c++config.h \
- /usr/include/c++/4.8/x86_64-suse-linux/bits/os_defines.h \
- /usr/include/c++/4.8/x86_64-suse-linux/bits/cpu_defines.h \
- /usr/include/c++/4.8/exception \
- /usr/include/c++/4.8/bits/atomic_lockfree_defines.h \
+ ../filesys/filesys.h ../filesys/openfile.h /usr/include/c++/4.7/new \
+ /usr/include/c++/4.7/x86_64-suse-linux/bits/c++config.h \
+ /usr/include/c++/4.7/x86_64-suse-linux/bits/os_defines.h \
+ /usr/include/c++/4.7/x86_64-suse-linux/bits/cpu_defines.h \
+ /usr/include/c++/4.7/exception \
+ /usr/include/c++/4.7/bits/atomic_lockfree_defines.h \
  ../threads/scheduler.h ../threads/list.h ../machine/interrupt.h \
  ../threads/list.h ../machine/stats.h ../machine/timer.h
-exception.o: ../userprog/exception.cc /usr/include/stdc-predef.h \
- ../threads/copyright.h ../threads/system.h ../threads/copyright.h \
- ../threads/utility.h ../machine/sysdep.h /usr/include/stdlib.h \
- /usr/include/features.h /usr/include/sys/cdefs.h \
+exception.o: ../userprog/exception.cc ../threads/copyright.h \
+ ../threads/system.h ../threads/copyright.h ../threads/utility.h \
+ ../machine/sysdep.h /usr/include/stdlib.h /usr/include/features.h \
+ /usr/include/stdc-predef.h /usr/include/sys/cdefs.h \
  /usr/include/bits/wordsize.h /usr/include/gnu/stubs.h \
  /usr/include/gnu/stubs-64.h \
- /usr/lib64/gcc/x86_64-suse-linux/4.8/include/stddef.h \
+ /usr/lib64/gcc/x86_64-suse-linux/4.7/include/stddef.h \
  /usr/include/bits/waitflags.h /usr/include/bits/waitstatus.h \
  /usr/include/endian.h /usr/include/bits/endian.h \
  /usr/include/bits/byteswap.h /usr/include/bits/types.h \
@@ -494,27 +489,27 @@ exception.o: ../userprog/exception.cc /usr/include/stdc-predef.h \
  /usr/include/alloca.h /usr/include/bits/stdlib-float.h \
  /usr/include/stdio.h /usr/include/libio.h /usr/include/_G_config.h \
  /usr/include/wchar.h \
- /usr/lib64/gcc/x86_64-suse-linux/4.8/include/stdarg.h \
+ /usr/lib64/gcc/x86_64-suse-linux/4.7/include/stdarg.h \
  /usr/include/bits/stdio_lim.h /usr/include/bits/sys_errlist.h \
  /usr/include/string.h ../threads/thread.h ../machine/machine.h \
  ../threads/utility.h ../machine/translate.h ../machine/disk.h \
  ../userprog/addrspace.h ../filesys/filesys.h ../filesys/openfile.h \
- /usr/include/c++/4.8/new \
- /usr/include/c++/4.8/x86_64-suse-linux/bits/c++config.h \
- /usr/include/c++/4.8/x86_64-suse-linux/bits/os_defines.h \
- /usr/include/c++/4.8/x86_64-suse-linux/bits/cpu_defines.h \
- /usr/include/c++/4.8/exception \
- /usr/include/c++/4.8/bits/atomic_lockfree_defines.h \
+ /usr/include/c++/4.7/new \
+ /usr/include/c++/4.7/x86_64-suse-linux/bits/c++config.h \
+ /usr/include/c++/4.7/x86_64-suse-linux/bits/os_defines.h \
+ /usr/include/c++/4.7/x86_64-suse-linux/bits/cpu_defines.h \
+ /usr/include/c++/4.7/exception \
+ /usr/include/c++/4.7/bits/atomic_lockfree_defines.h \
  ../threads/scheduler.h ../threads/list.h ../machine/interrupt.h \
  ../threads/list.h ../machine/stats.h ../machine/timer.h \
  ../userprog/syscall.h
-progtest.o: ../userprog/progtest.cc /usr/include/stdc-predef.h \
- ../threads/copyright.h ../threads/system.h ../threads/copyright.h \
- ../threads/utility.h ../machine/sysdep.h /usr/include/stdlib.h \
- /usr/include/features.h /usr/include/sys/cdefs.h \
+progtest.o: ../userprog/progtest.cc ../threads/copyright.h \
+ ../threads/system.h ../threads/copyright.h ../threads/utility.h \
+ ../machine/sysdep.h /usr/include/stdlib.h /usr/include/features.h \
+ /usr/include/stdc-predef.h /usr/include/sys/cdefs.h \
  /usr/include/bits/wordsize.h /usr/include/gnu/stubs.h \
  /usr/include/gnu/stubs-64.h \
- /usr/lib64/gcc/x86_64-suse-linux/4.8/include/stddef.h \
+ /usr/lib64/gcc/x86_64-suse-linux/4.7/include/stddef.h \
  /usr/include/bits/waitflags.h /usr/include/bits/waitstatus.h \
  /usr/include/endian.h /usr/include/bits/endian.h \
  /usr/include/bits/byteswap.h /usr/include/bits/types.h \
@@ -526,27 +521,27 @@ progtest.o: ../userprog/progtest.cc /usr/include/stdc-predef.h \
  /usr/include/alloca.h /usr/include/bits/stdlib-float.h \
  /usr/include/stdio.h /usr/include/libio.h /usr/include/_G_config.h \
  /usr/include/wchar.h \
- /usr/lib64/gcc/x86_64-suse-linux/4.8/include/stdarg.h \
+ /usr/lib64/gcc/x86_64-suse-linux/4.7/include/stdarg.h \
  /usr/include/bits/stdio_lim.h /usr/include/bits/sys_errlist.h \
  /usr/include/string.h ../threads/thread.h ../machine/machine.h \
  ../threads/utility.h ../machine/translate.h ../machine/disk.h \
  ../userprog/addrspace.h ../filesys/filesys.h ../filesys/openfile.h \
- /usr/include/c++/4.8/new \
- /usr/include/c++/4.8/x86_64-suse-linux/bits/c++config.h \
- /usr/include/c++/4.8/x86_64-suse-linux/bits/os_defines.h \
- /usr/include/c++/4.8/x86_64-suse-linux/bits/cpu_defines.h \
- /usr/include/c++/4.8/exception \
- /usr/include/c++/4.8/bits/atomic_lockfree_defines.h \
+ /usr/include/c++/4.7/new \
+ /usr/include/c++/4.7/x86_64-suse-linux/bits/c++config.h \
+ /usr/include/c++/4.7/x86_64-suse-linux/bits/os_defines.h \
+ /usr/include/c++/4.7/x86_64-suse-linux/bits/cpu_defines.h \
+ /usr/include/c++/4.7/exception \
+ /usr/include/c++/4.7/bits/atomic_lockfree_defines.h \
  ../threads/scheduler.h ../threads/list.h ../machine/interrupt.h \
  ../threads/list.h ../machine/stats.h ../machine/timer.h \
  ../machine/console.h ../userprog/addrspace.h ../threads/synch.h
-console.o: ../machine/console.cc /usr/include/stdc-predef.h \
- ../threads/copyright.h ../machine/console.h ../threads/utility.h \
- ../threads/copyright.h ../machine/sysdep.h /usr/include/stdlib.h \
- /usr/include/features.h /usr/include/sys/cdefs.h \
+console.o: ../machine/console.cc ../threads/copyright.h \
+ ../machine/console.h ../threads/utility.h ../threads/copyright.h \
+ ../machine/sysdep.h /usr/include/stdlib.h /usr/include/features.h \
+ /usr/include/stdc-predef.h /usr/include/sys/cdefs.h \
  /usr/include/bits/wordsize.h /usr/include/gnu/stubs.h \
  /usr/include/gnu/stubs-64.h \
- /usr/lib64/gcc/x86_64-suse-linux/4.8/include/stddef.h \
+ /usr/lib64/gcc/x86_64-suse-linux/4.7/include/stddef.h \
  /usr/include/bits/waitflags.h /usr/include/bits/waitstatus.h \
  /usr/include/endian.h /usr/include/bits/endian.h \
  /usr/include/bits/byteswap.h /usr/include/bits/types.h \
@@ -558,26 +553,26 @@ console.o: ../machine/console.cc /usr/include/stdc-predef.h \
  /usr/include/alloca.h /usr/include/bits/stdlib-float.h \
  /usr/include/stdio.h /usr/include/libio.h /usr/include/_G_config.h \
  /usr/include/wchar.h \
- /usr/lib64/gcc/x86_64-suse-linux/4.8/include/stdarg.h \
+ /usr/lib64/gcc/x86_64-suse-linux/4.7/include/stdarg.h \
  /usr/include/bits/stdio_lim.h /usr/include/bits/sys_errlist.h \
  /usr/include/string.h ../threads/system.h ../threads/utility.h \
  ../threads/thread.h ../machine/machine.h ../machine/translate.h \
  ../machine/disk.h ../userprog/addrspace.h ../filesys/filesys.h \
- ../filesys/openfile.h /usr/include/c++/4.8/new \
- /usr/include/c++/4.8/x86_64-suse-linux/bits/c++config.h \
- /usr/include/c++/4.8/x86_64-suse-linux/bits/os_defines.h \
- /usr/include/c++/4.8/x86_64-suse-linux/bits/cpu_defines.h \
- /usr/include/c++/4.8/exception \
- /usr/include/c++/4.8/bits/atomic_lockfree_defines.h \
+ ../filesys/openfile.h /usr/include/c++/4.7/new \
+ /usr/include/c++/4.7/x86_64-suse-linux/bits/c++config.h \
+ /usr/include/c++/4.7/x86_64-suse-linux/bits/os_defines.h \
+ /usr/include/c++/4.7/x86_64-suse-linux/bits/cpu_defines.h \
+ /usr/include/c++/4.7/exception \
+ /usr/include/c++/4.7/bits/atomic_lockfree_defines.h \
  ../threads/scheduler.h ../threads/list.h ../machine/interrupt.h \
  ../threads/list.h ../machine/stats.h ../machine/timer.h
-machine.o: ../machine/machine.cc /usr/include/stdc-predef.h \
- ../threads/copyright.h ../machine/machine.h ../threads/utility.h \
- ../threads/copyright.h ../machine/sysdep.h /usr/include/stdlib.h \
- /usr/include/features.h /usr/include/sys/cdefs.h \
+machine.o: ../machine/machine.cc ../threads/copyright.h \
+ ../machine/machine.h ../threads/utility.h ../threads/copyright.h \
+ ../machine/sysdep.h /usr/include/stdlib.h /usr/include/features.h \
+ /usr/include/stdc-predef.h /usr/include/sys/cdefs.h \
  /usr/include/bits/wordsize.h /usr/include/gnu/stubs.h \
  /usr/include/gnu/stubs-64.h \
- /usr/lib64/gcc/x86_64-suse-linux/4.8/include/stddef.h \
+ /usr/lib64/gcc/x86_64-suse-linux/4.7/include/stddef.h \
  /usr/include/bits/waitflags.h /usr/include/bits/waitstatus.h \
  /usr/include/endian.h /usr/include/bits/endian.h \
  /usr/include/bits/byteswap.h /usr/include/bits/types.h \
@@ -589,26 +584,26 @@ machine.o: ../machine/machine.cc /usr/include/stdc-predef.h \
  /usr/include/alloca.h /usr/include/bits/stdlib-float.h \
  /usr/include/stdio.h /usr/include/libio.h /usr/include/_G_config.h \
  /usr/include/wchar.h \
- /usr/lib64/gcc/x86_64-suse-linux/4.8/include/stdarg.h \
+ /usr/lib64/gcc/x86_64-suse-linux/4.7/include/stdarg.h \
  /usr/include/bits/stdio_lim.h /usr/include/bits/sys_errlist.h \
  /usr/include/string.h ../machine/translate.h ../machine/disk.h \
  ../threads/system.h ../threads/utility.h ../threads/thread.h \
  ../machine/machine.h ../userprog/addrspace.h ../filesys/filesys.h \
- ../filesys/openfile.h /usr/include/c++/4.8/new \
- /usr/include/c++/4.8/x86_64-suse-linux/bits/c++config.h \
- /usr/include/c++/4.8/x86_64-suse-linux/bits/os_defines.h \
- /usr/include/c++/4.8/x86_64-suse-linux/bits/cpu_defines.h \
- /usr/include/c++/4.8/exception \
- /usr/include/c++/4.8/bits/atomic_lockfree_defines.h \
+ ../filesys/openfile.h /usr/include/c++/4.7/new \
+ /usr/include/c++/4.7/x86_64-suse-linux/bits/c++config.h \
+ /usr/include/c++/4.7/x86_64-suse-linux/bits/os_defines.h \
+ /usr/include/c++/4.7/x86_64-suse-linux/bits/cpu_defines.h \
+ /usr/include/c++/4.7/exception \
+ /usr/include/c++/4.7/bits/atomic_lockfree_defines.h \
  ../threads/scheduler.h ../threads/list.h ../machine/interrupt.h \
  ../threads/list.h ../machine/stats.h ../machine/timer.h
-mipssim.o: ../machine/mipssim.cc /usr/include/stdc-predef.h \
- ../threads/copyright.h ../machine/machine.h ../threads/utility.h \
- ../threads/copyright.h ../machine/sysdep.h /usr/include/stdlib.h \
- /usr/include/features.h /usr/include/sys/cdefs.h \
+mipssim.o: ../machine/mipssim.cc ../threads/copyright.h \
+ ../machine/machine.h ../threads/utility.h ../threads/copyright.h \
+ ../machine/sysdep.h /usr/include/stdlib.h /usr/include/features.h \
+ /usr/include/stdc-predef.h /usr/include/sys/cdefs.h \
  /usr/include/bits/wordsize.h /usr/include/gnu/stubs.h \
  /usr/include/gnu/stubs-64.h \
- /usr/lib64/gcc/x86_64-suse-linux/4.8/include/stddef.h \
+ /usr/lib64/gcc/x86_64-suse-linux/4.7/include/stddef.h \
  /usr/include/bits/waitflags.h /usr/include/bits/waitstatus.h \
  /usr/include/endian.h /usr/include/bits/endian.h \
  /usr/include/bits/byteswap.h /usr/include/bits/types.h \
@@ -620,26 +615,26 @@ mipssim.o: ../machine/mipssim.cc /usr/include/stdc-predef.h \
  /usr/include/alloca.h /usr/include/bits/stdlib-float.h \
  /usr/include/stdio.h /usr/include/libio.h /usr/include/_G_config.h \
  /usr/include/wchar.h \
- /usr/lib64/gcc/x86_64-suse-linux/4.8/include/stdarg.h \
+ /usr/lib64/gcc/x86_64-suse-linux/4.7/include/stdarg.h \
  /usr/include/bits/stdio_lim.h /usr/include/bits/sys_errlist.h \
  /usr/include/string.h ../machine/translate.h ../machine/disk.h \
- ../machine/mipssim.h /usr/include/c++/4.8/new \
- /usr/include/c++/4.8/x86_64-suse-linux/bits/c++config.h \
- /usr/include/c++/4.8/x86_64-suse-linux/bits/os_defines.h \
- /usr/include/c++/4.8/x86_64-suse-linux/bits/cpu_defines.h \
- /usr/include/c++/4.8/exception \
- /usr/include/c++/4.8/bits/atomic_lockfree_defines.h ../threads/system.h \
+ ../machine/mipssim.h /usr/include/c++/4.7/new \
+ /usr/include/c++/4.7/x86_64-suse-linux/bits/c++config.h \
+ /usr/include/c++/4.7/x86_64-suse-linux/bits/os_defines.h \
+ /usr/include/c++/4.7/x86_64-suse-linux/bits/cpu_defines.h \
+ /usr/include/c++/4.7/exception \
+ /usr/include/c++/4.7/bits/atomic_lockfree_defines.h ../threads/system.h \
  ../threads/utility.h ../threads/thread.h ../machine/machine.h \
  ../userprog/addrspace.h ../filesys/filesys.h ../filesys/openfile.h \
  ../threads/scheduler.h ../threads/list.h ../machine/interrupt.h \
  ../threads/list.h ../machine/stats.h ../machine/timer.h
-translate.o: ../machine/translate.cc /usr/include/stdc-predef.h \
- ../threads/copyright.h ../machine/machine.h ../threads/utility.h \
- ../threads/copyright.h ../machine/sysdep.h /usr/include/stdlib.h \
- /usr/include/features.h /usr/include/sys/cdefs.h \
+translate.o: ../machine/translate.cc ../threads/copyright.h \
+ ../machine/machine.h ../threads/utility.h ../threads/copyright.h \
+ ../machine/sysdep.h /usr/include/stdlib.h /usr/include/features.h \
+ /usr/include/stdc-predef.h /usr/include/sys/cdefs.h \
  /usr/include/bits/wordsize.h /usr/include/gnu/stubs.h \
  /usr/include/gnu/stubs-64.h \
- /usr/lib64/gcc/x86_64-suse-linux/4.8/include/stddef.h \
+ /usr/lib64/gcc/x86_64-suse-linux/4.7/include/stddef.h \
  /usr/include/bits/waitflags.h /usr/include/bits/waitstatus.h \
  /usr/include/endian.h /usr/include/bits/endian.h \
  /usr/include/bits/byteswap.h /usr/include/bits/types.h \
@@ -651,51 +646,19 @@ translate.o: ../machine/translate.cc /usr/include/stdc-predef.h \
  /usr/include/alloca.h /usr/include/bits/stdlib-float.h \
  /usr/include/stdio.h /usr/include/libio.h /usr/include/_G_config.h \
  /usr/include/wchar.h \
- /usr/lib64/gcc/x86_64-suse-linux/4.8/include/stdarg.h \
+ /usr/lib64/gcc/x86_64-suse-linux/4.7/include/stdarg.h \
  /usr/include/bits/stdio_lim.h /usr/include/bits/sys_errlist.h \
  /usr/include/string.h ../machine/translate.h ../machine/disk.h \
  ../userprog/addrspace.h ../filesys/filesys.h ../filesys/openfile.h \
- /usr/include/c++/4.8/new \
- /usr/include/c++/4.8/x86_64-suse-linux/bits/c++config.h \
- /usr/include/c++/4.8/x86_64-suse-linux/bits/os_defines.h \
- /usr/include/c++/4.8/x86_64-suse-linux/bits/cpu_defines.h \
- /usr/include/c++/4.8/exception \
- /usr/include/c++/4.8/bits/atomic_lockfree_defines.h ../threads/system.h \
+ /usr/include/c++/4.7/new \
+ /usr/include/c++/4.7/x86_64-suse-linux/bits/c++config.h \
+ /usr/include/c++/4.7/x86_64-suse-linux/bits/os_defines.h \
+ /usr/include/c++/4.7/x86_64-suse-linux/bits/cpu_defines.h \
+ /usr/include/c++/4.7/exception \
+ /usr/include/c++/4.7/bits/atomic_lockfree_defines.h ../threads/system.h \
  ../threads/utility.h ../threads/thread.h ../machine/machine.h \
  ../threads/scheduler.h ../threads/list.h ../machine/interrupt.h \
  ../threads/list.h ../machine/stats.h ../machine/timer.h
-syscall.o: ../userprog/syscall.cc /usr/include/stdc-predef.h \
- ../threads/system.h ../threads/copyright.h ../threads/utility.h \
- ../machine/sysdep.h ../threads/copyright.h /usr/include/stdlib.h \
- /usr/include/features.h /usr/include/sys/cdefs.h \
- /usr/include/bits/wordsize.h /usr/include/gnu/stubs.h \
- /usr/include/gnu/stubs-64.h \
- /usr/lib64/gcc/x86_64-suse-linux/4.8/include/stddef.h \
- /usr/include/bits/waitflags.h /usr/include/bits/waitstatus.h \
- /usr/include/endian.h /usr/include/bits/endian.h \
- /usr/include/bits/byteswap.h /usr/include/bits/types.h \
- /usr/include/bits/typesizes.h /usr/include/bits/byteswap-16.h \
- /usr/include/xlocale.h /usr/include/sys/types.h /usr/include/time.h \
- /usr/include/sys/select.h /usr/include/bits/select.h \
- /usr/include/bits/sigset.h /usr/include/bits/time.h \
- /usr/include/sys/sysmacros.h /usr/include/bits/pthreadtypes.h \
- /usr/include/alloca.h /usr/include/bits/stdlib-float.h \
- /usr/include/stdio.h /usr/include/libio.h /usr/include/_G_config.h \
- /usr/include/wchar.h \
- /usr/lib64/gcc/x86_64-suse-linux/4.8/include/stdarg.h \
- /usr/include/bits/stdio_lim.h /usr/include/bits/sys_errlist.h \
- /usr/include/string.h ../threads/thread.h ../machine/machine.h \
- ../threads/utility.h ../machine/translate.h ../machine/disk.h \
- ../userprog/addrspace.h ../filesys/filesys.h ../filesys/openfile.h \
- /usr/include/c++/4.8/new \
- /usr/include/c++/4.8/x86_64-suse-linux/bits/c++config.h \
- /usr/include/c++/4.8/x86_64-suse-linux/bits/os_defines.h \
- /usr/include/c++/4.8/x86_64-suse-linux/bits/cpu_defines.h \
- /usr/include/c++/4.8/exception \
- /usr/include/c++/4.8/bits/atomic_lockfree_defines.h \
- ../threads/scheduler.h ../threads/list.h ../machine/interrupt.h \
- ../threads/list.h ../machine/stats.h ../machine/timer.h \
- ../userprog/syscall.h
 # DEPENDENCIES MUST END AT END OF FILE
 # IF YOU PUT STUFF HERE IT WILL GO AWAY
 # see make depend above
