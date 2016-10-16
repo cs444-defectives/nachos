@@ -12,11 +12,6 @@
  * into the Nachos kernel are handled elsewhere.)
  */
 
-/*
- * For now, this only handles the Halt() system call. Everything else core
- * dumps.
- */
-
 #include "copyright.h"
 #include "system.h"
 #include "syscall.h"
