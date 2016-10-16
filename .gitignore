@@ -35,3 +35,4 @@ test/sort
 test/create
 userprog/nachos
 bin/coff2noff
+test/halt
