@@ -89,7 +89,6 @@ void updatePC()
  */
 void ExceptionHandler(ExceptionType which)
 {
-    char stringarg[128];
     int type = machine->ReadRegister(2);
     int ret = 0;
 
@@ -105,7 +104,7 @@ void ExceptionHandler(ExceptionType which)
             interrupt->Halt();
         case SC_Create:
             DEBUG('a', "Create file, initiated by user program.\n");
-            ret = Create((char *) machine->ReadRegister(4));
+            Create((char *) machine->ReadRegister(4));
             break;
         case SC_Open:
             DEBUG('a', "Open file, initiated by user program.\n");
@@ -129,7 +128,7 @@ void ExceptionHandler(ExceptionType which)
         */
         case SC_Close:
             DEBUG('a', "Close file, initiated by user program.\n");
-            ret = Close(machine->ReadRegister(4));
+            Close(machine->ReadRegister(4));
             break;
         default:
             printf("Undefined SYSCALL %d\n", type);
