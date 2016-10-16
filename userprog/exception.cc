@@ -15,6 +15,20 @@
 #include "copyright.h"
 #include "system.h"
 #include "syscall.h"
+#include "filesys.h"
+#include "synch.h"
+#include <new>
+
+#define MAX_FILE_NAME 128
+#define MAX_OPEN_FILES 64
+
+static OpenFile *open_files[MAX_OPEN_FILES];
+static bool open_files_is_init = false;
+
+static Semaphore *num_open_files = new Semaphore("num_open_files", MAX_OPEN_FILES);
+static Lock *fid_assignment = new Lock("fid_assignment");
+
+static FileSystem *fs = new FileSystem(false);
 
 #ifdef USE_TLB
 
@@ -54,10 +68,36 @@ void HandleTLBFault(int vaddr)
 
 #endif
 
-/**
- * Update the program counter
- */
-void updatePC()
+/* fill the open_files array with NULL */
+static void try_init(void)
+{
+    if (open_files_is_init)
+        return;
+
+    open_files_is_init = true;
+    for (int i = 0; i < MAX_OPEN_FILES; i++)
+        open_files[i] = NULL;
+}
+
+/* TODO: address translation */
+static int strimport(char *buf, int size, char *virt_address)
+{
+    int i;
+    for (i = 0; i < size; i++) {
+        if ((buf[i] = machine->mainMemory[(int) virt_address++]) == '\0')
+            break;
+    }
+    return i;
+}
+
+/* copies a filename from userland, returns true if it fit in the buffer */
+static bool import_filename(char *buf, int size, char *virt_address)
+{
+    return strimport(buf, size, virt_address) != size;
+}
+
+/* update the program counter */
+static void updatePC()
 {
     int pc = machine->ReadRegister(PCReg);
     machine->WriteRegister(PrevPCReg, pc);
@@ -90,6 +130,11 @@ void updatePC()
 void ExceptionHandler(ExceptionType which)
 {
     int type = machine->ReadRegister(2);
+    char filename[MAX_FILE_NAME];
+    int findex, fid;
+    OpenFile *fo;
+    try_init();
+
     int ret = 0;
 
     switch (which) {
@@ -103,12 +148,39 @@ void ExceptionHandler(ExceptionType which)
             DEBUG('a', "Shutdown, initiated by user code exit.\n");
             interrupt->Halt();
         case SC_Create:
-            DEBUG('a', "Create file, initiated by user program.\n");
-            Create((char *) machine->ReadRegister(4));
+
+            /* don't create the file if the filename is too long */
+            if (!import_filename(filename, MAX_FILE_NAME, (char *) machine->ReadRegister(4)))
+                break;
+
+            DEBUG('a', "creating file: %s\n", filename);
+            fs->Create(filename, 0);
+
             break;
         case SC_Open:
-            DEBUG('a', "Open file, initiated by user program.\n");
-            ret = Open((char *) machine->ReadRegister(4));
+            DEBUG('a', "opening file %s\n", filename);
+
+            /* don't create the file if the filename is too long */
+            if (!import_filename(filename, MAX_FILE_NAME, (char *) machine->ReadRegister(4))) {
+                ret = -1;
+                break;
+            }
+
+            fo = fs->Open(filename);
+
+            fid_assignment->Acquire();
+            num_open_files->P();
+
+            /* since we're past the semaphore, there ought to be a free slot here */
+            for (findex = 0; open_files[findex] != NULL && findex < MAX_OPEN_FILES; findex++);
+            ASSERT(findex != MAX_OPEN_FILES);
+
+            open_files[findex] = fo;
+
+            fid_assignment->Release();
+
+            /* we don't store ConsoleInput and ConsoleOutput in the array */
+            ret = findex + 2;
             break;
         /*
         case SC_Read:
@@ -116,19 +188,30 @@ void ExceptionHandler(ExceptionType which)
             char *userland_str = (char *) machine->ReadRegister(4);
             int size = machine->ReadRegister(5);
             int fid = machine->ReadRegister(6);
-            ret = Read(userland_str, size, fid);
+            ret = read(userland_str, size, fid);
             break;
         case SC_Write:
             DEBUG('a', "Write file, initiated by user program.\n");
             char *userland_str = (char *) machine->ReadRegister(4);
             int size = machine->ReadRegister(5);
             int fid = machine->ReadRegister(6);
-            ret = Write(userland_str, size, fid);
+            ret = write(userland_str, size, fid);
             break;
         */
         case SC_Close:
-            DEBUG('a', "Close file, initiated by user program.\n");
-            Close(machine->ReadRegister(4));
+            fid = machine->ReadRegister(4);
+            DEBUG('a', "closing file with FID %d\n", fid);
+
+            /* we don't store ConsoleInput and ConsoleOutput in the array */
+            findex = fid - 2;
+
+            fid_assignment->Acquire();
+
+            delete open_files[findex];
+            open_files[findex] = NULL;
+
+            num_open_files->V();
+            fid_assignment->Release();
             break;
         default:
             printf("Undefined SYSCALL %d\n", type);
