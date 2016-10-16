@@ -3,6 +3,7 @@
 *.lo
 *.o
 *.obj
+userprog/swtch.s
 
 # Precompiled Headers
 *.gch
@@ -27,6 +28,10 @@
 *.exe
 *.out
 *.app
-
-# Intermediate binaries
 *.coff
+test/matmult
+test/shell
+test/sort
+test/create
+userprog/nachos
+bin/coff2noff
