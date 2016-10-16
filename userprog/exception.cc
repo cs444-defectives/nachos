@@ -89,9 +89,9 @@ void updatePC()
  */
 void ExceptionHandler(ExceptionType which)
 {
-    int arg1;
     char stringarg[128];
     int type = machine->ReadRegister(2);
+    int ret = 0;
 
     switch (which) {
     case SyscallException:
@@ -100,22 +100,43 @@ void ExceptionHandler(ExceptionType which)
             DEBUG('a', "Shutdown, initiated by user program.\n");
             interrupt->Halt();
         case SC_Exit:
+            /* FIXME */
             DEBUG('a', "Shutdown, initiated by user code exit.\n");
             interrupt->Halt();
         case SC_Create:
             DEBUG('a', "Create file, initiated by user program.\n");
-            arg1 = machine->ReadRegister(4);
-            // TODO: check to make sure file name isn't too long
-            for (int i = 0; i < 127; i++)
-                if ((stringarg[i] = machine->mainMemory[arg1++]) == '\0') break;
-            stringarg[127] = '\0';
-            Create(stringarg);
-            updatePC();
+            ret = Create((char *) machine->ReadRegister(4));
+            break;
+        case SC_Open:
+            DEBUG('a', "Open file, initiated by user program.\n");
+            ret = Open((char *) machine->ReadRegister(4));
+            break;
+        /*
+        case SC_Read:
+            DEBUG('a', "Read file, initiated by user program.\n");
+            char *userland_str = (char *) machine->ReadRegister(4);
+            int size = machine->ReadRegister(5);
+            int fid = machine->ReadRegister(6);
+            ret = Read(userland_str, size, fid);
+            break;
+        case SC_Write:
+            DEBUG('a', "Write file, initiated by user program.\n");
+            char *userland_str = (char *) machine->ReadRegister(4);
+            int size = machine->ReadRegister(5);
+            int fid = machine->ReadRegister(6);
+            ret = Write(userland_str, size, fid);
+            break;
+        */
+        case SC_Close:
+            DEBUG('a', "Close file, initiated by user program.\n");
+            ret = Close(machine->ReadRegister(4));
             break;
         default:
             printf("Undefined SYSCALL %d\n", type);
             ASSERT(false);
         }
+        machine->WriteRegister(2, ret);
+        updatePC();
 #ifdef USE_TLB
     case PageFaultException:
         HandleTLBFault(machine->ReadRegister(BadVAddrReg));
