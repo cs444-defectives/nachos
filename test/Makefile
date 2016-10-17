@@ -34,7 +34,7 @@ CPP = /usr/bin/cpp -E
 INCDIR =-I../userprog -I../threads
 CFLAGS = -G 0 -c $(INCDIR) -DCHANGED -nostartfiles
 
-all: halt shell matmult sort create file_test
+all: halt shell matmult sort file_test hellocons hellofile fromcons fileio
 
 start.o: start.s ../userprog/syscall.h
 	$(CPP) $(CPPFLAGS) start.s > strt.s
@@ -47,11 +47,29 @@ halt: halt.o start.o
 	$(LD) $(LDFLAGS) start.o halt.o -o halt.coff
 	../bin/coff2noff halt.coff halt
 
-create.o: create.c
-	$(CC) $(CFLAGS) -c create.c
-create: create.o start.o
-	$(LD) $(LDFLAGS) start.o create.o -o create.coff
-	../bin/coff2noff create.coff create
+hellocons.o: hellocons.c
+	$(CC) $(CFLAGS) -c hellocons.c
+hellocons: hellocons.o start.o
+	$(LD) $(LDFLAGS) start.o hellocons.o -o hellocons.coff
+	../bin/coff2noff hellocons.coff hellocons
+
+hellofile.o: hellofile.c
+	$(CC) $(CFLAGS) -c hellofile.c
+hellofile: hellofile.o start.o
+	$(LD) $(LDFLAGS) start.o hellofile.o -o hellofile.coff
+	../bin/coff2noff hellofile.coff hellofile
+
+fromcons.o: fromcons.c
+	$(CC) $(CFLAGS) -c fromcons.c
+fromcons: fromcons.o start.o
+	$(LD) $(LDFLAGS) start.o fromcons.o -o fromcons.coff
+	../bin/coff2noff fromcons.coff fromcons
+
+fileio.o: fileio.c
+	$(CC) $(CFLAGS) -c fileio.c
+fileio: fileio.o start.o
+	$(LD) $(LDFLAGS) start.o fileio.o -o fileio.coff
+	../bin/coff2noff fileio.coff fileio
 
 file_test.o: file_test.c
 	$(CC) $(CFLAGS) -c file_test.c
