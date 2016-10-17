@@ -32,7 +32,7 @@ static Lock *fid_assignment = new Lock("fid_assignment");
 
 static FileSystem *fs = new FileSystem(false);
 
-static SynchConsole *console = new SynchConsole();
+static SynchConsole *console;
 
 #ifdef USE_TLB
 
@@ -151,6 +151,8 @@ void ExceptionHandler(ExceptionType which)
     try_init();
 
     int ret = 0;
+
+    console = new SynchConsole();
 
     switch (which) {
     case SyscallException:
