@@ -1,5 +1,4 @@
-#ifndef SYNCHDISK_H
-#define SYNCHDISK_H
+#pragma once
 
 #include "synch.h"
 #include "console.h"
@@ -46,5 +45,3 @@ class SynchConsole {
     Semaphore *reads, *writes;
     Lock *lock;
 };
-
-#endif // SYNCHDISK_H
