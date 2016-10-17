@@ -248,7 +248,8 @@ void ExceptionHandler(ExceptionType which)
             if (fid == ConsoleInput)
                 break;
 
-            ASSERT(open_files[findex] != NULL);
+            if (fid != ConsoleOutput)
+                ASSERT(open_files[findex] != NULL);
 
             while (size) {
                 n_to_rw = (size > RW_BUFFER_SIZE) ? RW_BUFFER_SIZE : size;
