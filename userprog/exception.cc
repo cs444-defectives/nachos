@@ -238,6 +238,13 @@ void ExceptionHandler(ExceptionType which)
 
         case SC_Close:
             fid = machine->ReadRegister(4);
+
+            /* console can't be opened or closed */
+            if (fid == ConsoleInput || fid == ConsoleOutput) {
+                DEBUG('a', "ignoring silly console close request\n");
+                break;
+            }
+
             DEBUG('a', "closing file with FID %d\n", fid);
 
             /* we don't store ConsoleInput and ConsoleOutput in the array */
