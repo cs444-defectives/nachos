@@ -17,7 +17,7 @@
 #include "syscall.h"
 #include "filesys.h"
 #include "synch.h"
-#include <new>
+#include <string.h>
 
 #define MAX_FILE_NAME 128
 #define MAX_OPEN_FILES 64
@@ -79,6 +79,13 @@ static void try_init(void)
         open_files[i] = NULL;
 }
 
+/* import n bytes from userland into a buffer */
+static void strnimport(char *buf, int n, char *virt_address)
+{
+    for (int i = 0; i < n; i++)
+        buf[i] = machine->mainMemory[(int) virt_address++];
+}
+
 /* TODO: address translation */
 static int strimport(char *buf, int size, char *virt_address)
 {
@@ -131,7 +138,12 @@ void ExceptionHandler(ExceptionType which)
 {
     int type = machine->ReadRegister(2);
     char filename[MAX_FILE_NAME];
-    int findex, fid;
+    int findex, fid, size;
+    char *userland_str;
+    int RW_BUFFER_SIZE = 128;
+    char rw_buf[RW_BUFFER_SIZE];
+    int bytes_rw;
+    int n_to_rw; // number of bytes to read or write
     OpenFile *fo;
     try_init();
 
@@ -140,13 +152,16 @@ void ExceptionHandler(ExceptionType which)
     switch (which) {
     case SyscallException:
         switch (type) {
+
         case SC_Halt:
             DEBUG('a', "Shutdown, initiated by user program.\n");
             interrupt->Halt();
+
         case SC_Exit:
             /* FIXME */
             DEBUG('a', "Shutdown, initiated by user code exit.\n");
             interrupt->Halt();
+
         case SC_Create:
 
             /* don't create the file if the filename is too long */
@@ -157,6 +172,7 @@ void ExceptionHandler(ExceptionType which)
             fs->Create(filename, 0);
 
             break;
+
         case SC_Open:
             DEBUG('a', "opening file %s\n", filename);
 
@@ -182,22 +198,44 @@ void ExceptionHandler(ExceptionType which)
             /* we don't store ConsoleInput and ConsoleOutput in the array */
             ret = findex + 2;
             break;
-        /*
+
         case SC_Read:
             DEBUG('a', "Read file, initiated by user program.\n");
-            char *userland_str = (char *) machine->ReadRegister(4);
-            int size = machine->ReadRegister(5);
-            int fid = machine->ReadRegister(6);
-            ret = read(userland_str, size, fid);
+
+            userland_str = (char *) machine->ReadRegister(4);
+            size = machine->ReadRegister(5);
+            findex = machine->ReadRegister(6) - 2;
+
+            bytes_rw = -1;
+
+            while (size && bytes_rw) {
+                n_to_rw = size > RW_BUFFER_SIZE ? RW_BUFFER_SIZE : size;
+                bytes_rw = open_files[findex]->Read(rw_buf, n_to_rw);
+                // copy from buffer into main memory
+                memcpy(&machine->mainMemory[(int) userland_str], (void *)rw_buf, n_to_rw);
+                printf("tried to read: %d - actually read: %d\n", n_to_rw, bytes_rw);
+                size -= bytes_rw;
+                userland_str += bytes_rw;
+            }
+
             break;
+
         case SC_Write:
             DEBUG('a', "Write file, initiated by user program.\n");
-            char *userland_str = (char *) machine->ReadRegister(4);
-            int size = machine->ReadRegister(5);
-            int fid = machine->ReadRegister(6);
-            ret = write(userland_str, size, fid);
+            userland_str = (char *) machine->ReadRegister(4);
+            size = machine->ReadRegister(5);
+            findex = machine->ReadRegister(6) - 2;
+
+            while (size) {
+                n_to_rw = size > RW_BUFFER_SIZE ? RW_BUFFER_SIZE : size;
+                strnimport(rw_buf, n_to_rw, userland_str);
+                bytes_rw = open_files[findex]->Write(rw_buf, n_to_rw);
+                size -= bytes_rw;
+                userland_str += bytes_rw;
+            }
+
             break;
-        */
+
         case SC_Close:
             fid = machine->ReadRegister(4);
             DEBUG('a', "closing file with FID %d\n", fid);
