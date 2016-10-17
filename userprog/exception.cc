@@ -210,10 +210,15 @@ void ExceptionHandler(ExceptionType which)
             fid = machine->ReadRegister(6);
             findex = fid - 2;
 
+            /* can't read from output */
+            if (fid == ConsoleOutput)
+                break;
+
             bytes_rw = -1;
 
             while (size && bytes_rw) {
                 n_to_rw = (size > RW_BUFFER_SIZE) ? RW_BUFFER_SIZE : size;
+
                 if (fid == ConsoleInput) {
                     console->ReadBytes(rw_buf, n_to_rw);
                     bytes_rw = n_to_rw;
@@ -236,6 +241,10 @@ void ExceptionHandler(ExceptionType which)
             size = machine->ReadRegister(5);
             fid = machine->ReadRegister(6);
             findex = fid - 2;
+
+            /* can't write to input */
+            if (fid == ConsoleInput)
+                break;
 
             ASSERT(open_files[findex] != NULL);
 
