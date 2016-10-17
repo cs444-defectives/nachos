@@ -17,6 +17,7 @@
 #include "syscall.h"
 #include "filesys.h"
 #include "synch.h"
+#include "synchconsole.h"
 #include <string.h>
 
 #define MAX_FILE_NAME 128
@@ -29,6 +30,8 @@ static Semaphore *num_open_files = new Semaphore("num_open_files", MAX_OPEN_FILE
 static Lock *fid_assignment = new Lock("fid_assignment");
 
 static FileSystem *fs = new FileSystem(false);
+
+static SynchConsole *console = new SynchConsole();
 
 #ifdef USE_TLB
 
@@ -222,14 +225,20 @@ void ExceptionHandler(ExceptionType which)
 
         case SC_Write:
             DEBUG('a', "Write file, initiated by user program.\n");
+
             userland_str = (char *) machine->ReadRegister(4);
             size = machine->ReadRegister(5);
-            findex = machine->ReadRegister(6) - 2;
+            fid = machine->ReadRegister(6);
+
+            findex = fid - 2;
 
             while (size) {
                 n_to_rw = size > RW_BUFFER_SIZE ? RW_BUFFER_SIZE : size;
                 strnimport(rw_buf, n_to_rw, userland_str);
-                bytes_rw = open_files[findex]->Write(rw_buf, n_to_rw);
+                if (fid == ConsoleOutput)
+                    console->WriteBytes(rw_buf, n_to_rw);
+                else
+                    bytes_rw = open_files[findex]->Write(rw_buf, n_to_rw);
                 size -= bytes_rw;
                 userland_str += bytes_rw;
             }
