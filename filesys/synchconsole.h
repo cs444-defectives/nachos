@@ -2,6 +2,7 @@
 #define SYNCHDISK_H
 
 #include "synch.h"
+#include "console.h"
 
 /*
  * Routines to synchronously access the console. The console is an asynchronous

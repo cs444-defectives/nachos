@@ -1,6 +1,23 @@
 #include "synchconsole.h"
 #include <new>
 
+/*
+ * Since methods can't be used as callbacks, we need to wrap the read and write
+ * console callbacks.
+ */
+
+static void read_available(int console_addr)
+{
+    SynchConsole *console = (SynchConsole *) console_addr;
+    console->ReadAvailable();
+}
+
+static void write_done(int console_addr)
+{
+    SynchConsole *console = (SynchConsole *) console_addr;
+    console->WriteDone();
+}
+
 SynchConsole::SynchConsole()
 {
     reads = new(std::nothrow) Semaphore("SynchConsole reads", 0);
@@ -29,7 +46,7 @@ char SynchConsole::ReadChar(void)
     return c;
 }
 
-void ReadBytes(char *dest, int n)
+void SynchConsole::ReadBytes(char *dest, int n)
 {
     lock->Acquire();
     for (int i = 0; i < n; i++) {
@@ -62,20 +79,3 @@ void SynchConsole::WriteBytes(char *s, int n)
 
 void SynchConsole::ReadAvailable() { reads->V(); }
 void SynchConsole::WriteDone() { writes->V(); }
-
-/*
- * Since methods can't be used as callbacks, we need to wrap the read and write
- * console callbacks.
- */
-
-static void read_available(int console_addr)
-{
-    SynchConsole *console = (SynchConsole *) console_addr;
-    console->ReadAvailable();
-}
-
-static void write_done(int console_addr)
-{
-    SynchConsole *console = (SynchConsole *) console_addr;
-    console->WriteDone();
-}
