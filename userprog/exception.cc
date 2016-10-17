@@ -22,6 +22,7 @@
 
 #define MAX_FILE_NAME 128
 #define MAX_OPEN_FILES 64
+#define RW_BUFFER_SIZE 128
 
 static OpenFile *open_files[MAX_OPEN_FILES];
 static bool open_files_is_init = false;
@@ -86,15 +87,15 @@ static void try_init(void)
 static void strnimport(char *buf, int n, char *virt_address)
 {
     for (int i = 0; i < n; i++)
-        buf[i] = machine->mainMemory[(int) virt_address++];
+        buf[i] = machine->mainMemory[(int) virt_address + i];
 }
 
 /* TODO: address translation */
-static int strimport(char *buf, int size, char *virt_address)
+static int strimport(char *buf, int max_size, char *virt_address)
 {
     int i;
-    for (i = 0; i < size; i++) {
-        if ((buf[i] = machine->mainMemory[(int) virt_address++]) == '\0')
+    for (i = 0; i < max_size; i++) {
+        if ((buf[i] = machine->mainMemory[(int) virt_address + i]) == '\0')
             break;
     }
     return i;
@@ -143,7 +144,6 @@ void ExceptionHandler(ExceptionType which)
     char filename[MAX_FILE_NAME];
     int findex, fid, size;
     char *userland_str;
-    int RW_BUFFER_SIZE = 128;
     char rw_buf[RW_BUFFER_SIZE];
     int bytes_rw;
     int n_to_rw; // number of bytes to read or write
@@ -207,15 +207,21 @@ void ExceptionHandler(ExceptionType which)
 
             userland_str = (char *) machine->ReadRegister(4);
             size = machine->ReadRegister(5);
-            findex = machine->ReadRegister(6) - 2;
+            fid = machine->ReadRegister(6);
+            findex = fid - 2;
 
             bytes_rw = -1;
 
             while (size && bytes_rw) {
                 n_to_rw = (size > RW_BUFFER_SIZE) ? RW_BUFFER_SIZE : size;
-                bytes_rw = open_files[findex]->Read(rw_buf, n_to_rw);
+                if (fid == ConsoleInput) {
+                    console->ReadBytes(rw_buf, n_to_rw);
+                    bytes_rw = n_to_rw;
+                } else {
+                    bytes_rw = open_files[findex]->Read(rw_buf, n_to_rw);
+                }
                 // copy from buffer into main memory
-                memcpy(&machine->mainMemory[(int) userland_str], (void *)rw_buf, n_to_rw);
+                memcpy(&machine->mainMemory[(int) userland_str], (void *) rw_buf, n_to_rw);
                 printf("tried to read: %d - actually read: %d\n", n_to_rw, bytes_rw);
                 size -= bytes_rw;
                 userland_str += bytes_rw;
@@ -229,8 +235,9 @@ void ExceptionHandler(ExceptionType which)
             userland_str = (char *) machine->ReadRegister(4);
             size = machine->ReadRegister(5);
             fid = machine->ReadRegister(6);
-
             findex = fid - 2;
+
+            ASSERT(open_files[findex] != NULL);
 
             while (size) {
                 n_to_rw = (size > RW_BUFFER_SIZE) ? RW_BUFFER_SIZE : size;
@@ -260,6 +267,7 @@ void ExceptionHandler(ExceptionType which)
 
             /* we don't store ConsoleInput and ConsoleOutput in the array */
             findex = fid - 2;
+            ASSERT(open_files[findex] != NULL);
 
             fid_assignment->Acquire();
 
