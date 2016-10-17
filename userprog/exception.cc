@@ -212,7 +212,7 @@ void ExceptionHandler(ExceptionType which)
             bytes_rw = -1;
 
             while (size && bytes_rw) {
-                n_to_rw = size > RW_BUFFER_SIZE ? RW_BUFFER_SIZE : size;
+                n_to_rw = (size > RW_BUFFER_SIZE) ? RW_BUFFER_SIZE : size;
                 bytes_rw = open_files[findex]->Read(rw_buf, n_to_rw);
                 // copy from buffer into main memory
                 memcpy(&machine->mainMemory[(int) userland_str], (void *)rw_buf, n_to_rw);
@@ -233,12 +233,14 @@ void ExceptionHandler(ExceptionType which)
             findex = fid - 2;
 
             while (size) {
-                n_to_rw = size > RW_BUFFER_SIZE ? RW_BUFFER_SIZE : size;
+                n_to_rw = (size > RW_BUFFER_SIZE) ? RW_BUFFER_SIZE : size;
                 strnimport(rw_buf, n_to_rw, userland_str);
-                if (fid == ConsoleOutput)
+                if (fid == ConsoleOutput) {
                     console->WriteBytes(rw_buf, n_to_rw);
-                else
+                    bytes_rw = n_to_rw;
+                } else {
                     bytes_rw = open_files[findex]->Write(rw_buf, n_to_rw);
+                }
                 size -= bytes_rw;
                 userland_str += bytes_rw;
             }
