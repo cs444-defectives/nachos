@@ -229,7 +229,6 @@ void ExceptionHandler(ExceptionType which)
                 }
                 // copy from buffer into main memory
                 memcpy(&machine->mainMemory[(int) userland_str], (void *) rw_buf, n_to_rw);
-                printf("tried to read: %d - actually read: %d\n", n_to_rw, bytes_rw);
                 size -= bytes_rw;
                 userland_str += bytes_rw;
             }
