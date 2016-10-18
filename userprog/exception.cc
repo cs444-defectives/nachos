@@ -21,18 +21,7 @@
 #include <string.h>
 
 #define MAX_FILE_NAME 128
-#define MAX_OPEN_FILES 64
 #define RW_BUFFER_SIZE 128
-
-static OpenFile *open_files[MAX_OPEN_FILES];
-static bool open_files_is_init = false;
-
-static Semaphore *num_open_files = new Semaphore("num_open_files", MAX_OPEN_FILES);
-static Lock *fid_assignment = new Lock("fid_assignment");
-
-static FileSystem *fs = new FileSystem(false);
-
-static SynchConsole *console;
 
 #ifdef USE_TLB
 
@@ -71,17 +60,6 @@ void HandleTLBFault(int vaddr)
 }
 
 #endif
-
-/* fill the open_files array with NULL */
-static void try_init(void)
-{
-    if (open_files_is_init)
-        return;
-
-    open_files_is_init = true;
-    for (int i = 0; i < MAX_OPEN_FILES; i++)
-        open_files[i] = NULL;
-}
 
 /* import n bytes from userland into a buffer */
 static void strnimport(char *buf, int n, char *virt_address)
@@ -148,7 +126,6 @@ void ExceptionHandler(ExceptionType which)
     int bytes_rw;
     int n_to_rw; // number of bytes to read or write
     OpenFile *fo;
-    try_init();
 
     int ret = 0;
 
@@ -174,7 +151,7 @@ void ExceptionHandler(ExceptionType which)
                 break;
 
             DEBUG('a', "creating file: %s\n", filename);
-            fs->Create(filename, 0);
+            fileSystem->Create(filename, 0);
 
             break;
 
@@ -187,18 +164,19 @@ void ExceptionHandler(ExceptionType which)
                 break;
             }
 
-            fo = fs->Open(filename);
+            fo = fileSystem->Open(filename);
 
-            fid_assignment->Acquire();
-            num_open_files->P();
+            currentThread->num_open_files->P();
+
+            currentThread->fid_assignment->Acquire();
 
             /* since we're past the semaphore, there ought to be a free slot here */
-            for (findex = 0; open_files[findex] != NULL && findex < MAX_OPEN_FILES; findex++);
+            for (findex = 0; currentThread->open_files[findex] != NULL && findex < MAX_OPEN_FILES; findex++);
             ASSERT(findex != MAX_OPEN_FILES);
 
-            open_files[findex] = fo;
+            currentThread->open_files[findex] = fo;
 
-            fid_assignment->Release();
+            currentThread->fid_assignment->Release();
 
             /* we don't store ConsoleInput and ConsoleOutput in the array */
             ret = findex + 2;
@@ -218,26 +196,26 @@ void ExceptionHandler(ExceptionType which)
             if (fid == ConsoleOutput)
                 break;
 
-            if (fid != ConsoleInput && open_files[findex] == NULL) {
+            if (fid != ConsoleInput && currentThread->open_files[findex] == NULL) {
                 ret = -1;
                 break;
             }
 
-            while (size && bytes_rw) {
+            do {
                 n_to_rw = (size > RW_BUFFER_SIZE) ? RW_BUFFER_SIZE : size;
 
                 if (fid == ConsoleInput) {
                     console->ReadBytes(rw_buf, n_to_rw);
                     bytes_rw = n_to_rw;
                 } else {
-                    bytes_rw = open_files[findex]->Read(rw_buf, n_to_rw);
+                    bytes_rw = currentThread->open_files[findex]->Read(rw_buf, n_to_rw);
                 }
                 // copy from buffer into main memory
                 memcpy(&machine->mainMemory[(int) userland_str], (void *) rw_buf, n_to_rw);
                 size -= bytes_rw;
                 userland_str += bytes_rw;
                 ret += bytes_rw;
-            }
+            } while (size && bytes_rw);
 
             break;
 
@@ -254,7 +232,7 @@ void ExceptionHandler(ExceptionType which)
                 break;
 
             if (fid != ConsoleOutput)
-                ASSERT(open_files[findex] != NULL);
+                ASSERT(currentThread->open_files[findex] != NULL);
 
             while (size) {
                 n_to_rw = (size > RW_BUFFER_SIZE) ? RW_BUFFER_SIZE : size;
@@ -263,7 +241,7 @@ void ExceptionHandler(ExceptionType which)
                     console->WriteBytes(rw_buf, n_to_rw);
                     bytes_rw = n_to_rw;
                 } else {
-                    bytes_rw = open_files[findex]->Write(rw_buf, n_to_rw);
+                    bytes_rw = currentThread->open_files[findex]->Write(rw_buf, n_to_rw);
                 }
                 size -= bytes_rw;
                 userland_str += bytes_rw;
@@ -284,15 +262,15 @@ void ExceptionHandler(ExceptionType which)
 
             /* we don't store ConsoleInput and ConsoleOutput in the array */
             findex = fid - 2;
-            ASSERT(open_files[findex] != NULL);
+            ASSERT(currentThread->open_files[findex] != NULL);
 
-            fid_assignment->Acquire();
+            currentThread->fid_assignment->Acquire();
 
-            delete open_files[findex];
-            open_files[findex] = NULL;
+            delete currentThread->open_files[findex];
+            currentThread->open_files[findex] = NULL;
 
-            num_open_files->V();
-            fid_assignment->Release();
+            currentThread->fid_assignment->Release();
+            currentThread->num_open_files->V();
             break;
         default:
             printf("Undefined SYSCALL %d\n", type);

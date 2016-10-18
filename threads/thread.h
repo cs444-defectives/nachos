@@ -45,6 +45,8 @@
 #include "addrspace.h"
 #endif
 
+#include "synch.h"
+
 // CPU register state to be saved on context switch.  
 // The SPARC and MIPS only need 10 registers, but the Snake needs 18.
 // For simplicity, this is just the max over all architectures.
@@ -55,6 +57,7 @@
 // WATCH OUT IF THIS ISN'T BIG ENOUGH!!!!!
 #define StackSize	(4 * 1024)	// in words
 
+#define MAX_OPEN_FILES 64
 
 // Thread state
 enum ThreadStatus { JUST_CREATED, RUNNING, READY, BLOCKED };
@@ -121,6 +124,9 @@ class Thread {
 // while executing kernel code.
     int userRegisters[NumTotalRegs];	// user-level CPU register state
   public:
+    OpenFile **open_files;
+    Semaphore *num_open_files;
+    Lock *fid_assignment;
     void SaveUserState();		// save user-level register state
     void RestoreUserState();		// restore user-level register state
 
