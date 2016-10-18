@@ -191,9 +191,12 @@ void ExceptionHandler(ExceptionType which)
             ret = 0;
 
             /* can't read from output */
-            if (fid == ConsoleOutput)
+            if (fid == ConsoleOutput) {
+                ret = -1;
                 break;
+            }
 
+            /* no such file */
             if (fid != ConsoleInput && currentThread->open_files[findex] == NULL) {
                 ret = -1;
                 break;
