@@ -129,8 +129,6 @@ void ExceptionHandler(ExceptionType which)
 
     int ret = 0;
 
-    console = new SynchConsole();
-
     switch (which) {
     case SyscallException:
         switch (type) {
@@ -205,7 +203,7 @@ void ExceptionHandler(ExceptionType which)
                 n_to_rw = (size > RW_BUFFER_SIZE) ? RW_BUFFER_SIZE : size;
 
                 if (fid == ConsoleInput) {
-                    console->ReadBytes(rw_buf, n_to_rw);
+                    sconsole->ReadBytes(rw_buf, n_to_rw);
                     bytes_rw = n_to_rw;
                 } else {
                     bytes_rw = currentThread->open_files[findex]->Read(rw_buf, n_to_rw);
@@ -238,7 +236,7 @@ void ExceptionHandler(ExceptionType which)
                 n_to_rw = (size > RW_BUFFER_SIZE) ? RW_BUFFER_SIZE : size;
                 strnimport(rw_buf, n_to_rw, userland_str);
                 if (fid == ConsoleOutput) {
-                    console->WriteBytes(rw_buf, n_to_rw);
+                    sconsole->WriteBytes(rw_buf, n_to_rw);
                     bytes_rw = n_to_rw;
                 } else {
                     bytes_rw = currentThread->open_files[findex]->Write(rw_buf, n_to_rw);
