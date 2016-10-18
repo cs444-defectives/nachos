@@ -218,7 +218,10 @@ void ExceptionHandler(ExceptionType which)
             if (fid == ConsoleOutput)
                 break;
 
-            bytes_rw = -1;
+            if (fid != ConsoleInput && open_files[findex] == NULL) {
+                ret = -1;
+                break;
+            }
 
             while (size && bytes_rw) {
                 n_to_rw = (size > RW_BUFFER_SIZE) ? RW_BUFFER_SIZE : size;
