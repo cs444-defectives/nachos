@@ -36,3 +36,8 @@ test/create
 userprog/nachos
 bin/coff2noff
 test/halt
+test/file_test
+test/fileio
+test/fromcons
+test/hellocons
+test/hellofile
