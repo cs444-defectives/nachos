@@ -212,6 +212,8 @@ void ExceptionHandler(ExceptionType which)
             fid = machine->ReadRegister(6);
             findex = fid - 2;
 
+            ret = 0;
+
             /* can't read from output */
             if (fid == ConsoleOutput)
                 break;
@@ -231,6 +233,7 @@ void ExceptionHandler(ExceptionType which)
                 memcpy(&machine->mainMemory[(int) userland_str], (void *) rw_buf, n_to_rw);
                 size -= bytes_rw;
                 userland_str += bytes_rw;
+                ret += bytes_rw;
             }
 
             break;
