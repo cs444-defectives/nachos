@@ -62,9 +62,12 @@ AddrSpace::AddrSpace(OpenFile *executable)
 {
     NoffHeader noffH;
     unsigned int size;
-#ifndef USE_TLB
-    unsigned int i;
-#endif
+
+    open_files = new OpenFile* [MAX_OPEN_FILES];
+    for (int i = 0; i < MAX_OPEN_FILES; i++)
+        open_files[i] = NULL;
+    num_open_files = new Semaphore("num_open_files", MAX_OPEN_FILES);
+    fid_assignment = new Lock("fid_assignment");
 
     executable->ReadAt((char *)&noffH, sizeof(noffH), 0);
     if ((noffH.noffMagic != NOFFMAGIC) && 
@@ -87,9 +90,8 @@ AddrSpace::AddrSpace(OpenFile *executable)
     DEBUG('a', "Initializing address space, num pages %d, size %d\n", 
 					numPages, size);
 #ifndef USE_TLB
-// first, set up the translation 
     pageTable = new(std::nothrow) TranslationEntry[numPages];
-    for (i = 0; i < numPages; i++) {
+    for (unsigned int i = 0; i < numPages; i++) {
 	pageTable[i].virtualPage = i;	// for now, virtual page # = phys page #
 	pageTable[i].physicalPage = i;
 	pageTable[i].valid = true;

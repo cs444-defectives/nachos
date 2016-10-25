@@ -15,8 +15,10 @@
 
 #include "copyright.h"
 #include "filesys.h"
+#include "synch.h"
 
 #define UserStackSize		1024 	// increase this as necessary!
+#define MAX_OPEN_FILES 64
 
 class AddrSpace {
   public:
@@ -30,6 +32,10 @@ class AddrSpace {
 
     void SaveState();			// Save/restore address space-specific
     void RestoreState();		// info on a context switch 
+
+    OpenFile **open_files;
+    Semaphore *num_open_files;
+    Lock *fid_assignment;
 
   private:
 #ifndef USE_TLB

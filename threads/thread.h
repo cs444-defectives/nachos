@@ -52,12 +52,9 @@
 // For simplicity, this is just the max over all architectures.
 #define MachineStateSize 18 
 
-
 // Size of the thread's private execution stack.
 // WATCH OUT IF THIS ISN'T BIG ENOUGH!!!!!
 #define StackSize	(4 * 1024)	// in words
-
-#define MAX_OPEN_FILES 64
 
 // Thread state
 enum ThreadStatus { JUST_CREATED, RUNNING, READY, BLOCKED };
@@ -124,9 +121,6 @@ class Thread {
 // while executing kernel code.
     int userRegisters[NumTotalRegs];	// user-level CPU register state
   public:
-    OpenFile **open_files;
-    Semaphore *num_open_files;
-    Lock *fid_assignment;
     void SaveUserState();		// save user-level register state
     void RestoreUserState();		// restore user-level register state
 
