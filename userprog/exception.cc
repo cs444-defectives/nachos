@@ -66,7 +66,7 @@ static int strimport(char *buf, int max_size, char *virt_address)
 {
     int i;
     for (i = 0; i < max_size; i++) {
-        if ((buf[i] = machine->mainMemory[(int) virt_address + i]) == '\0')
+        if ((buf[i] = machine->mainMemory[currentThread->space->Translate((int) virt_address + i)]) == '\0')
             break;
     }
     return i;
@@ -209,7 +209,7 @@ void ExceptionHandler(ExceptionType which)
                 } else {
                     byteRead = open_files[findex]->Read(&c, 1);
                 }
-                machine->mainMemory[(int) userland_str] = c;
+                machine->mainMemory[space->Translate((int) userland_str)] = c;
                 userland_str++;
                 size--;
                 ret += byteRead;
@@ -233,7 +233,7 @@ void ExceptionHandler(ExceptionType which)
                 ASSERT(open_files[findex] != NULL);
 
             while (size) {
-                c = machine->mainMemory[(int) userland_str];
+                c = machine->mainMemory[space->Translate((int) userland_str)];
                 if (fid == ConsoleOutput) {
                     sconsole->WriteChar(c);
                 } else {
