@@ -92,7 +92,7 @@ AddrSpace::AddrSpace(OpenFile *executable)
 #ifndef USE_TLB
     pageTable = new(std::nothrow) TranslationEntry[numPages];
 #ifndef CHANGED // page table non 1:1
-    for (i = 0; i < numPages; i++) {
+    for (unsigned int i = 0; i < numPages; i++) {
         pageTable[i].virtualPage = i;
         pageTable[i].physicalPage = memoryManager->GetPage();
         pageTable[i].valid = true;
@@ -104,7 +104,7 @@ AddrSpace::AddrSpace(OpenFile *executable)
     }
 #else
 // first, set up the translation
-    for (i = 0; i < numPages; i++) {
+    for (unsigned int i = 0; i < numPages; i++) {
         pageTable[i].virtualPage = i;	// for now, virtual page # = phys page #
         pageTable[i].physicalPage = i;
         pageTable[i].valid = true;
