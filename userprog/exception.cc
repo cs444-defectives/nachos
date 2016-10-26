@@ -61,13 +61,6 @@ void HandleTLBFault(int vaddr)
 
 #endif
 
-/* import n bytes from userland into a buffer */
-static void strnimport(char *buf, int n, char *virt_address)
-{
-    for (int i = 0; i < n; i++)
-        buf[i] = machine->mainMemory[(int) virt_address + i];
-}
-
 /* TODO: address translation */
 static int strimport(char *buf, int max_size, char *virt_address)
 {
@@ -122,10 +115,9 @@ void ExceptionHandler(ExceptionType which)
     char filename[MAX_FILE_NAME];
     int findex, fid, size;
     char *userland_str;
-    char rw_buf[RW_BUFFER_SIZE];
-    int bytes_rw;
-    int n_to_rw; // number of bytes to read or write
     OpenFile *fo;
+    char c;
+    int byteRead;
 
     /* aliases for convenience and to save on memory accesses */
     AddrSpace *space = currentThread->space;
@@ -208,21 +200,20 @@ void ExceptionHandler(ExceptionType which)
                 break;
             }
 
-            do {
-                n_to_rw = (size > RW_BUFFER_SIZE) ? RW_BUFFER_SIZE : size;
+            byteRead = 1;
 
+            while (size && byteRead) {
                 if (fid == ConsoleInput) {
-                    sconsole->ReadBytes(rw_buf, n_to_rw);
-                    bytes_rw = n_to_rw;
+                    c = sconsole->ReadChar();
+                    byteRead = 1;
                 } else {
-                    bytes_rw = open_files[findex]->Read(rw_buf, n_to_rw);
+                    byteRead = open_files[findex]->Read(&c, 1);
                 }
-                // copy from buffer into main memory
-                memcpy(&machine->mainMemory[(int) userland_str], (void *) rw_buf, n_to_rw);
-                size -= bytes_rw;
-                userland_str += bytes_rw;
-                ret += bytes_rw;
-            } while (size && bytes_rw);
+                machine->mainMemory[(int) userland_str] = c;
+                userland_str++;
+                size--;
+                ret += byteRead;
+            }
 
             break;
 
@@ -242,16 +233,14 @@ void ExceptionHandler(ExceptionType which)
                 ASSERT(open_files[findex] != NULL);
 
             while (size) {
-                n_to_rw = (size > RW_BUFFER_SIZE) ? RW_BUFFER_SIZE : size;
-                strnimport(rw_buf, n_to_rw, userland_str);
+                c = machine->mainMemory[(int) userland_str];
                 if (fid == ConsoleOutput) {
-                    sconsole->WriteBytes(rw_buf, n_to_rw);
-                    bytes_rw = n_to_rw;
+                    sconsole->WriteChar(c);
                 } else {
-                    bytes_rw = open_files[findex]->Write(rw_buf, n_to_rw);
+                    open_files[findex]->Write(&c, 1);
                 }
-                size -= bytes_rw;
-                userland_str += bytes_rw;
+                userland_str++;
+                size--;
             }
 
             break;
