@@ -41,3 +41,4 @@ test/fileio
 test/fromcons
 test/hellocons
 test/hellofile
+test/fork
