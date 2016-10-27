@@ -17,6 +17,11 @@
 #include "timer.h"
 #include <new>
 
+#ifdef CHANGED
+#include "memorymanager.h"
+#include "syscall.h"
+#endif
+
 // Initialization and cleanup routines
 extern void Initialize(int argc, char **argv); 	// Initialization,
 						// called before anything else
@@ -36,8 +41,9 @@ extern Machine* machine;	// user program memory and registers
 #include "synchconsole.h"
 extern SynchConsole *sconsole;
 #ifdef CHANGED
-#include "memorymanager.h"
 extern MemoryManager *memoryManager;
+extern SpaceId spaceId;
+extern Lock *spaceIdLock;
 #endif /* CHANGED */
 #endif
 

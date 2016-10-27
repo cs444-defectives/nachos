@@ -32,6 +32,8 @@ Machine *machine;	// user program memory and registers
 SynchConsole *sconsole;
 #ifdef CHANGED
 MemoryManager *memoryManager;
+SpaceId spaceId;
+Lock *spaceIdLock;
 #endif
 #endif
 
@@ -155,6 +157,8 @@ Initialize(int argc, char **argv)
     sconsole = new(std::nothrow) SynchConsole();
 #ifdef CHANGED
     memoryManager = new(std::nothrow) MemoryManager();
+    spaceId = 0;
+    spaceIdLock = new(std::nothrow) Lock("space id lock");
 #endif
 #endif
 
