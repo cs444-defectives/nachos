@@ -89,6 +89,12 @@ static void updatePC()
     machine->WriteRegister(NextPCReg, pc);
 }
 
+#ifdef CHANGED
+void forkCb(int _) {
+    machine->Run();
+}
+#endif
+
 /*
  * Entry point into the Nachos kernel. Called when a user program is executing,
  * and either does a syscall, or generates an addressing or arithmetic
@@ -118,7 +124,8 @@ void ExceptionHandler(ExceptionType which)
     OpenFile *fo;
     char c;
     int byteRead;
-    Thread *newThread; // for fork
+    // for fork
+    Thread *childThread;
 
     /* aliases for convenience and to save on memory accesses */
     AddrSpace *space = currentThread->space;
@@ -150,6 +157,8 @@ void ExceptionHandler(ExceptionType which)
             DEBUG('a', "creating file: %s\n", filename);
             fileSystem->Create(filename, 0);
 
+            updatePC();
+
             break;
 
         case SC_Open:
@@ -177,6 +186,9 @@ void ExceptionHandler(ExceptionType which)
 
             /* we don't store ConsoleInput and ConsoleOutput in the array */
             ret = findex + 2;
+
+            updatePC();
+
             break;
 
         case SC_Read:
@@ -216,6 +228,8 @@ void ExceptionHandler(ExceptionType which)
                 ret += byteRead;
             }
 
+            updatePC();
+
             break;
 
         case SC_Write:
@@ -244,6 +258,8 @@ void ExceptionHandler(ExceptionType which)
                 size--;
             }
 
+            updatePC();
+
             break;
 
         case SC_Close:
@@ -268,16 +284,49 @@ void ExceptionHandler(ExceptionType which)
 
             fid_assignment->Release();
             num_open_files->V();
+
+            updatePC();
+
             break;
 
         case SC_Fork:
-            DEBUG('a', "forking a thread");
+            DEBUG('a', "forking a thread\n");
 
-            newThread = new(std::nothrow) Thread("fork child");
-            newThread->space = new(std::nothrow) AddrSpace(currentThread->space);
+            childThread = new Thread("fork child");
+            childThread->space = new(std::nothrow) AddrSpace(currentThread->space);
 
-            scheduler->ReadyToRun(newThread);
+            // assign space id
+            spaceIdLock->Acquire();
+            childThread->id = spaceId++;
+            spaceIdLock->Release();
 
+            // update program counter
+            updatePC();
+
+            // save child register
+            childThread->SaveUserState();
+
+            // save parent registers
+            currentThread->SaveUserState();
+
+            // return 0 to child
+            machine->WriteRegister(2, 0);
+
+            childThread->Fork((VoidFunctionPtr) forkCb, 0);
+
+            // TODO: this is sketchy
+            // P() a 0 valued semaphore
+            currentThread->Yield();
+
+            // restore parent registers
+            currentThread->RestoreUserState();
+
+            // return 1 to parent
+            ret = 1;
+
+            break;
+
+        case SC_Join:
             break;
 
         default:
@@ -285,7 +334,6 @@ void ExceptionHandler(ExceptionType which)
             ASSERT(false);
         }
         machine->WriteRegister(2, ret);
-        updatePC();
 #ifdef USE_TLB
     case PageFaultException:
         HandleTLBFault(machine->ReadRegister(BadVAddrReg));
