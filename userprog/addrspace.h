@@ -25,6 +25,7 @@ class AddrSpace {
     AddrSpace(OpenFile *executable);	// Create an address space,
 					// initializing it with the program
 					// stored in the file "executable"
+    AddrSpace(AddrSpace *parent);
     ~AddrSpace();			// De-allocate an address space
 
     void InitRegisters();		// Initialize user-level CPU registers,
@@ -39,12 +40,19 @@ class AddrSpace {
     OpenFile **open_files;
     Semaphore *num_open_files;
     Lock *fid_assignment;
+#ifdef CHANGED
+    unsigned int size;    // make these public for forking reasons
+    unsigned int numPages;
+#endif
 
   private:
 #ifndef USE_TLB
     TranslationEntry *pageTable;	// Assume linear page table translation
 #endif					// for now!
+
+#ifndef CHANGED
     unsigned int numPages;		// Number of pages in the virtual
+#endif
 					// address space
 };
 

@@ -61,7 +61,9 @@ SwapHeader (NoffHeader *noffH)
 AddrSpace::AddrSpace(OpenFile *executable)
 {
     NoffHeader noffH;
+#ifndef CHANGED
     unsigned int size;
+#endif /* CHANGED */
 
     open_files = new OpenFile* [MAX_OPEN_FILES];
     for (int i = 0; i < MAX_OPEN_FILES; i++)
@@ -155,6 +157,38 @@ AddrSpace::AddrSpace(OpenFile *executable)
 
 
 #ifdef CHANGED
+/**
+ * This constructor is used for `fork` calls
+ * Instead of loading a program it copies the parent's address space
+ * and open files
+ */
+AddrSpace::AddrSpace(AddrSpace *parent) {
+    size = parent->size;
+    numPages = parent->numPages;
+    pageTable = new(std::nothrow) TranslationEntry[numPages];
+
+    for (unsigned int i = 0; i < numPages; i++) {
+        pageTable[i].virtualPage = i;
+        pageTable[i].physicalPage = memoryManager->GetPage();
+        pageTable[i].valid = true;
+        pageTable[i].use = false;
+        pageTable[i].dirty = false;
+        pageTable[i].readOnly = false;
+    }
+
+    // copy parent's memory into childs space
+    for (unsigned int i = 0; i < size; i++)
+        machine->mainMemory[Translate(i)] = machine->mainMemory[parent->Translate(i)];
+
+    // copy parent's open file
+    open_files = new OpenFile* [MAX_OPEN_FILES];
+    for (int i = 0; i < MAX_OPEN_FILES; i++)
+        open_files[i] = parent->open_files[i];
+}
+
+/**
+ *
+ */
 int AddrSpace::Translate(int virtAddr) {
     unsigned int vpn, offset, ppn;
     vpn = (unsigned) virtAddr / PageSize;

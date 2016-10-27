@@ -118,6 +118,7 @@ void ExceptionHandler(ExceptionType which)
     OpenFile *fo;
     char c;
     int byteRead;
+    Thread *newThread; // for fork
 
     /* aliases for convenience and to save on memory accesses */
     AddrSpace *space = currentThread->space;
@@ -268,6 +269,17 @@ void ExceptionHandler(ExceptionType which)
             fid_assignment->Release();
             num_open_files->V();
             break;
+
+        case SC_Fork:
+            DEBUG('a', "forking a thread");
+
+            newThread = new(std::nothrow) Thread("fork child");
+            newThread->space = new(std::nothrow) AddrSpace(currentThread->space);
+
+            scheduler->ReadyToRun(newThread);
+
+            break;
+
         default:
             printf("Undefined SYSCALL %d\n", type);
             ASSERT(false);

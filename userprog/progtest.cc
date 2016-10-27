@@ -1,11 +1,11 @@
-// progtest.cc 
+// progtest.cc
 //	Test routines for demonstrating that Nachos can load
-//	a user program and execute it.  
+//	a user program and execute it.
 //
 //	Also, routines for testing the Console hardware device.
 //
 // Copyright (c) 1992-1993 The Regents of the University of California.
-// All rights reserved.  See copyright.h for copyright notice and limitation 
+// All rights reserved.  See copyright.h for copyright notice and limitation
 // of liability and disclaimer of warranty provisions.
 
 #include "copyright.h"
@@ -31,7 +31,7 @@ StartProcess(char *filename)
 	printf("Unable to open file %s\n", filename);
 	return;
     }
-    space = new(std::nothrow) AddrSpace(executable);    
+    space = new(std::nothrow) AddrSpace(executable);
     currentThread->space = space;
 
     delete executable;			// close file
@@ -66,7 +66,7 @@ static void WriteDone(int) { writeDone->V(); }
 //	the output.  Stop when the user types a 'q'.
 //----------------------------------------------------------------------
 
-void 
+void
 ConsoleTest (char *in, char *out)
 {
     char ch;
@@ -74,7 +74,7 @@ ConsoleTest (char *in, char *out)
     console = new(std::nothrow) Console(in, out, ReadAvail, WriteDone, 0);
     readAvail = new(std::nothrow) Semaphore("read avail", 0);
     writeDone = new(std::nothrow) Semaphore("write done", 0);
-    
+
     for (;;) {
 	readAvail->P();		// wait for character to arrive
 	ch = console->GetChar();
