@@ -50,6 +50,7 @@ Semaphore::~Semaphore()
  */
 void Semaphore::P()
 {
+    DEBUG('L', "%s P() on semaphore %s\n", currentThread->getName(), name);
     IntStatus oldLevel = interrupt->SetLevel(IntOff);
 
     /* go to sleep if semaphore isn't available */
@@ -71,6 +72,7 @@ void Semaphore::P()
  */
 void Semaphore::V()
 {
+    DEBUG('L', "%s V() on semaphore %s\n", currentThread->getName(), name);
     Thread *thread;
     IntStatus oldLevel = interrupt->SetLevel(IntOff);
 
