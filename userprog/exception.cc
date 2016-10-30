@@ -166,12 +166,14 @@ void ExceptionHandler(ExceptionType which)
 
             tidx = currentThread->spaceId % MAX_THREADS;
 
-            // Wake up all threads `Join`ed on this one
-            threads[tidx]->join->V();
+            if (threads[tidx] != NULL) { // main thread will not be in there
+                // Wake up all threads `Join`ed on this one
+                threads[tidx]->join->V();
 
-            // you are done running
-            threads[tidx]->done = true;
-            threads[tidx]->exitCode = exitCode;
+                // you are done running
+                threads[tidx]->done = true;
+                threads[tidx]->exitCode = exitCode;
+            }
 
             currentThread->Finish();
 
@@ -395,6 +397,8 @@ void ExceptionHandler(ExceptionType which)
 
             if (executable == NULL) {
                 fprintf(stderr, "Unable to open file %s\n", filename);
+                // TODO: what should we return here?
+                updatePC();
                 break;
             }
 
