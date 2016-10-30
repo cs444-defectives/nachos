@@ -5,8 +5,12 @@ MemoryManager::MemoryManager() {
     bitmap = new BitMap(NumPhysPages);
 }
 
-int MemoryManager::GetPage() {
+int MemoryManager::AllocatePage() {
     int addr = bitmap->Find();
     return addr;
+}
+
+void MemoryManager::DeallocatePage(int ppn) {
+    bitmap->Clear(ppn);
 }
 #endif

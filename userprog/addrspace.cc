@@ -63,7 +63,7 @@ AddrSpace::AddrSpace(OpenFile *executable)
     NoffHeader noffH;
 #ifndef CHANGED
     unsigned int size;
-#endif /* CHANGED */
+#endif /* not CHANGED */
 
     open_files = new OpenFile* [MAX_OPEN_FILES];
     for (int i = 0; i < MAX_OPEN_FILES; i++)
@@ -96,7 +96,7 @@ AddrSpace::AddrSpace(OpenFile *executable)
 #ifdef CHANGED // page table non 1:1
     for (unsigned int i = 0; i < numPages; i++) {
         pageTable[i].virtualPage = i;
-        pageTable[i].physicalPage = memoryManager->GetPage();
+        pageTable[i].physicalPage = memoryManager->AllocatePage();
         pageTable[i].valid = true;
         pageTable[i].use = false;
         pageTable[i].dirty = false;
@@ -169,7 +169,7 @@ AddrSpace::AddrSpace(AddrSpace *parent) {
 
     for (unsigned int i = 0; i < numPages; i++) {
         pageTable[i].virtualPage = i;
-        pageTable[i].physicalPage = memoryManager->GetPage();
+        pageTable[i].physicalPage = memoryManager->AllocatePage();
         pageTable[i].valid = true;
         pageTable[i].use = false;
         pageTable[i].dirty = false;
@@ -187,7 +187,81 @@ AddrSpace::AddrSpace(AddrSpace *parent) {
 }
 
 /**
- *
+ * Deallocate pages and reallocate for new executable
+ */
+void AddrSpace::Exec(OpenFile *executable) {
+    Deallocate();
+    delete pageTable;
+
+    NoffHeader noffH;
+
+    executable->ReadAt((char *)&noffH, sizeof(noffH), 0);
+
+    if ((noffH.noffMagic != NOFFMAGIC) &&
+        (WordToHost(noffH.noffMagic) == NOFFMAGIC))
+        SwapHeader(&noffH);
+    ASSERT(noffH.noffMagic == NOFFMAGIC);
+
+    // how big is address space?
+    size = noffH.code.size + noffH.initData.size + noffH.uninitData.size
+			+ UserStackSize;	// we need to increase the size
+						// to leave room for the stack
+    numPages = divRoundUp(size, PageSize);
+    size = numPages * PageSize;
+
+    ASSERT(numPages <= NumPhysPages);		// check we're not trying
+						// to run anything too big --
+						// at least until we have
+						// virtual memory
+
+    DEBUG('a', "Initializing address space, num pages %d, size %d\n",
+					numPages, size);
+
+    pageTable = new(std::nothrow) TranslationEntry[numPages];
+
+    for (unsigned int i = 0; i < numPages; i++) {
+        pageTable[i].virtualPage = i;
+        pageTable[i].physicalPage = memoryManager->AllocatePage();
+        pageTable[i].valid = true;
+        pageTable[i].use = false;
+        pageTable[i].dirty = false;
+        pageTable[i].readOnly = false;  // if the code segment was entirely on
+                        // a separate page, we could set its
+                        // pages to be read-only
+    }
+
+    for (unsigned int i = 0; i < numPages; i++) {
+        bzero(&machine->mainMemory[pageTable[i].physicalPage * PageSize], PageSize);
+    }
+
+    // read code into memory
+    if (noffH.code.size > 0) {
+        for (int i = 0; i < noffH.code.size; i++)
+            executable->ReadAt(&machine->mainMemory[Translate(i)], 1, i + noffH.code.inFileAddr);
+    }
+
+    // read data segment into memory
+    if (noffH.initData.size > 0) {
+        for (int i = 0; i < noffH.initData.inFileAddr; i++)
+            executable->ReadAt(
+                    &machine->mainMemory[Translate(i + noffH.code.size)],
+                    1,
+                    i + noffH.initData.inFileAddr);
+    }
+}
+
+/**
+ * deallocate allocated pages
+ */
+void AddrSpace::Deallocate() {
+    for (unsigned int i = 0; i < numPages; i++) {
+        memoryManager->DeallocatePage(pageTable[i].physicalPage);
+    }
+}
+
+/**
+ * Translate virtual addresses from this address space into physical
+ * addresses
  */
 int AddrSpace::Translate(int virtAddr) {
     unsigned int vpn, offset, ppn;
@@ -208,6 +282,9 @@ AddrSpace::~AddrSpace()
 {
 #ifndef USE_TLB
    delete pageTable;
+#endif
+#ifdef CHANGED
+   Deallocate();
 #endif
 }
 

@@ -128,17 +128,20 @@ void ExceptionHandler(ExceptionType which)
     char c;
     int byteRead;
     int tidx;
-    // for fork
+
+    // fork
     Thread *childThread;
     int nThreads;
     ThreadExit *exit;
 
-    // for join
+    // join
     SpaceId spaceId;
 
-    // for exit
+    // exit
     int exitCode;
 
+    // exec
+    OpenFile *executable;
 
     /* aliases for convenience and to save on memory accesses */
     AddrSpace *space = currentThread->space;
@@ -379,6 +382,28 @@ void ExceptionHandler(ExceptionType which)
             }
 
             updatePC();
+
+            break;
+
+        case SC_Exec:
+            DEBUG('a', "user thread %s called exec\n", currentThread->getName());
+
+            if (!import_filename(filename, MAX_FILE_NAME, (char *) machine->ReadRegister(4)))
+                break;
+
+            executable = fileSystem->Open(filename);
+
+            if (executable == NULL) {
+                fprintf(stderr, "Unable to open file %s\n", filename);
+                break;
+            }
+
+            currentThread->space->Exec(executable);
+
+            delete executable;
+
+            currentThread->space->InitRegisters();
+            currentThread->space->RestoreState(); // doesn't do anything rn
 
             break;
 

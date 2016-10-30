@@ -7,6 +7,7 @@ private:
     BitMap *bitmap;
 public:
     MemoryManager();
-    int GetPage();
+    int AllocatePage();
+    void DeallocatePage(int ppn);
 };
 #endif
