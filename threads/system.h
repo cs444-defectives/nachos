@@ -20,6 +20,8 @@
 #ifdef CHANGED
 #include "memorymanager.h"
 #include "syscall.h"
+#include "synch.h"
+#include "threadexit.h"
 #endif
 
 // Initialization and cleanup routines
@@ -42,8 +44,11 @@ extern Machine* machine;	// user program memory and registers
 extern SynchConsole *sconsole;
 #ifdef CHANGED
 extern MemoryManager *memoryManager;
-extern SpaceId spaceId;
+#define MAX_THREADS 100
+extern SpaceId _spaceId;
 extern Lock *spaceIdLock;
+extern ThreadExit* threads[MAX_THREADS];
+extern Lock *threadsLock;
 #endif /* CHANGED */
 #endif
 

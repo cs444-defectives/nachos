@@ -32,8 +32,10 @@ Machine *machine;	// user program memory and registers
 SynchConsole *sconsole;
 #ifdef CHANGED
 MemoryManager *memoryManager;
-SpaceId spaceId;
+SpaceId _spaceId;
 Lock *spaceIdLock;
+ThreadExit* threads[MAX_THREADS];
+Lock *threadsLock;
 #endif
 #endif
 
@@ -157,8 +159,11 @@ Initialize(int argc, char **argv)
     sconsole = new(std::nothrow) SynchConsole();
 #ifdef CHANGED
     memoryManager = new(std::nothrow) MemoryManager();
-    spaceId = 0;
+    _spaceId = 0;
     spaceIdLock = new(std::nothrow) Lock("space id lock");
+    for (int i = 0; i < MAX_THREADS; i++)
+        threads[i] = NULL;
+    threadsLock = new(std::nothrow) Lock("thread array lock");
 #endif
 #endif
 
