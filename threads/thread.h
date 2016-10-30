@@ -108,7 +108,8 @@ class Thread {
     void Print() { printf("%s, ", name); }
 
 #ifdef CHANGED
-    SpaceId id;
+    SpaceId spaceId;
+    Semaphore *wakeParent;
 #endif
 
   private:
