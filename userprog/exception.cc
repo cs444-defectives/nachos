@@ -91,6 +91,9 @@ static void updatePC()
 
 #ifdef CHANGED
 void forkCb(int _) {
+    currentThread->RestoreUserState();
+    currentThread->space->RestoreState();
+    //currentThread->wakeParent->V();
     machine->Run();
 }
 #endif
@@ -124,8 +127,18 @@ void ExceptionHandler(ExceptionType which)
     OpenFile *fo;
     char c;
     int byteRead;
+    int tidx;
     // for fork
     Thread *childThread;
+    int nThreads;
+    ThreadExit *exit;
+
+    // for join
+    SpaceId spaceId;
+
+    // for exit
+    int exitCode;
+
 
     /* aliases for convenience and to save on memory accesses */
     AddrSpace *space = currentThread->space;
@@ -144,9 +157,22 @@ void ExceptionHandler(ExceptionType which)
             interrupt->Halt();
 
         case SC_Exit:
-            /* FIXME */
-            DEBUG('a', "Shutdown, initiated by user code exit.\n");
-            interrupt->Halt();
+            DEBUG('a', "Exit, initiated by user code exit.\n");
+
+            exitCode = machine->ReadRegister(4);
+
+            tidx = currentThread->spaceId % MAX_THREADS;
+
+            // Wake up all threads `Join`ed on this one
+            threads[tidx]->join->V();
+
+            // you are done running
+            threads[tidx]->done = true;
+            threads[tidx]->exitCode = exitCode;
+
+            currentThread->Finish();
+
+            break;
 
         case SC_Create:
 
@@ -292,41 +318,68 @@ void ExceptionHandler(ExceptionType which)
         case SC_Fork:
             DEBUG('a', "forking a thread\n");
 
-            childThread = new Thread("fork child");
-            childThread->space = new(std::nothrow) AddrSpace(currentThread->space);
+            childThread = new Thread("fork child"); // create child thread
+            childThread->space = new(std::nothrow) AddrSpace(currentThread->space); // copy parent's address space
 
             // assign space id
+            // WARNING MAY LEAD TO DEADLINE
             spaceIdLock->Acquire();
-            childThread->id = spaceId++;
+            threadsLock->Acquire();
+
+            nThreads = 0;
+
+            while (threads[++_spaceId % MAX_THREADS] != NULL) {
+                nThreads++;
+                if (nThreads == MAX_THREADS) { // threads array is full
+                    ret = -1;
+                    return;
+                }
+            }
+
+            childThread->spaceId = _spaceId;
+            exit = (ThreadExit*)malloc(sizeof(ThreadExit));
+            exit->spaceId = _spaceId;
+            exit->done = false;
+            exit->join = new(std::nothrow) Semaphore("join semaphore", 0);
+            exit->joinLock = new(std::nothrow) Lock("join lock");
+            threads[_spaceId % MAX_THREADS] = exit;
+
+            threadsLock->Release();
             spaceIdLock->Release();
 
-            // update program counter
-            updatePC();
+            updatePC(); // update program counter for both parent and child
 
-            // save child register
-            childThread->SaveUserState();
+            currentThread->SaveUserState(); // save parent registers
 
-            // save parent registers
-            currentThread->SaveUserState();
+            machine->WriteRegister(2, 0); // return 0 to child
 
-            // return 0 to child
-            machine->WriteRegister(2, 0);
+            childThread->SaveUserState(); // save child register
 
-            childThread->Fork((VoidFunctionPtr) forkCb, 0);
+            childThread->Fork((VoidFunctionPtr) forkCb, 0); // start child
 
-            // TODO: this is sketchy
-            // P() a 0 valued semaphore
-            currentThread->Yield();
+            //childThread->wakeParent->P(); // put parent to sleep
 
-            // restore parent registers
-            currentThread->RestoreUserState();
-
-            // return 1 to parent
-            ret = 1;
+            ret = _spaceId;
+            //machine->WriteRegister(2, _spaceId); // return space id to parent
 
             break;
 
         case SC_Join:
+            DEBUG('a', "Join, initiated by user program\n");
+
+            spaceId = machine->ReadRegister(4);
+
+            tidx = spaceId % MAX_THREADS;
+
+            if (threads[tidx] != NULL && threads[tidx]->spaceId == spaceId) {
+                threads[tidx]->joinLock->Acquire();
+                threads[tidx]->join->P();
+                ret = threads[tidx]->exitCode;
+                threads[tidx]->joinLock->Release();
+            }
+
+            updatePC();
+
             break;
 
         default:
