@@ -109,7 +109,6 @@ class Thread {
 
 #ifdef CHANGED
     SpaceId spaceId;
-    Semaphore *wakeParent;
 #endif
 
   private:

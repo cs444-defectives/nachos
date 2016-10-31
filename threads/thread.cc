@@ -17,7 +17,6 @@
 #include "copyright.h"
 #include "thread.h"
 #include "switch.h"
-#include "synch.h"
 #include "system.h"
 #include <new>
 
@@ -41,9 +40,6 @@ Thread::Thread(const char* threadName)
     status = JUST_CREATED;
 #ifdef USER_PROGRAM
     space = NULL;
-#ifdef CHANGED
-    wakeParent = new(std::nothrow) Semaphore(name, 0);
-#endif
 #endif
 }
 

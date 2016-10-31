@@ -61,7 +61,6 @@ void HandleTLBFault(int vaddr)
 
 #endif
 
-/* TODO: address translation */
 static int strimport(char *buf, int max_size, char *virt_address)
 {
     int i;
@@ -93,7 +92,6 @@ static void updatePC()
 void forkCb(int _) {
     currentThread->RestoreUserState();
     currentThread->space->RestoreState();
-    //currentThread->wakeParent->V();
     machine->Run();
 }
 
