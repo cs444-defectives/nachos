@@ -184,7 +184,9 @@ void ExceptionHandler(ExceptionType which)
 
         case SC_Exec:
             DEBUG('a', "user thread %s called exec\n", currentThread->getName());
-            machine->WriteRegister(2, SysExec());
+            updatePC();
+            if (SysExec() == -1)
+                machine->WriteRegister(2, -1);
             break;
 
         default:
@@ -358,6 +360,8 @@ SpaceId SysFork() {
 
     int nThreads = 0;
 
+    // TODO: the threads array only grows, things are never deleted from it
+    // FIX ME
     while (threads[++_spaceId % MAX_THREADS] != NULL) {
         nThreads++;
         if (nThreads == MAX_THREADS) { // threads array is full
@@ -414,11 +418,8 @@ int SysExec() {
 
     OpenFile *executable = fileSystem->Open(filename);
 
-    if (executable == NULL) {
-        fprintf(stderr, "Unable to open file %s\n", filename);
-        updatePC();
+    if (executable == NULL)
         return -1;
-    }
 
     currentThread->space->Exec(executable);
 
@@ -430,3 +431,4 @@ int SysExec() {
     return 0;
 }
 #endif /* CHANGED */
+
