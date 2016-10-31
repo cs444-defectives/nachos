@@ -280,11 +280,11 @@ int AddrSpace::Translate(int virtAddr) {
 
 AddrSpace::~AddrSpace()
 {
-#ifndef USE_TLB
-   delete pageTable;
-#endif
 #ifdef CHANGED
    Deallocate();
+#endif
+#ifndef USE_TLB
+   delete pageTable;
 #endif
 }
 
