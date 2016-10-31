@@ -132,14 +132,6 @@ void ExceptionHandler(ExceptionType which)
 {
     int type = machine->ReadRegister(2);
 
-    /* aliases for convenience and to save on memory accesses */
-    //AddrSpace *space = currentThread->space;
-    //OpenFile **open_files = space->open_files;
-    //Semaphore *num_open_files = space->num_open_files;
-    //Lock *fid_assignment = space->fid_assignment;
-
-    //int ret = 0;
-
     switch (which) {
     case SyscallException:
         switch (type) {
