@@ -96,6 +96,16 @@ void forkCb(int _) {
     //currentThread->wakeParent->V();
     machine->Run();
 }
+
+int SysExec();
+int SysJoin();
+SpaceId SysFork();
+void SysExit();
+int SysOpen();
+void SysCreate();
+void SysClose();
+void SysWrite();
+int SysRead();
 #endif
 
 /*
@@ -121,35 +131,14 @@ void forkCb(int _) {
 void ExceptionHandler(ExceptionType which)
 {
     int type = machine->ReadRegister(2);
-    char filename[MAX_FILE_NAME];
-    int findex, fid, size;
-    char *userland_str;
-    OpenFile *fo;
-    char c;
-    int byteRead;
-    int tidx;
-
-    // fork
-    Thread *childThread;
-    int nThreads;
-    ThreadExit *exit;
-
-    // join
-    SpaceId spaceId;
-
-    // exit
-    int exitCode;
-
-    // exec
-    OpenFile *executable;
 
     /* aliases for convenience and to save on memory accesses */
-    AddrSpace *space = currentThread->space;
-    OpenFile **open_files = space->open_files;
-    Semaphore *num_open_files = space->num_open_files;
-    Lock *fid_assignment = space->fid_assignment;
+    //AddrSpace *space = currentThread->space;
+    //OpenFile **open_files = space->open_files;
+    //Semaphore *num_open_files = space->num_open_files;
+    //Lock *fid_assignment = space->fid_assignment;
 
-    int ret = 0;
+    //int ret = 0;
 
     switch (which) {
     case SyscallException:
@@ -161,261 +150,57 @@ void ExceptionHandler(ExceptionType which)
 
         case SC_Exit:
             DEBUG('a', "Exit, initiated by user code exit.\n");
-
-            exitCode = machine->ReadRegister(4);
-
-            tidx = currentThread->spaceId % MAX_THREADS;
-
-            if (threads[tidx] != NULL) { // main thread will not be in there
-                // Wake up all threads `Join`ed on this one
-                threads[tidx]->join->V();
-
-                // you are done running
-                threads[tidx]->done = true;
-                threads[tidx]->exitCode = exitCode;
-            }
-
-            currentThread->Finish();
-
+            SysExit();
             break;
 
         case SC_Create:
-
-            /* don't create the file if the filename is too long */
-            if (!import_filename(filename, MAX_FILE_NAME, (char *) machine->ReadRegister(4)))
-                break;
-
-            DEBUG('a', "creating file: %s\n", filename);
-            fileSystem->Create(filename, 0);
-
+            SysCreate();
             updatePC();
-
             break;
 
         case SC_Open:
-            DEBUG('a', "opening file %s\n", filename);
-
-            /* don't create the file if the filename is too long */
-            if (!import_filename(filename, MAX_FILE_NAME, (char *) machine->ReadRegister(4))) {
-                ret = -1;
-                break;
-            }
-
-            fo = fileSystem->Open(filename);
-
-            num_open_files->P();
-
-            fid_assignment->Acquire();
-
-            /* since we're past the semaphore, there ought to be a free slot here */
-            for (findex = 0; open_files[findex] != NULL && findex < MAX_OPEN_FILES; findex++);
-            ASSERT(findex != MAX_OPEN_FILES);
-
-            open_files[findex] = fo;
-
-            fid_assignment->Release();
-
-            /* we don't store ConsoleInput and ConsoleOutput in the array */
-            ret = findex + 2;
-
+            DEBUG('a', "opening file\n");
+            machine->WriteRegister(2, SysOpen());
             updatePC();
-
             break;
 
         case SC_Read:
             DEBUG('a', "Read file, initiated by user program.\n");
-
-            userland_str = (char *) machine->ReadRegister(4);
-            size = machine->ReadRegister(5);
-            fid = machine->ReadRegister(6);
-            findex = fid - 2;
-
-            ret = 0;
-
-            /* can't read from output */
-            if (fid == ConsoleOutput) {
-                ret = -1;
-                break;
-            }
-
-            /* no such file */
-            if (fid != ConsoleInput && open_files[findex] == NULL) {
-                ret = -1;
-                break;
-            }
-
-            byteRead = 1;
-
-            while (size && byteRead) {
-                if (fid == ConsoleInput) {
-                    c = sconsole->ReadChar();
-                    byteRead = 1;
-                } else {
-                    byteRead = open_files[findex]->Read(&c, 1);
-                }
-                machine->mainMemory[space->Translate((int) userland_str)] = c;
-                userland_str++;
-                size--;
-                ret += byteRead;
-            }
-
+            machine->WriteRegister(2, SysRead());
             updatePC();
-
             break;
 
         case SC_Write:
             DEBUG('a', "Write file, initiated by user program.\n");
-
-            userland_str = (char *) machine->ReadRegister(4);
-            size = machine->ReadRegister(5);
-            fid = machine->ReadRegister(6);
-            findex = fid - 2;
-
-            /* can't write to input */
-            if (fid == ConsoleInput)
-                break;
-
-            if (fid != ConsoleOutput)
-                ASSERT(open_files[findex] != NULL);
-
-            while (size) {
-                c = machine->mainMemory[space->Translate((int) userland_str)];
-                if (fid == ConsoleOutput) {
-                    sconsole->WriteChar(c);
-                } else {
-                    open_files[findex]->Write(&c, 1);
-                }
-                userland_str++;
-                size--;
-            }
-
+            SysWrite();
             updatePC();
-
             break;
 
         case SC_Close:
-            fid = machine->ReadRegister(4);
-
-            /* console can't be opened or closed */
-            if (fid == ConsoleInput || fid == ConsoleOutput) {
-                DEBUG('a', "ignoring silly console close request\n");
-                break;
-            }
-
-            DEBUG('a', "closing file with FID %d\n", fid);
-
-            /* we don't store ConsoleInput and ConsoleOutput in the array */
-            findex = fid - 2;
-            ASSERT(open_files[findex] != NULL);
-
-            fid_assignment->Acquire();
-
-            delete open_files[findex];
-            open_files[findex] = NULL;
-
-            fid_assignment->Release();
-            num_open_files->V();
-
+            DEBUG('a', "closing a file\n");
+            SysClose();
             updatePC();
-
             break;
 
         case SC_Fork:
             DEBUG('a', "forking a thread\n");
-
-            childThread = new Thread("fork child"); // create child thread
-            childThread->space = new(std::nothrow) AddrSpace(currentThread->space); // copy parent's address space
-
-            // assign space id
-            // WARNING MAY LEAD TO DEADLINE
-            spaceIdLock->Acquire();
-            threadsLock->Acquire();
-
-            nThreads = 0;
-
-            while (threads[++_spaceId % MAX_THREADS] != NULL) {
-                nThreads++;
-                if (nThreads == MAX_THREADS) { // threads array is full
-                    ret = -1;
-                    return;
-                }
-            }
-
-            childThread->spaceId = _spaceId;
-            exit = (ThreadExit*)malloc(sizeof(ThreadExit));
-            exit->spaceId = _spaceId;
-            exit->done = false;
-            exit->join = new(std::nothrow) Semaphore("join semaphore", 0);
-            exit->joinLock = new(std::nothrow) Lock("join lock");
-            threads[_spaceId % MAX_THREADS] = exit;
-
-            threadsLock->Release();
-            spaceIdLock->Release();
-
-            updatePC(); // update program counter for both parent and child
-
-            currentThread->SaveUserState(); // save parent registers
-
-            machine->WriteRegister(2, 0); // return 0 to child
-
-            childThread->SaveUserState(); // save child register
-
-            childThread->Fork((VoidFunctionPtr) forkCb, 0); // start child
-
-            //childThread->wakeParent->P(); // put parent to sleep
-
-            ret = _spaceId;
-            //machine->WriteRegister(2, _spaceId); // return space id to parent
-
+            machine->WriteRegister(2, SysFork());
             break;
 
         case SC_Join:
             DEBUG('a', "Join, initiated by user program\n");
-
-            spaceId = machine->ReadRegister(4);
-
-            tidx = spaceId % MAX_THREADS;
-
-            if (threads[tidx] != NULL && threads[tidx]->spaceId == spaceId) {
-                threads[tidx]->joinLock->Acquire();
-                threads[tidx]->join->P();
-                ret = threads[tidx]->exitCode;
-                threads[tidx]->joinLock->Release();
-            }
-
-            updatePC();
-
+            machine->WriteRegister(2, SysJoin());
             break;
 
         case SC_Exec:
             DEBUG('a', "user thread %s called exec\n", currentThread->getName());
-
-            if (!import_filename(filename, MAX_FILE_NAME, (char *) machine->ReadRegister(4)))
-                break;
-
-            executable = fileSystem->Open(filename);
-
-            if (executable == NULL) {
-                fprintf(stderr, "Unable to open file %s\n", filename);
-                // TODO: what should we return here?
-                updatePC();
-                break;
-            }
-
-            currentThread->space->Exec(executable);
-
-            delete executable;
-
-            currentThread->space->InitRegisters();
-            currentThread->space->RestoreState(); // doesn't do anything rn
-
+            machine->WriteRegister(2, SysExec());
             break;
 
         default:
             printf("Undefined SYSCALL %d\n", type);
             ASSERT(false);
         }
-        machine->WriteRegister(2, ret);
 #ifdef USE_TLB
     case PageFaultException:
         HandleTLBFault(machine->ReadRegister(BadVAddrReg));
@@ -425,3 +210,233 @@ void ExceptionHandler(ExceptionType which)
         ;
     }
 }
+
+#ifdef CHANGED
+void SysCreate() {
+    char filename[MAX_FILE_NAME];
+    /* don't create the file if the filename is too long */
+    if (!import_filename(filename, MAX_FILE_NAME, (char *) machine->ReadRegister(4)))
+        return;
+
+    DEBUG('a', "creating file: %s\n", filename);
+    fileSystem->Create(filename, 0);
+}
+
+int SysRead() {
+    char *userland_str = (char *) machine->ReadRegister(4);
+    int size = machine->ReadRegister(5);
+    int fid = machine->ReadRegister(6);
+    int findex = fid - 2;
+    char c;
+    AddrSpace *space = currentThread->space;
+    OpenFile **open_files = space->open_files;
+
+    int bytesRead = 0;
+
+    /* can't read from output */
+    if (fid == ConsoleOutput)
+        return -1;
+
+    /* no such file */
+    if (fid != ConsoleInput && open_files[findex] == NULL)
+        return -1;
+
+    int byteRead = 1;
+
+    while (size && byteRead) {
+        if (fid == ConsoleInput) {
+            c = sconsole->ReadChar();
+            byteRead = 1;
+        } else {
+            byteRead = open_files[findex]->Read(&c, 1);
+        }
+        machine->mainMemory[space->Translate((int) userland_str)] = c;
+        userland_str++;
+        size--;
+        bytesRead += byteRead;
+    }
+
+    return bytesRead;
+}
+
+void SysWrite() {
+    char *userland_str = (char *) machine->ReadRegister(4);
+    int size = machine->ReadRegister(5);
+    int fid = machine->ReadRegister(6);
+    int findex = fid - 2;
+    char c;
+    AddrSpace *space = currentThread->space;
+    OpenFile **open_files = space->open_files;
+
+    /* can't write to input */
+    if (fid == ConsoleInput)
+        return;
+
+    if (fid != ConsoleOutput)
+        ASSERT(open_files[findex] != NULL);
+
+    while (size) {
+        c = machine->mainMemory[space->Translate((int) userland_str)];
+        if (fid == ConsoleOutput) {
+            sconsole->WriteChar(c);
+        } else {
+            open_files[findex]->Write(&c, 1);
+        }
+        userland_str++;
+        size--;
+    }
+}
+
+void SysClose() {
+    int fid = machine->ReadRegister(4);
+    OpenFile **open_files = currentThread->space->open_files;
+    Semaphore *num_open_files = currentThread->space->num_open_files;
+    Lock *fid_assignment = currentThread->space->fid_assignment;
+
+    /* console can't be opened or closed */
+    if (fid == ConsoleInput || fid == ConsoleOutput) {
+        DEBUG('a', "ignoring silly console close request\n");
+        return;
+    }
+
+    DEBUG('a', "closing file with FID %d\n", fid);
+
+    /* we don't store ConsoleInput and ConsoleOutput in the array */
+    int findex = fid - 2;
+    ASSERT(open_files[findex] != NULL);
+
+    fid_assignment->Acquire();
+
+    delete open_files[findex];
+    open_files[findex] = NULL;
+
+    fid_assignment->Release();
+    num_open_files->V();
+}
+
+int SysOpen() {
+    char filename[MAX_FILE_NAME];
+    OpenFile **open_files = currentThread->space->open_files;
+    Semaphore *num_open_files = currentThread->space->num_open_files;
+    Lock *fid_assignment = currentThread->space->fid_assignment;
+    int findex;
+
+    if (!import_filename(filename, MAX_FILE_NAME, (char *) machine->ReadRegister(4)))
+        return -1;
+
+    OpenFile *fo = fileSystem->Open(filename);
+
+    num_open_files->P();
+
+    fid_assignment->Acquire();
+
+    /* since we're past the semaphore, there ought to be a free slot here */
+    for (findex = 0; open_files[findex] != NULL && findex < MAX_OPEN_FILES; findex++);
+
+    ASSERT(findex != MAX_OPEN_FILES);
+
+    open_files[findex] = fo;
+
+    fid_assignment->Release();
+
+    /* we don't store ConsoleInput and ConsoleOutput in the array */
+    return findex + 2;
+}
+
+void SysExit() {
+    int exitCode = machine->ReadRegister(4);
+    int tidx = currentThread->spaceId % MAX_THREADS;
+
+    if (threads[tidx] != NULL) { // main thread will not be in there
+        threads[tidx]->join->V(); // Wake up all threads `Join`ed on this one
+        threads[tidx]->done = true; // you are done running
+        threads[tidx]->exitCode = exitCode;
+    }
+
+    currentThread->Finish();
+}
+
+SpaceId SysFork() {
+    Thread *childThread = new Thread("fork child"); // create child thread
+    // copy parent's address space
+    childThread->space = new(std::nothrow) AddrSpace(currentThread->space);
+
+    // assign space id
+    // WARNING: MAY LEAD TO DEADLOCK
+    spaceIdLock->Acquire();
+    threadsLock->Acquire();
+
+    int nThreads = 0;
+
+    while (threads[++_spaceId % MAX_THREADS] != NULL) {
+        nThreads++;
+        if (nThreads == MAX_THREADS) { // threads array is full
+            return -1;
+        }
+    }
+
+    childThread->spaceId = _spaceId;
+    ThreadExit *exit = (ThreadExit*)malloc(sizeof(ThreadExit));
+    exit->spaceId = _spaceId;
+    exit->done = false;
+    exit->join = new(std::nothrow) Semaphore("join semaphore", 0);
+    exit->joinLock = new(std::nothrow) Lock("join lock");
+    threads[_spaceId % MAX_THREADS] = exit;
+
+    threadsLock->Release();
+    spaceIdLock->Release();
+
+    updatePC(); // update program counter for both parent and child
+
+    currentThread->SaveUserState(); // save parent registers
+
+    machine->WriteRegister(2, 0); // return 0 to child
+    childThread->SaveUserState(); // save child register
+    childThread->Fork((VoidFunctionPtr) forkCb, 0); // start child
+
+    return _spaceId;
+}
+
+int SysJoin() {
+    SpaceId spaceId = machine->ReadRegister(4);
+
+    int tidx = spaceId % MAX_THREADS;
+
+    int exitCode;
+
+    if (threads[tidx] != NULL && threads[tidx]->spaceId == spaceId) {
+        threads[tidx]->joinLock->Acquire();
+        threads[tidx]->join->P();
+        exitCode = threads[tidx]->exitCode;
+        threads[tidx]->joinLock->Release();
+    }
+
+    updatePC();
+
+    return exitCode;
+}
+
+int SysExec() {
+    char filename[MAX_FILE_NAME];
+
+    if (!import_filename(filename, MAX_FILE_NAME, (char *) machine->ReadRegister(4)))
+        return -1;
+
+    OpenFile *executable = fileSystem->Open(filename);
+
+    if (executable == NULL) {
+        fprintf(stderr, "Unable to open file %s\n", filename);
+        updatePC();
+        return -1;
+    }
+
+    currentThread->space->Exec(executable);
+
+    delete executable;
+
+    currentThread->space->InitRegisters();
+    currentThread->space->RestoreState(); // doesn't do anything rn
+
+    return 0;
+}
+#endif /* CHANGED */
