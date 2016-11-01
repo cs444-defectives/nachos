@@ -218,29 +218,34 @@ int SysRead() {
     char *userland_str = (char *) machine->ReadRegister(4);
     int size = machine->ReadRegister(5);
     int fid = machine->ReadRegister(6);
-    int findex = fid - 2;
-    char c;
+    int bytesRead = 0;
     AddrSpace *space = currentThread->space;
     OpenFile **open_files = space->open_files;
+    OpenFile *f = NULL;
 
-    int bytesRead = 0;
-
-    /* can't read from output */
-    if (fid == ConsoleOutput)
+    /* not a possible fid */
+    if (fid > MAX_OPEN_FILES || fid < 0)
         return -1;
 
-    /* no such file */
-    if (fid != ConsoleInput && open_files[findex] == NULL)
+    /* get open file or console cookie */
+    unsigned int fp = (unsigned int) open_files[fid];
+
+    /* can't read from output or a null file */
+    if (fp == 0 || fp == OUTMAGIC)
         return -1;
+
+    /* we're safe to grab the file object */
+    if (fp != INMAGIC)
+        f = (OpenFile *) fp;
 
     int byteRead = 1;
-
+    char c;
     while (size && byteRead) {
-        if (fid == ConsoleInput) {
+        if (fp == INMAGIC) {
             c = sconsole->ReadChar();
             byteRead = 1;
         } else {
-            byteRead = open_files[findex]->Read(&c, 1);
+            byteRead = f->Read(&c, 1);
         }
         machine->mainMemory[space->Translate((int) userland_str)] = c;
         userland_str++;
@@ -255,24 +260,32 @@ void SysWrite() {
     char *userland_str = (char *) machine->ReadRegister(4);
     int size = machine->ReadRegister(5);
     int fid = machine->ReadRegister(6);
-    int findex = fid - 2;
-    char c;
     AddrSpace *space = currentThread->space;
     OpenFile **open_files = space->open_files;
+    OpenFile *f = NULL;
 
-    /* can't write to input */
-    if (fid == ConsoleInput)
+    /* not a possible fid */
+    if (fid > MAX_OPEN_FILES || fid < 0)
         return;
 
-    if (fid != ConsoleOutput)
-        ASSERT(open_files[findex] != NULL);
+    /* get open file or console cookie */
+    unsigned int fp = (unsigned int) open_files[fid];
 
+    /* can't write to input or a null file */
+    if (fp == 0 || fp == INMAGIC)
+        return;
+
+    /* we're safe to grab the file object */
+    if (fp != OUTMAGIC)
+        f = (OpenFile *) fp;
+
+    char c;
     while (size) {
         c = machine->mainMemory[space->Translate((int) userland_str)];
         if (fid == ConsoleOutput) {
             sconsole->WriteChar(c);
         } else {
-            open_files[findex]->Write(&c, 1);
+            f->Write(&c, 1);
         }
         userland_str++;
         size--;
@@ -284,23 +297,44 @@ void SysClose() {
     OpenFile **open_files = currentThread->space->open_files;
     Semaphore *num_open_files = currentThread->space->num_open_files;
     Lock *fid_assignment = currentThread->space->fid_assignment;
+    OpenFile *f = NULL;
 
-    /* console can't be opened or closed */
-    if (fid == ConsoleInput || fid == ConsoleOutput) {
-        DEBUG('a', "ignoring silly console close request\n");
+    /* not a possible fid */
+    if (fid > MAX_OPEN_FILES || fid < 0)
         return;
+
+    /* get open file or console cookie */
+    unsigned int fp = (unsigned int) open_files[fid];
+
+    /* can't close a null file */
+    if (fp == 0)
+        return;
+
+    /* we're safe to grab the file object */
+    if (fp != OUTMAGIC && fp != INMAGIC)
+        f = (OpenFile *) fp;
+
+    const char *dbg_closing;
+    switch (fp) {
+        case 0:
+            dbg_closing = "null file";
+            break;
+        case INMAGIC:
+            dbg_closing = "console input";
+            break;
+        case OUTMAGIC:
+            dbg_closing = "console output";
+            break;
+        default:
+            dbg_closing = "file";
+            break;
     }
-
-    DEBUG('a', "closing file with FID %d\n", fid);
-
-    /* we don't store ConsoleInput and ConsoleOutput in the array */
-    int findex = fid - 2;
-    ASSERT(open_files[findex] != NULL);
+    DEBUG('a', "closing %s at FID %d\n", dbg_closing, fid);
 
     fid_assignment->Acquire();
 
-    delete open_files[findex];
-    open_files[findex] = NULL;
+    delete f;
+    open_files[fid] = NULL;
 
     fid_assignment->Release();
     num_open_files->V();
@@ -311,7 +345,7 @@ int SysOpen() {
     OpenFile **open_files = currentThread->space->open_files;
     Semaphore *num_open_files = currentThread->space->num_open_files;
     Lock *fid_assignment = currentThread->space->fid_assignment;
-    int findex;
+    int fid;
 
     if (!import_filename(filename, MAX_FILE_NAME, (char *) machine->ReadRegister(4)))
         return -1;
@@ -323,16 +357,15 @@ int SysOpen() {
     fid_assignment->Acquire();
 
     /* since we're past the semaphore, there ought to be a free slot here */
-    for (findex = 0; open_files[findex] != NULL && findex < MAX_OPEN_FILES; findex++);
+    for (fid = 0; open_files[fid] != NULL && fid < MAX_OPEN_FILES; fid++);
 
-    ASSERT(findex != MAX_OPEN_FILES);
+    ASSERT(fid != MAX_OPEN_FILES);
 
-    open_files[findex] = fo;
+    open_files[fid] = fo;
 
     fid_assignment->Release();
 
-    /* we don't store ConsoleInput and ConsoleOutput in the array */
-    return findex + 2;
+    return fid;
 }
 
 void SysExit() {

@@ -65,10 +65,20 @@ AddrSpace::AddrSpace(OpenFile *executable)
     unsigned int size;
 #endif /* not CHANGED */
 
+    /* allocate space for open files, plus console in/out cookies */
     open_files = new OpenFile* [MAX_OPEN_FILES];
     for (int i = 0; i < MAX_OPEN_FILES; i++)
         open_files[i] = NULL;
     num_open_files = new Semaphore("num_open_files", MAX_OPEN_FILES);
+
+    /* allocate a fake file object for console input */
+    open_files[ConsoleInput] = (OpenFile *) INMAGIC;
+    num_open_files->V();
+
+    /* allocate a fake file object for console output */
+    open_files[ConsoleOutput] = (OpenFile *) OUTMAGIC;
+    num_open_files->V();
+
     fid_assignment = new Lock("fid_assignment");
 
     executable->ReadAt((char *)&noffH, sizeof(noffH), 0);
