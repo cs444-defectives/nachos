@@ -43,3 +43,5 @@ test/hellocons
 test/hellofile
 test/fork
 test/exec
+test/cat
+test/cp
