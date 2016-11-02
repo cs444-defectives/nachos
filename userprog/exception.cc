@@ -351,6 +351,8 @@ int SysOpen() {
         return -1;
 
     OpenFile *fo = fileSystem->Open(filename);
+    if (fo == NULL)
+        return -1;
 
     num_open_files->P();
 
