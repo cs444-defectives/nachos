@@ -42,3 +42,4 @@ test/fromcons
 test/hellocons
 test/hellofile
 test/fork
+test/exec
