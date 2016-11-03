@@ -21,7 +21,6 @@
 #include <string.h>
 
 #define MAX_FILE_NAME 128
-#define RW_BUFFER_SIZE 128
 
 #ifdef USE_TLB
 
