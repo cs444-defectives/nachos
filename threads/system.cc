@@ -34,7 +34,7 @@ SynchConsole *sconsole;
 MemoryManager *memoryManager;
 SpaceId _spaceId;
 Lock *spaceIdLock;
-ThreadExit* threads[MAX_THREADS];
+Thread* threads[MAX_THREADS];
 Lock *threadsLock;
 #endif
 #endif

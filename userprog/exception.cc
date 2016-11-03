@@ -262,7 +262,7 @@ static void _exit(void)
 
     if (threads[tidx] != NULL) { // main thread will not be in there
         threads[tidx]->join->V(); // Wake up all threads `Join`ed on this one
-        threads[tidx]->done = true; // you are done running
+        threads[tidx]->dead = true; // you are done running
         threads[tidx]->exitCode = exitCode;
     }
 
@@ -287,7 +287,6 @@ static SpaceId _fork(void)
     // assign space id
     // WARNING: MAY LEAD TO DEADLOCK
     spaceIdLock->Acquire();
-    threadsLock->Acquire();
 
     int nThreads = 0;
 
@@ -301,15 +300,11 @@ static SpaceId _fork(void)
     }
 
     childThread->spaceId = _spaceId;
-    ThreadExit *exit = (ThreadExit*)malloc(sizeof(ThreadExit));
-    exit->spaceId = _spaceId;
-    exit->done = false;
-    exit->join = new(std::nothrow) Semaphore("join semaphore", 0);
-    exit->joinLock = new(std::nothrow) Lock("join lock");
-    threads[_spaceId % MAX_THREADS] = exit;
-
-    threadsLock->Release();
     spaceIdLock->Release();
+
+    threadsLock->Acquire();
+    threads[_spaceId % MAX_THREADS] = childThread; // put child thread in threads array
+    threadsLock->Release();
 
     updatePC(); // update program counter for both parent and child
 

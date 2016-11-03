@@ -40,6 +40,9 @@ Thread::Thread(const char* threadName)
     status = JUST_CREATED;
 #ifdef USER_PROGRAM
     space = NULL;
+    dead = false;
+    join = new(std::nothrow) Semaphore("thread join", 0);
+    joinLock = new(std::nothrow) Lock("thread join sempahore lock");
 #endif
 }
 

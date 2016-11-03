@@ -109,6 +109,10 @@ class Thread {
 
 #ifdef CHANGED
     SpaceId spaceId;
+    Semaphore *join;
+    Lock *joinLock;
+    bool dead;
+    int exitCode;
 #endif
 
   private:
