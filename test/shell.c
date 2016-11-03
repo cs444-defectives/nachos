@@ -5,7 +5,7 @@
 
 int main()
 {
-    int i;
+    int i, err;
     char c, line[MAX_LINE];
     char *prompt = "defectives> ";
     SpaceId p;
@@ -25,8 +25,11 @@ int main()
             }
 
             /* return submits the line */
-            if (c == '\n' || c == '\r')
+            if (c == '\n' || c == '\r') {
+                line[i] = '\0';
+                i++;
                 break;
+            }
 
             /* FIXME: this currently crashes the kernel?! */
             /* ^D exits from shell */
@@ -38,18 +41,29 @@ int main()
                 continue;
 
             /* the character was good, so store it */
-            line[i++] = c;
+            line[i] = c;
+            i++;
 
-        } while (i < MAX_LINE);
-        line[--i] = '\0';
+        } while (i < MAX_LINE - 1);
+        line[MAX_LINE - 1] = '\0';
 
         /* if no text was entered on the line */
         if (i <= 0)
             continue;
 
-        if (p = Fork())
+        /* we're in the parent */
+        /* FIXME: fork crashes kernel after the fifth shell command */
+        if (p = Fork()) {
             Join(p);
-        else
-            Exec(line);
+
+        /* we're in the child */
+        } else {
+            err = Exec(line);
+            if (err == -1) {
+                print_string("No such script or binary '");
+                print_string(line);
+                print_string("'!\n");
+            }
+        }
     }
 }
