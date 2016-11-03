@@ -73,11 +73,11 @@ AddrSpace::AddrSpace(OpenFile *executable)
 
     /* allocate a fake file object for console input */
     open_files[ConsoleInput] = new OpenFile(false);
-    num_open_files->V();
+    num_open_files->P();
 
     /* allocate a fake file object for console output */
     open_files[ConsoleOutput] = new OpenFile(true);
-    num_open_files->V();
+    num_open_files->P();
 
     fid_assignment = new Lock("fid_assignment");
 

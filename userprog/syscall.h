@@ -28,6 +28,7 @@
 #define SC_Write	7
 #define SC_Close	8
 #define SC_Fork		9
+#define SC_Dup		10
 
 #ifndef IN_ASM
 
@@ -114,6 +115,11 @@ int Read(char *buffer, int size, OpenFileId id);
 /* Close the file, we're done reading and writing to it. */
 void Close(OpenFileId id);
 
+/*
+ * A call to Dup returns a new OpenFileId, referring to the same file as
+ * denoted by the argument. The semantics should be the same as the Unix dup().
+ */
+OpenFileId Dup(OpenFileId fid);
 
 #endif /* IN_ASM */
 

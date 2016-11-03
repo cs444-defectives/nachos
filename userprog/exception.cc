@@ -104,6 +104,7 @@ void SysCreate();
 void SysClose();
 void SysWrite();
 int SysRead();
+OpenFileId SysDup(void);
 #endif
 
 /*
@@ -151,6 +152,12 @@ void ExceptionHandler(ExceptionType which)
         case SC_Open:
             DEBUG('a', "opening file\n");
             machine->WriteRegister(2, SysOpen());
+            updatePC();
+            break;
+
+        case SC_Dup:
+            DEBUG('a', "duping file\n");
+            machine->WriteRegister(2, SysDup());
             updatePC();
             break;
 
@@ -217,7 +224,7 @@ void SysCreate() {
 int SysRead() {
     char *userland_str = (char *) machine->ReadRegister(4);
     int size = machine->ReadRegister(5);
-    int fid = machine->ReadRegister(6);
+    OpenFileId fid = machine->ReadRegister(6);
     int bytesRead = 0;
     AddrSpace *space = currentThread->space;
     OpenFile **open_files = space->open_files;
@@ -258,7 +265,7 @@ int SysRead() {
 void SysWrite() {
     char *userland_str = (char *) machine->ReadRegister(4);
     int size = machine->ReadRegister(5);
-    int fid = machine->ReadRegister(6);
+    OpenFileId fid = machine->ReadRegister(6);
     AddrSpace *space = currentThread->space;
     OpenFile **open_files = space->open_files;
     OpenFile *f;
@@ -290,7 +297,7 @@ void SysWrite() {
 }
 
 void SysClose() {
-    int fid = machine->ReadRegister(4);
+    OpenFileId fid = machine->ReadRegister(4);
     OpenFile **open_files = currentThread->space->open_files;
     Semaphore *num_open_files = currentThread->space->num_open_files;
     Lock *fid_assignment = currentThread->space->fid_assignment;
@@ -333,7 +340,7 @@ int SysOpen() {
     OpenFile **open_files = currentThread->space->open_files;
     Semaphore *num_open_files = currentThread->space->num_open_files;
     Lock *fid_assignment = currentThread->space->fid_assignment;
-    int fid;
+    OpenFileId fid;
 
     if (!import_filename(filename, MAX_FILE_NAME, (char *) machine->ReadRegister(4)))
         return -1;
@@ -462,5 +469,33 @@ int SysExec() {
 
     return 0;
 }
+
+int SysDup()
+{
+    OpenFileId fid = machine->ReadRegister(4);
+    OpenFile **open_files = currentThread->space->open_files;
+    Semaphore *num_open_files = currentThread->space->num_open_files;
+    Lock *fid_assignment = currentThread->space->fid_assignment;
+
+    OpenFile *f = open_files[fid];
+
+    num_open_files->P();
+
+    fid_assignment->Acquire();
+
+    /* since we're past the semaphore, there ought to be a free slot here */
+    int new_fid;
+    for (new_fid = 0; open_files[new_fid] != NULL && new_fid < MAX_OPEN_FILES; new_fid++);
+
+    ASSERT(new_fid != MAX_OPEN_FILES);
+
+    open_files[new_fid] = f;
+    f->refcount++;
+
+    fid_assignment->Release();
+
+    return new_fid;
+}
+
 #endif /* CHANGED */
 

@@ -106,6 +106,14 @@ Write:
 	j	$31
 	.end Write
 
+	.globl Dup
+	.ent	Dup
+Dup:
+	addiu $2,$0,SC_Dup
+	syscall
+	j	$31
+	.end Dup
+
 	.globl Close
 	.ent	Close
 Close:
