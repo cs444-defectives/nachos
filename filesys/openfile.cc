@@ -52,7 +52,7 @@ OpenFile::OpenFile(bool d)
 
 OpenFile::~OpenFile()
 {
-    if (is_real_file)
+    if (is_real_file && refcount)
         delete hdr;
 }
 
