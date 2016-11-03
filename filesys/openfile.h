@@ -28,8 +28,25 @@
 					// See definitions listed under #else
 class OpenFile {
   public:
-    OpenFile(int f) { file = f; currentOffset = 0; }	// open the file
-    ~OpenFile() { Close(file); }			// close the file
+
+    OpenFile(int f)
+    {
+      refcount = 1;
+      file = f;
+      currentOffset = 0;
+      is_real_file = true;
+    }
+
+    OpenFile(bool d)
+    {
+      refcount = 1;
+      is_real_file = false;
+      console_direction = d;
+    }
+
+    ~OpenFile() {
+      Close(file);
+    }
 
     int ReadAt(char *into, int numBytes, int position) { 
     		Lseek(file, position, 0); 
@@ -52,7 +69,14 @@ class OpenFile {
 		}
 
     int Length() { Lseek(file, 0, 2); return Tell(file); }
-    
+    int refcount;
+
+    /*
+     * is_real_file is false if the file represents console in/out.
+     * console_direction is true if the file represents console out, false if it
+     * represents console in.
+     */
+    bool is_real_file, console_direction;
   private:
     int file;
     int currentOffset;
@@ -85,7 +109,8 @@ class OpenFile {
 					// file (this interface is simpler 
 					// than the UNIX idiom -- lseek to 
 					// end of file, tell, lseek back 
-    
+    int refcount;
+    bool is_real_file, console_direction;
   private:
     FileHeader *hdr;			// Header for this file 
     int seekPosition;			// Current position within the file

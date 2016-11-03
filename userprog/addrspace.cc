@@ -72,11 +72,11 @@ AddrSpace::AddrSpace(OpenFile *executable)
     num_open_files = new Semaphore("num_open_files", MAX_OPEN_FILES);
 
     /* allocate a fake file object for console input */
-    open_files[ConsoleInput] = (OpenFile *) INMAGIC;
+    open_files[ConsoleInput] = new OpenFile(false);
     num_open_files->V();
 
     /* allocate a fake file object for console output */
-    open_files[ConsoleOutput] = (OpenFile *) OUTMAGIC;
+    open_files[ConsoleOutput] = new OpenFile(true);
     num_open_files->V();
 
     fid_assignment = new Lock("fid_assignment");

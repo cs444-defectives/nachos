@@ -20,10 +20,6 @@
 #define UserStackSize		1024 	// increase this as necessary!
 #define MAX_OPEN_FILES 64
 
-/* special cookies for console input and output */
-#define INMAGIC 0xface1e55
-#define OUTMAGIC 0xface1e56
-
 class AddrSpace {
   public:
     AddrSpace(OpenFile *executable);	// Create an address space,

@@ -221,27 +221,27 @@ int SysRead() {
     int bytesRead = 0;
     AddrSpace *space = currentThread->space;
     OpenFile **open_files = space->open_files;
-    OpenFile *f = NULL;
+    OpenFile *f;
 
     /* not a possible fid */
     if (fid > MAX_OPEN_FILES || fid < 0)
         return -1;
 
-    /* get open file or console cookie */
-    unsigned int fp = (unsigned int) open_files[fid];
+    f = open_files[fid];
 
-    /* can't read from output or a null file */
-    if (fp == 0 || fp == OUTMAGIC)
+    /* can't read from a null file */
+    if (f == NULL)
         return -1;
 
-    /* we're safe to grab the file object */
-    if (fp != INMAGIC)
-        f = (OpenFile *) fp;
+    /* can't read from console output */
+    if (!f->is_real_file && f->console_direction)
+        return -1;
 
     int byteRead = 1;
     char c;
+    bool console_read = (!f->is_real_file && !f->console_direction);
     while (size && byteRead) {
-        if (fp == INMAGIC) {
+        if (console_read) {
             c = sconsole->ReadChar();
             byteRead = 1;
         } else {
@@ -262,27 +262,27 @@ void SysWrite() {
     int fid = machine->ReadRegister(6);
     AddrSpace *space = currentThread->space;
     OpenFile **open_files = space->open_files;
-    OpenFile *f = NULL;
+    OpenFile *f;
 
     /* not a possible fid */
     if (fid > MAX_OPEN_FILES || fid < 0)
         return;
 
-    /* get open file or console cookie */
-    unsigned int fp = (unsigned int) open_files[fid];
+    f = open_files[fid];
 
     /* can't write to input or a null file */
-    if (fp == 0 || fp == INMAGIC)
+    if (f == NULL)
         return;
 
-    /* we're safe to grab the file object */
-    if (fp != OUTMAGIC)
-        f = (OpenFile *) fp;
+    /* can't write to console input */
+    if (!f->is_real_file && !f->console_direction)
+        return;
 
     char c;
+    bool console_write = (!f->is_real_file && f->console_direction);
     while (size) {
         c = machine->mainMemory[space->Translate((int) userland_str)];
-        if (fid == ConsoleOutput) {
+        if (console_write) {
             sconsole->WriteChar(c);
         } else {
             f->Write(&c, 1);
@@ -297,43 +297,34 @@ void SysClose() {
     OpenFile **open_files = currentThread->space->open_files;
     Semaphore *num_open_files = currentThread->space->num_open_files;
     Lock *fid_assignment = currentThread->space->fid_assignment;
-    OpenFile *f = NULL;
+    OpenFile *f;
 
     /* not a possible fid */
     if (fid > MAX_OPEN_FILES || fid < 0)
         return;
 
-    /* get open file or console cookie */
-    unsigned int fp = (unsigned int) open_files[fid];
+    f = open_files[fid];
 
     /* can't close a null file */
-    if (fp == 0)
+    if (f == NULL)
         return;
 
-    /* we're safe to grab the file object */
-    if (fp != OUTMAGIC && fp != INMAGIC)
-        f = (OpenFile *) fp;
-
     const char *dbg_closing;
-    switch (fp) {
-        case 0:
-            dbg_closing = "null file";
-            break;
-        case INMAGIC:
-            dbg_closing = "console input";
-            break;
-        case OUTMAGIC:
-            dbg_closing = "console output";
-            break;
-        default:
-            dbg_closing = "file";
-            break;
+    if (f->is_real_file) {
+        dbg_closing = "file";
+    } else if (f->console_direction) {
+        dbg_closing = "console output";
+    } else {
+        dbg_closing = "console input";
     }
     DEBUG('a', "closing %s at FID %d\n", dbg_closing, fid);
 
     fid_assignment->Acquire();
 
-    delete f;
+    /* one fewer file reference exists; close iff none remain */
+    f->refcount--;
+    if (f->refcount == 0)
+        delete f;
     open_files[fid] = NULL;
 
     fid_assignment->Release();
@@ -387,6 +378,15 @@ SpaceId SysFork() {
     Thread *childThread = new Thread("fork child"); // create child thread
     // copy parent's address space
     childThread->space = new(std::nothrow) AddrSpace(currentThread->space);
+
+    /* increment reference count for each file */
+    OpenFile **child_files = childThread->space->open_files;
+    OpenFile *f;
+    for (int i = 0; i < MAX_OPEN_FILES; i++) {
+        f = child_files[i];
+        if (f != NULL)
+            f->refcount++;
+    }
 
     // assign space id
     // WARNING: MAY LEAD TO DEADLOCK

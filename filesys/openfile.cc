@@ -30,6 +30,19 @@ OpenFile::OpenFile(int sector)
     hdr = new(std::nothrow) FileHeader;
     hdr->FetchFrom(sector);
     seekPosition = 0;
+    refcount = 1;
+    is_real_file = true;
+}
+
+/*
+ * make a fake open file representing console in/out. pass false if it's console
+ * in, true if it's console out.
+ */
+OpenFile::OpenFile(bool d)
+{
+    refcount = 1;
+    is_real_file = false;
+    console_direction = d;
 }
 
 //----------------------------------------------------------------------
