@@ -94,124 +94,10 @@ void forkCb(int _) {
     currentThread->space->RestoreState();
     machine->Run();
 }
-
-int SysExec();
-int SysJoin();
-SpaceId SysFork();
-void SysExit();
-int SysOpen();
-void SysCreate();
-void SysClose();
-void SysWrite();
-int SysRead();
-OpenFileId SysDup(void);
 #endif
 
-/*
- * Entry point into the Nachos kernel. Called when a user program is executing,
- * and either does a syscall, or generates an addressing or arithmetic
- * exception.
- *
- * For system calls, the following is the calling convention:
- *
- *   - r2: system call code
- *   - r4: arg1
- *   - r5: arg2
- *   - r6: arg3
- *   - r7: arg4
- *
- * The result of the system call, if any, must be put back into r2. And don't
- * forget to increment the pc before returning. (Or else you'll loop making the
- * same system call forever!
- *
- * "which" is the kind of exception. The list of possible exceptions are in
- * machine.h.
- */
-void ExceptionHandler(ExceptionType which)
+static void _create(void)
 {
-    int type = machine->ReadRegister(2);
-
-    switch (which) {
-    case SyscallException:
-        switch (type) {
-
-        case SC_Halt:
-            DEBUG('a', "Shutdown, initiated by user program.\n");
-            interrupt->Halt();
-
-        case SC_Exit:
-            DEBUG('a', "Exit, initiated by user code exit.\n");
-            SysExit();
-            break;
-
-        case SC_Create:
-            SysCreate();
-            updatePC();
-            break;
-
-        case SC_Open:
-            DEBUG('a', "opening file\n");
-            machine->WriteRegister(2, SysOpen());
-            updatePC();
-            break;
-
-        case SC_Dup:
-            DEBUG('a', "duping file\n");
-            machine->WriteRegister(2, SysDup());
-            updatePC();
-            break;
-
-        case SC_Read:
-            DEBUG('a', "Read file, initiated by user program.\n");
-            machine->WriteRegister(2, SysRead());
-            updatePC();
-            break;
-
-        case SC_Write:
-            DEBUG('a', "Write file, initiated by user program.\n");
-            SysWrite();
-            updatePC();
-            break;
-
-        case SC_Close:
-            DEBUG('a', "closing a file\n");
-            SysClose();
-            updatePC();
-            break;
-
-        case SC_Fork:
-            DEBUG('a', "forking a thread\n");
-            machine->WriteRegister(2, SysFork());
-            break;
-
-        case SC_Join:
-            DEBUG('a', "Join, initiated by user program\n");
-            machine->WriteRegister(2, SysJoin());
-            break;
-
-        case SC_Exec:
-            DEBUG('a', "user thread %s called exec\n", currentThread->getName());
-            updatePC();
-            if (SysExec() == -1)
-                machine->WriteRegister(2, -1);
-            break;
-
-        default:
-            printf("Undefined SYSCALL %d\n", type);
-            ASSERT(false);
-        }
-#ifdef USE_TLB
-    case PageFaultException:
-        HandleTLBFault(machine->ReadRegister(BadVAddrReg));
-        break;
-#endif
-    default:
-        ;
-    }
-}
-
-#ifdef CHANGED
-void SysCreate() {
     char filename[MAX_FILE_NAME];
     /* don't create the file if the filename is too long */
     if (!import_filename(filename, MAX_FILE_NAME, (char *) machine->ReadRegister(4)))
@@ -221,7 +107,8 @@ void SysCreate() {
     fileSystem->Create(filename, 0);
 }
 
-int SysRead() {
+static int _read(void)
+{
     char *userland_str = (char *) machine->ReadRegister(4);
     int size = machine->ReadRegister(5);
     OpenFileId fid = machine->ReadRegister(6);
@@ -262,7 +149,8 @@ int SysRead() {
     return bytesRead;
 }
 
-void SysWrite() {
+static void _write(void)
+{
     char *userland_str = (char *) machine->ReadRegister(4);
     int size = machine->ReadRegister(5);
     OpenFileId fid = machine->ReadRegister(6);
@@ -296,7 +184,8 @@ void SysWrite() {
     }
 }
 
-void SysClose() {
+static void _close(void)
+{
     OpenFileId fid = machine->ReadRegister(4);
     OpenFile **open_files = currentThread->space->open_files;
     Semaphore *num_open_files = currentThread->space->num_open_files;
@@ -335,7 +224,8 @@ void SysClose() {
     num_open_files->V();
 }
 
-int SysOpen() {
+static int _open(void)
+{
     char filename[MAX_FILE_NAME];
     OpenFile **open_files = currentThread->space->open_files;
     Semaphore *num_open_files = currentThread->space->num_open_files;
@@ -365,7 +255,8 @@ int SysOpen() {
     return fid;
 }
 
-void SysExit() {
+static void _exit(void)
+{
     int exitCode = machine->ReadRegister(4);
     int tidx = currentThread->spaceId % MAX_THREADS;
 
@@ -378,7 +269,8 @@ void SysExit() {
     currentThread->Finish();
 }
 
-SpaceId SysFork() {
+static SpaceId _fork(void)
+{
     Thread *childThread = new Thread("fork child"); // create child thread
     // copy parent's address space
     childThread->space = new(std::nothrow) AddrSpace(currentThread->space);
@@ -430,7 +322,8 @@ SpaceId SysFork() {
     return _spaceId;
 }
 
-int SysJoin() {
+static int _join(void)
+{
     SpaceId spaceId = machine->ReadRegister(4);
 
     int tidx = spaceId % MAX_THREADS;
@@ -449,7 +342,8 @@ int SysJoin() {
     return exitCode;
 }
 
-int SysExec() {
+static int _exec(void)
+{
     char filename[MAX_FILE_NAME];
 
     if (!import_filename(filename, MAX_FILE_NAME, (char *) machine->ReadRegister(4)))
@@ -470,7 +364,7 @@ int SysExec() {
     return 0;
 }
 
-int SysDup()
+static int _dup(void)
 {
     OpenFileId fid = machine->ReadRegister(4);
     OpenFile **open_files = currentThread->space->open_files;
@@ -497,5 +391,105 @@ int SysDup()
     return new_fid;
 }
 
-#endif /* CHANGED */
+/*
+ * Entry point into the Nachos kernel. Called when a user program is executing,
+ * and either does a syscall, or generates an addressing or arithmetic
+ * exception.
+ *
+ * For system calls, the following is the calling convention:
+ *
+ *   - r2: system call code
+ *   - r4: arg1
+ *   - r5: arg2
+ *   - r6: arg3
+ *   - r7: arg4
+ *
+ * The result of the system call, if any, must be put back into r2. And don't
+ * forget to increment the pc before returning. (Or else you'll loop making the
+ * same system call forever!
+ *
+ * "which" is the kind of exception. The list of possible exceptions are in
+ * machine.h.
+ */
+void ExceptionHandler(ExceptionType which)
+{
+    int type = machine->ReadRegister(2);
 
+    switch (which) {
+    case SyscallException:
+        switch (type) {
+
+        case SC_Halt:
+            DEBUG('a', "Shutdown, initiated by user program.\n");
+            interrupt->Halt();
+
+        case SC_Exit:
+            DEBUG('a', "Exit, initiated by user code exit.\n");
+            _exit();
+            break;
+
+        case SC_Create:
+            _create();
+            updatePC();
+            break;
+
+        case SC_Open:
+            DEBUG('a', "opening file\n");
+            machine->WriteRegister(2, _open());
+            updatePC();
+            break;
+
+        case SC_Dup:
+            DEBUG('a', "duping file\n");
+            machine->WriteRegister(2, _dup());
+            updatePC();
+            break;
+
+        case SC_Read:
+            DEBUG('a', "Read file, initiated by user program.\n");
+            machine->WriteRegister(2, _read());
+            updatePC();
+            break;
+
+        case SC_Write:
+            DEBUG('a', "Write file, initiated by user program.\n");
+            _write();
+            updatePC();
+            break;
+
+        case SC_Close:
+            DEBUG('a', "closing a file\n");
+            _close();
+            updatePC();
+            break;
+
+        case SC_Fork:
+            DEBUG('a', "forking a thread\n");
+            machine->WriteRegister(2, _fork());
+            break;
+
+        case SC_Join:
+            DEBUG('a', "Join, initiated by user program\n");
+            machine->WriteRegister(2, _join());
+            break;
+
+        case SC_Exec:
+            DEBUG('a', "user thread %s called exec\n", currentThread->getName());
+            updatePC();
+            if (_exec() == -1)
+                machine->WriteRegister(2, -1);
+            break;
+
+        default:
+            printf("Undefined SYSCALL %d\n", type);
+            ASSERT(false);
+        }
+#ifdef USE_TLB
+    case PageFaultException:
+        HandleTLBFault(machine->ReadRegister(BadVAddrReg));
+        break;
+#endif
+    default:
+        ;
+    }
+}
