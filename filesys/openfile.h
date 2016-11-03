@@ -45,7 +45,8 @@ class OpenFile {
     }
 
     ~OpenFile() {
-      Close(file);
+      if (is_real_file)
+        Close(file);
     }
 
     int ReadAt(char *into, int numBytes, int position) { 

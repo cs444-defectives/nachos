@@ -52,7 +52,8 @@ OpenFile::OpenFile(bool d)
 
 OpenFile::~OpenFile()
 {
-    delete hdr;
+    if (is_real_file)
+        delete hdr;
 }
 
 //----------------------------------------------------------------------

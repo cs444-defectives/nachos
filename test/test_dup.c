@@ -27,9 +27,7 @@ int main()
     Write("to duped ConsoleOutput\n", 23, duped);
     Close(ConsoleOutput);
     Write("original fid deleted, but I can still write\n", 44, duped);
-
-    /* FIXME: this crashes the kernel */
-    /* Close(duped); */
+    Close(duped);
 
     Halt();
 }
