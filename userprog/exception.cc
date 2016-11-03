@@ -264,11 +264,19 @@ static void _exit(void)
 
     int parentIdx = currentThread->parentSpaceId % MAX_THREADS;
 
+    // iterate over thread's children and delete dead ones
+    for (int i = 0; i < MAX_THREADS; i++) {
+        if (threads[i] != NULL
+            && threads[i]->parentSpaceId == currentThread->spaceId
+            && threads[i]->dead) {
+            threadToBeDestroyed = threads[i]; // hard delete children
+            currentThread->Yield();
+        }
+    }
+
     if (threads[parentIdx] == NULL
         || threads[parentIdx]->spaceId != currentThread->parentSpaceId)
         threadToBeDestroyed = currentThread; // hard delete this thread
-
-    // TODO: iterate over my children and delete dead ones
 
     currentThread->Finish(); // soft delete
 }
