@@ -50,18 +50,6 @@ halt: halt.o start.o
 	$(LD) $(LDFLAGS) start.o halt.o -o halt.coff
 	../bin/coff2noff halt.coff halt
 
-fork.o: fork.c
-	$(CC) $(CFLAGS) -c fork.c
-fork: fork.o start.o
-	$(LD) $(LDFLAGS) start.o fork.o -o fork.coff
-	../bin/coff2noff fork.coff fork
-
-exec.o: exec.c
-	$(CC) $(CFLAGS) -c exec.c
-exec: exec.o start.o
-	$(LD) $(LDFLAGS) start.o exec.o -o exec.coff
-	../bin/coff2noff exec.coff exec
-
 hellocons.o: hellocons.c
 	$(CC) $(CFLAGS) -c hellocons.c
 hellocons: hellocons.o start.o
@@ -111,6 +99,18 @@ dup.o: dup.c
 dup: dup.o start.o defective_libc.o
 	$(LD) $(LDFLAGS) start.o dup.o defective_libc.o -o dup.coff
 	../bin/coff2noff dup.coff dup
+
+fork.o: fork.c
+	$(CC) $(CFLAGS) -c fork.c
+fork: fork.o start.o defective_libc.o
+	$(LD) $(LDFLAGS) start.o fork.o defective_libc.o -o fork.coff
+	../bin/coff2noff fork.coff fork
+
+exec.o: exec.c
+	$(CC) $(CFLAGS) -c exec.c
+exec: exec.o start.o defective_libc.o
+	$(LD) $(LDFLAGS) start.o exec.o defective_libc.o -o exec.coff
+	../bin/coff2noff exec.coff exec
 
 shell.o: shell.c
 	$(CC) $(CFLAGS) -c shell.c

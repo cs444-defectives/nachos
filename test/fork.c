@@ -5,88 +5,37 @@
  */
 
 #include "syscall.h"
+#include "defective_libc.h"
 
-int
-main()
+int main()
 {
-
   SpaceId kid;
   int joinval;
 
-  prints("PARENT exists\n", ConsoleOutput);
+  print_string("PARENT exists\n");
   kid = Fork();
   if (kid != 0) {
-    prints("PARENT after fork; kid pid is ", ConsoleOutput);
-    printd((int)kid, ConsoleOutput);
-    prints("\n", ConsoleOutput);
+    print_string("PARENT after fork; kid pid is ");
+    print_int((int)kid);
+    print_string("\n");
 
     joinval = Join(kid);
 
-    prints("PARENT off Join with value of ", ConsoleOutput);
-    printd(joinval, ConsoleOutput);
-    prints("\n", ConsoleOutput);
-    prints("PARENT halting\n", ConsoleOutput);
+    print_string("PARENT off Join with value of ");
+    print_int(joinval);
+    print_string("\n");
+    print_string("PARENT halting\n");
     Halt();
-  /* not reached */
+
+    /* not reached */
+    print_string("if you see this, Halt() has failed\n");
+
   } else {
-    prints("KID running, about to Exit()\n", ConsoleOutput);
+    print_string("KID running, about to Exit()\n");
     Exit(17);
+
+    /* not reached */
+    print_string("if you see this, Exit() has returned\n");
   }
 }
-
-/* Print a null-terminated string "s" on open file descriptor "file". */
-
-prints(s,file)
-char *s;
-OpenFileId file;
-
-{
-  int count = 0;
-  char *p;
-
-  p = s;
-  while (*p++ != '\0') count++;
-  Write(s, count, file);
-
-}
-
-
-/* Print an integer "n" on open file descriptor "file". */
-
-printd(n,file)
-int n;
-OpenFileId file;
-
-{
-
-  int i, pos=0, divisor=1000000000, d, zflag=1;
-  char c;
-  char buffer[11];
-
-  if (n < 0) {
-    buffer[pos++] = '-';
-    n = -n;
-  }
-
-  if (n == 0) {
-    Write("0",1,file);
-    return;
-  }
-
-  for (i=0; i<10; i++) {
-    d = n / divisor; n = n % divisor;
-    if (d == 0) {
-      if (!zflag) buffer[pos++] =  (char) (d % 10) + '0';
-    } else {
-      zflag = 0;
-      buffer[pos++] =  (char) (d % 10) + '0';
-    }
-    divisor = divisor/10;
-  }
-  Write(buffer,pos,file);
-}
-
-
-
-
 

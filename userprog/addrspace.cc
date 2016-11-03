@@ -190,10 +190,14 @@ AddrSpace::AddrSpace(AddrSpace *parent) {
     for (unsigned int i = 0; i < size; i++)
         machine->mainMemory[Translate(i)] = machine->mainMemory[parent->Translate(i)];
 
-    // copy parent's open file
+    // copy parent's open_files array
     open_files = new OpenFile* [MAX_OPEN_FILES];
     for (int i = 0; i < MAX_OPEN_FILES; i++)
         open_files[i] = parent->open_files[i];
+    num_open_files = parent->num_open_files;
+
+    // copy parent's lock
+    fid_assignment = parent->fid_assignment;
 }
 
 /**
@@ -201,7 +205,7 @@ AddrSpace::AddrSpace(AddrSpace *parent) {
  */
 void AddrSpace::Exec(OpenFile *executable) {
     Deallocate();
-    delete pageTable;
+    delete[] pageTable;
 
     NoffHeader noffH;
 
