@@ -1,37 +1,55 @@
 #include "syscall.h"
 #include "defective_libc.h"
 
-int
-main()
+#define MAX_LINE 128
+
+int main()
 {
-    SpaceId newProc;
-    OpenFileId input = ConsoleInput;
-    OpenFileId output = ConsoleOutput;
-    char prompt[2], ch, buffer[60];
     int i;
+    char c, line[MAX_LINE];
+    char *prompt = "defectives> ";
+    SpaceId p;
 
-    prompt[0] = '-';
-    prompt[1] = '-';
+    while (1) {
+        print_string(prompt);
 
-    while( 1 )
-    {
-	Write(prompt, 2, output);
+        /* read characters from the user */
+        i = 0;
+        do {
+            Read(&c, 1, ConsoleInput);
 
-	i = 0;
-	
-	do {
-	
-	    Read(&buffer[i], 1, input); 
+            /* backspace deletes the last character */
+            if (c == 127) {
+                i--;
+                continue;
+            }
 
-	} while( buffer[i++] != '\n' );
+            /* return submits the line */
+            if (c == '\n' || c == '\r')
+                break;
 
-	buffer[--i] = '\0';
+            /* FIXME: this currently crashes the kernel?! */
+            /* ^D exits from shell */
+            if (c == 26)
+                return;
 
-	if( i > 0 ) {
-	  newProc = Fork();
-          if (newProc == 0) Exec(buffer);
-	  else Join(newProc);
-	}
+            /* ignore any other control characters (or failed reads) */
+            if (c < ' ')
+                continue;
+
+            /* the character was good, so store it */
+            line[i++] = c;
+
+        } while (i < MAX_LINE);
+        line[--i] = '\0';
+
+        /* if no text was entered on the line */
+        if (i <= 0)
+            continue;
+
+        if (p = Fork())
+            Join(p);
+        else
+            Exec(line);
     }
 }
-
