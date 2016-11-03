@@ -45,3 +45,4 @@ test/fork
 test/exec
 test/cat
 test/cp
+test/test_dup
