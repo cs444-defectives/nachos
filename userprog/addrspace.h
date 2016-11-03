@@ -18,7 +18,7 @@
 #include "synch.h"
 
 #define UserStackSize		1024 	// increase this as necessary!
-#define MAX_OPEN_FILES 64
+#define MAX_OPEN_FILES 128
 
 class AddrSpace {
   public:

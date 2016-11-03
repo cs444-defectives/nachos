@@ -43,7 +43,7 @@ extern Machine* machine;	// user program memory and registers
 extern SynchConsole *sconsole;
 #ifdef CHANGED
 extern MemoryManager *memoryManager;
-#define MAX_THREADS 100
+#define MAX_THREADS 128
 extern SpaceId _spaceId;
 extern Lock *spaceIdLock;
 extern Thread* threads[MAX_THREADS];
