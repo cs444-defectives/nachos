@@ -239,13 +239,12 @@ int SysRead() {
 
     int byteRead = 1;
     char c;
-    bool console_read = (!f->is_real_file && !f->console_direction);
     while (size && byteRead) {
-        if (console_read) {
+        if (f->is_real_file) {
+            byteRead = f->Read(&c, 1);
+        } else {
             c = sconsole->ReadChar();
             byteRead = 1;
-        } else {
-            byteRead = f->Read(&c, 1);
         }
         machine->mainMemory[space->Translate((int) userland_str)] = c;
         userland_str++;
@@ -279,14 +278,12 @@ void SysWrite() {
         return;
 
     char c;
-    bool console_write = (!f->is_real_file && f->console_direction);
     while (size) {
         c = machine->mainMemory[space->Translate((int) userland_str)];
-        if (console_write) {
-            sconsole->WriteChar(c);
-        } else {
+        if (f->is_real_file)
             f->Write(&c, 1);
-        }
+        else
+            sconsole->WriteChar(c);
         userland_str++;
         size--;
     }
