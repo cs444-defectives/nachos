@@ -41,6 +41,9 @@ start.o: start.s ../userprog/syscall.h
 	$(AS) $(ASFLAGS) -o start.o strt.s
 	rm strt.s
 
+defective_libc.o: defective_libc.c
+	$(CC) $(CFLAGS) -c defective_libc.c
+
 halt.o: halt.c
 	$(CC) $(CFLAGS) -c halt.c
 halt: halt.o start.o
@@ -89,18 +92,6 @@ file_test: file_test.o start.o
 	$(LD) $(LDFLAGS) start.o file_test.o -o file_test.coff
 	../bin/coff2noff file_test.coff file_test
 
-test_dup.o: test_dup.c
-	$(CC) $(CFLAGS) -c test_dup.c
-test_dup: test_dup.o start.o
-	$(LD) $(LDFLAGS) start.o test_dup.o -o test_dup.coff
-	../bin/coff2noff test_dup.coff test_dup
-
-shell.o: shell.c
-	$(CC) $(CFLAGS) -c shell.c
-shell: shell.o start.o
-	$(LD) $(LDFLAGS) start.o shell.o -o shell.coff
-	../bin/coff2noff shell.coff shell
-
 sort.o: sort.c
 	$(CC) $(CFLAGS) -c sort.c
 sort: sort.o start.o
@@ -113,14 +104,28 @@ matmult: matmult.o start.o
 	$(LD) $(LDFLAGS) start.o matmult.o -o matmult.coff
 	../bin/coff2noff matmult.coff matmult
 
+# the following use defective_libc
+
+test_dup.o: test_dup.c
+	$(CC) $(CFLAGS) -c test_dup.c
+test_dup: test_dup.o start.o defective_libc.o
+	$(LD) $(LDFLAGS) start.o test_dup.o defective_libc.o -o test_dup.coff
+	../bin/coff2noff test_dup.coff test_dup
+
+shell.o: shell.c
+	$(CC) $(CFLAGS) -c shell.c
+shell: shell.o start.o defective_libc.o
+	$(LD) $(LDFLAGS) start.o shell.o defective_libc.o -o shell.coff
+	../bin/coff2noff shell.coff shell
+
 cat.o: cat.c
 	$(CC) $(CFLAGS) -c cat.c
-cat: cat.o start.o
-	$(LD) $(LDFLAGS) start.o cat.o -o cat.coff
+cat: cat.o start.o defective_libc.o
+	$(LD) $(LDFLAGS) start.o cat.o defective_libc.o -o cat.coff
 	../bin/coff2noff cat.coff cat
 
 cp.o: cp.c
 	$(CC) $(CFLAGS) -c cp.c
-cp: cp.o start.o
-	$(LD) $(LDFLAGS) start.o cp.o -o cp.coff
+cp: cp.o start.o defective_libc.o
+	$(LD) $(LDFLAGS) start.o cp.o defective_libc.o -o cp.coff
 	../bin/coff2noff cp.coff cp

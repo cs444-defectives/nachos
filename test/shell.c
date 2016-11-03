@@ -1,4 +1,5 @@
 #include "syscall.h"
+#include "defective_libc.h"
 
 int
 main()

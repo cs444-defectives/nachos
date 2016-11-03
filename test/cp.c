@@ -1,19 +1,5 @@
 #include "syscall.h"
-
-int len_string(char *str)
-{
-    int i = 0;
-    for (; *str != '\0'; str++)
-        i++;
-    return i;
-}
-
-void console_print(char *str)
-{
-    int n;
-    n = len_string(str);
-    Write(str, n, ConsoleOutput);
-}
+#include "defective_libc.h"
 
 int main(int argc, char **argv)
 {
@@ -22,7 +8,7 @@ int main(int argc, char **argv)
     OpenFileId infid, outfid;
 
     if (argc != 3) {
-        console_print("Usage: cp <infile> <outfile>\nN.b. Outfile must not exist.\n");
+        print_string("Usage: cp <infile> <outfile>\nN.b. Outfile must not exist.\n");
         return 2;
     }
 
@@ -30,11 +16,11 @@ int main(int argc, char **argv)
     c = '0';
     c += argc;
     Write(&c, 1, ConsoleOutput);
-    console_print(" Arguments\n");
+    print_string(" Arguments\n");
     for (i = 0; i < argc; i++) {
-        console_print("- ");
-        console_print(argv[i]);
-        console_print("\n");
+        print_string("- ");
+        print_string(argv[i]);
+        print_string("\n");
     }
 
     /* try to create and open the output file */
@@ -42,14 +28,14 @@ int main(int argc, char **argv)
     Create(argv[2]);
     outfid = Open(argv[2]);
     if (outfid == -1) {
-        console_print("Input file could not be created!\n");
+        print_string("Input file could not be created!\n");
         return 1;
     }
 
     infile = argv[1];
     infid = Open(argv[1]);
     if (infid == -1) {
-        console_print("Output file not found!\n");
+        print_string("Output file not found!\n");
         return 1;
     }
 

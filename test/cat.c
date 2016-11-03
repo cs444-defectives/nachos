@@ -1,19 +1,5 @@
 #include "syscall.h"
-
-int len_string(char *str)
-{
-    int i = 0;
-    for (; *str != '\0'; str++)
-        i++;
-    return i;
-}
-
-void console_print(char *str)
-{
-    int n;
-    n = len_string(str);
-    Write(str, n, ConsoleOutput);
-}
+#include "defective_libc.h"
 
 int main(int argc, char **argv)
 {
@@ -22,7 +8,7 @@ int main(int argc, char **argv)
     OpenFileId fid;
 
     if (argc < 2) {
-        console_print("Usage: cat <file>...\n");
+        print_string("Usage: cat <file>...\n");
         return 2;
     }
 
@@ -30,15 +16,15 @@ int main(int argc, char **argv)
     c = '0';
     c += argc;
     Write(&c, 1, ConsoleOutput);
-    console_print(" Arguments\n");
+    print_string(" Arguments\n");
 
     /* DEBUG: print arguments */
     for (i = 0; i < argc; i++) {
-        console_print("- ");
-        console_print(argv[i]);
-        console_print("\n");
+        print_string("- ");
+        print_string(argv[i]);
+        print_string("\n");
     }
-    console_print("Begin concatenated files\n");
+    print_string("Begin concatenated files\n");
 
     /* print files given as arguments, one by one */
     for (i = 1; i < argc; i++) {
@@ -46,7 +32,7 @@ int main(int argc, char **argv)
         /* claim an fid */
         fid = Open(argv[i]);
         if (fid == -1) {
-            console_print("File not found!\n");
+            print_string("File not found!\n");
             return 1;
         }
 
