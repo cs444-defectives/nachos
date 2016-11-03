@@ -28,5 +28,5 @@ int main()
     Close(fid);
 
     Write(read_buf, 45, ConsoleOutput);
-
+    Halt();
 }
