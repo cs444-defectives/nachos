@@ -164,6 +164,11 @@ Initialize(int argc, char **argv)
     for (int i = 0; i < MAX_THREADS; i++)
         threads[i] = NULL;
     threadsLock = new(std::nothrow) Lock("thread array lock");
+
+    // add thread to our global list of threads
+    threads[0] = currentThread;
+    currentThread->spaceId = 0;
+    fprintf(stderr, "stashing main\n");
 #endif
 #endif
 

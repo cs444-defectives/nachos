@@ -151,7 +151,7 @@ Thread::Finish ()
 
     DEBUG('t', "Finishing thread \"%s\"\n", getName());
 
-    threadToBeDestroyed = currentThread;
+    // threadToBeDestroyed = currentThread;
     Sleep();					// invokes SWITCH
     // not reached
 }

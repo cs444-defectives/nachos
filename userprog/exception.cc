@@ -258,20 +258,29 @@ static int _open(void)
 static void _exit(void)
 {
     int exitCode = machine->ReadRegister(4);
-    int tidx = currentThread->spaceId % MAX_THREADS;
 
-    if (threads[tidx] != NULL) { // main thread will not be in there
-        threads[tidx]->join->V(); // Wake up all threads `Join`ed on this one
-        threads[tidx]->dead = true; // you are done running
-        threads[tidx]->exitCode = exitCode;
-    }
+    currentThread->exitCode = exitCode; // store exit code
+    currentThread->dead = true; // mark as dead
+    currentThread->join->V(); // permission for parent to proceed
 
-    currentThread->Finish();
+    int parentIdx = currentThread->parentSpaceId % MAX_THREADS;
+
+    if (threads[parentIdx] == NULL
+        || threads[parentIdx]->spaceId != currentThread->parentSpaceId)
+        threadToBeDestroyed = currentThread; // hard delete this thread
+
+    // TODO: iterate over my children and delete dead ones
+
+    currentThread->Finish(); // soft delete
 }
 
 static SpaceId _fork(void)
 {
     Thread *childThread = new Thread("fork child"); // create child thread
+
+    // tell child about its parent so that it can kill itself later if need be
+    childThread->parentSpaceId = currentThread->spaceId;
+
     // copy parent's address space
     childThread->space = new(std::nothrow) AddrSpace(currentThread->space);
 
@@ -331,6 +340,11 @@ static int _join(void)
         exitCode = threads[tidx]->exitCode;
         threads[tidx]->joinLock->Release();
     }
+
+    threadsLock->Acquire();
+    threadToBeDestroyed = threads[tidx]; // mark thread for deletion
+    threads[tidx] = NULL;
+    threadsLock->Release();
 
     updatePC();
 

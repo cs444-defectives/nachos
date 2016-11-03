@@ -113,6 +113,7 @@ class Thread {
     Lock *joinLock;
     bool dead;
     int exitCode;
+    SpaceId parentSpaceId;
 #endif
 
   private:
