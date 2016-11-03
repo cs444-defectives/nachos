@@ -168,7 +168,6 @@ Initialize(int argc, char **argv)
     // add thread to our global list of threads
     threads[0] = currentThread;
     currentThread->spaceId = 0;
-    fprintf(stderr, "stashing main\n");
 #endif
 #endif
 
