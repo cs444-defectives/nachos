@@ -34,7 +34,7 @@ CPP = /usr/bin/cpp -E
 INCDIR =-I../userprog -I../threads
 CFLAGS = -G 0 -c $(INCDIR) -DCHANGED -nostartfiles
 
-all: halt shell matmult sort file_test dup hellocons hellofile fromcons fileio fork exec cat cp
+all: va-experiment
 
 start.o: start.s ../userprog/syscall.h
 	$(CPP) $(CPPFLAGS) start.s > strt.s
@@ -129,3 +129,9 @@ cp.o: cp.c
 cp: cp.o start.o defective_libc.o
 	$(LD) $(LDFLAGS) start.o cp.o defective_libc.o -o cp.coff
 	../bin/coff2noff cp.coff cp
+
+va-experiment.o: va-experiment.c
+	$(CC) $(CFLAGS) -c va-experiment.c
+va-experiment: va-experiment.o start.o defective_libc.o
+	$(LD) $(LDFLAGS) start.o va-experiment.o defective_libc.o -o va-experiment.coff
+	../bin/coff2noff va-experiment.coff va-experiment

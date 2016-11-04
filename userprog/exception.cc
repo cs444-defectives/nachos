@@ -183,44 +183,50 @@ static void _write(void)
     }
 }
 
+static int get_int(int va)
+{
+    char ibuf[sizeof(int)];
+
+    for (int i = 0; i < (int) sizeof(int); i++)
+        ibuf[i] = machine->mainMemory[va + i];
+
+    return *((int *) ibuf);
+}
+
+static void dump_mem(int va, int n)
+{
+    char c;
+    printf("  0x");
+    for (int i = 0; i < n; i++)
+        printf("%02x", machine->mainMemory[va + i]);
+    printf("\n  ");
+    for (int i = 0; i < n; i++) {
+        c = machine->mainMemory[va + i];
+        if (c < ' ')
+            c = '.';
+        printf("%c", c);
+    }
+    printf("\n");
+    if (n == 4)
+        printf("  as int: %d\n", get_int(va));
+}
+
+/*
+ * FIXME: hijacked for experiment. prints stack[Translate(va)] and
+ * mainMemory[Translate(va)]
+ */
 static void _close(void)
 {
-    OpenFileId fid = machine->ReadRegister(4);
-    OpenFile **open_files = currentThread->space->open_files;
-    Semaphore *num_open_files = currentThread->space->num_open_files;
-    Lock *fid_assignment = currentThread->space->fid_assignment;
-    OpenFile *f;
+    int raw_va = machine->ReadRegister(4);
+    int n = machine->ReadRegister(5);
+    int va = raw_va + machine->ReadRegister(StackReg);
 
-    /* not a possible fid */
-    if (fid > MAX_OPEN_FILES || fid < 0)
-        return;
+    printf("stack:\n");
+    dump_mem(va, n);
 
-    f = open_files[fid];
-
-    /* can't close a null file */
-    if (f == NULL)
-        return;
-
-    const char *dbg_closing;
-    if (f->is_real_file) {
-        dbg_closing = "file";
-    } else if (f->console_direction) {
-        dbg_closing = "console output";
-    } else {
-        dbg_closing = "console input";
-    }
-    DEBUG('a', "closing %s at FID %d\n", dbg_closing, fid);
-
-    fid_assignment->Acquire();
-
-    /* one fewer file reference exists; close iff none remain */
-    f->refcount--;
-    if (f->refcount == 0)
-        delete f;
-    open_files[fid] = NULL;
-
-    fid_assignment->Release();
-    num_open_files->V();
+    printf("main memory:\n");
+    dump_mem(raw_va, n);
+    printf("\n");
 }
 
 static int _open(void)

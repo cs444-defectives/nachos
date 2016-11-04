@@ -46,3 +46,4 @@ test/exec
 test/cat
 test/cp
 test/dup
+test/va-experiment

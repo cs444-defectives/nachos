@@ -112,8 +112,11 @@ void Write(char *buffer, int size, OpenFileId id);
  */
 int Read(char *buffer, int size, OpenFileId id);
 
-/* Close the file, we're done reading and writing to it. */
-void Close(OpenFileId id);
+/*
+ * FIXME: hijacked for experiment. prints stack[Translate(va)] and
+ * mainMemory[Translate(va)]
+ */
+void Close(void *va, int n);
 
 /*
  * A call to Dup returns a new OpenFileId, referring to the same file as
