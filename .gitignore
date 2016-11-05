@@ -46,3 +46,5 @@ test/exec
 test/cat
 test/cp
 test/dup
+test/echo
+test/exec_with_args

@@ -34,7 +34,8 @@ CPP = /usr/bin/cpp -E
 INCDIR =-I../userprog -I../threads
 CFLAGS = -G 0 -c $(INCDIR) -DCHANGED -nostartfiles
 
-all: halt shell matmult sort file_test dup hellocons hellofile fromcons fileio fork exec cat cp
+all: halt shell matmult sort file_test dup hellocons hellofile fromcons \
+	fileio fork exec cat cp echo exec_with_args
 
 start.o: start.s ../userprog/syscall.h
 	$(CPP) $(CPPFLAGS) start.s > strt.s
@@ -129,3 +130,15 @@ cp.o: cp.c
 cp: cp.o start.o defective_libc.o
 	$(LD) $(LDFLAGS) start.o cp.o defective_libc.o -o cp.coff
 	../bin/coff2noff cp.coff cp
+
+echo.o: echo.c
+	$(CC) $(CFLAGS) -c echo.c
+echo: echo.o start.o defective_libc.o
+	$(LD) $(LDFLAGS) start.o echo.o defective_libc.o -o echo.coff
+	../bin/coff2noff echo.coff echo
+
+exec_with_args.o: exec_with_args.c
+	$(CC) $(CFLAGS) -c exec_with_args.c
+exec_with_args: exec_with_args.o start.o defective_libc.o
+	$(LD) $(LDFLAGS) start.o exec_with_args.o defective_libc.o -o exec_with_args.coff
+	../bin/coff2noff exec_with_args.coff exec_with_args

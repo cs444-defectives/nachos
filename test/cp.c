@@ -12,16 +12,9 @@ int main(int argc, char **argv)
         return 2;
     }
 
-    /* DEBUG: print arguments */
-    c = '0';
-    c += argc;
-    Write(&c, 1, ConsoleOutput);
+    /* DEBUG: print number of arguments */
+    print_int(argc);
     print_string(" Arguments\n");
-    for (i = 0; i < argc; i++) {
-        print_string("- ");
-        print_string(argv[i]);
-        print_string("\n");
-    }
 
     /* try to create and open the output file */
     outfile = argv[2];

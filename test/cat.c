@@ -13,16 +13,15 @@ int main(int argc, char **argv)
     }
 
     /* DEBUG: print number of arguments */
-    c = '0';
-    c += argc;
-    Write(&c, 1, ConsoleOutput);
-    print_string(" Arguments\n");
+    print_string("cat sees argc as ");
+    print_int(argc);
+    print_string(" and argv as:\n");
 
     /* DEBUG: print arguments */
     for (i = 0; i < argc; i++) {
-        print_string("- ");
+        print_string("- \"");
         print_string(argv[i]);
-        print_string("\n");
+        print_string("\"\n");
     }
     print_string("Begin concatenated files\n");
 
