@@ -6,6 +6,7 @@ MemoryManager::MemoryManager() {
 }
 
 int MemoryManager::AllocatePage() {
+    ASSERT(bitmap->NumClear() > 0);
     int addr = bitmap->Find();
     return addr;
 }
