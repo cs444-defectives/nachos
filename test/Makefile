@@ -35,7 +35,9 @@ INCDIR =-I../userprog -I../threads
 CFLAGS = -G 0 -c $(INCDIR) -DCHANGED -nostartfiles
 
 all: halt shell matmult sort file_test dup hellocons hellofile fromcons \
-	fileio fork exec cat cp echo exec_with_args
+	fileio fork exec cat cp echo exec_with_args arg_seq_child argkid argtest \
+	deepfork deepkid1 deepkid2 kid maxfork parent_child seq_child share sharekid
+
 
 start.o: start.s ../userprog/syscall.h
 	$(CPP) $(CPPFLAGS) start.s > strt.s
@@ -92,6 +94,78 @@ matmult.o: matmult.c
 matmult: matmult.o start.o
 	$(LD) $(LDFLAGS) start.o matmult.o -o matmult.coff
 	../bin/coff2noff matmult.coff matmult
+
+arg_seq_child.o: arg_seq_child.c
+	$(CC) $(CFLAGS) -c arg_seq_child.c
+arg_seq_child: arg_seq_child.o start.o
+	$(LD) $(LDFLAGS) start.o arg_seq_child.o -o arg_seq_child.coff
+	../bin/coff2noff arg_seq_child.coff arg_seq_child
+
+argkid.o: argkid.c
+	$(CC) $(CFLAGS) -c argkid.c
+argkid: argkid.o start.o
+	$(LD) $(LDFLAGS) start.o argkid.o -o argkid.coff
+	../bin/coff2noff argkid.coff argkid
+
+argtest.o: argtest.c
+	$(CC) $(CFLAGS) -c argtest.c
+argtest: argtest.o start.o
+	$(LD) $(LDFLAGS) start.o argtest.o -o argtest.coff
+	../bin/coff2noff argtest.coff argtest
+
+deepfork.o: deepfork.c
+	$(CC) $(CFLAGS) -c deepfork.c
+deepfork: deepfork.o start.o
+	$(LD) $(LDFLAGS) start.o deepfork.o -o deepfork.coff
+	../bin/coff2noff deepfork.coff deepfork
+
+deepkid1.o: deepkid1.c
+	$(CC) $(CFLAGS) -c deepkid1.c
+deepkid1: deepkid1.o start.o
+	$(LD) $(LDFLAGS) start.o deepkid1.o -o deepkid1.coff
+	../bin/coff2noff deepkid1.coff deepkid1
+
+deepkid2.o: deepkid2.c
+	$(CC) $(CFLAGS) -c deepkid2.c
+deepkid2: deepkid2.o start.o
+	$(LD) $(LDFLAGS) start.o deepkid2.o -o deepkid2.coff
+	../bin/coff2noff deepkid2.coff deepkid2
+
+kid.o: kid.c
+	$(CC) $(CFLAGS) -c kid.c
+kid: kid.o start.o
+	$(LD) $(LDFLAGS) start.o kid.o -o kid.coff
+	../bin/coff2noff kid.coff kid
+
+maxfork.o: maxfork.c
+	$(CC) $(CFLAGS) -c maxfork.c
+maxfork: maxfork.o start.o
+	$(LD) $(LDFLAGS) start.o maxfork.o -o maxfork.coff
+	../bin/coff2noff maxfork.coff maxfork
+
+parent_child.o: parent_child.c
+	$(CC) $(CFLAGS) -c parent_child.c
+parent_child: parent_child.o start.o
+	$(LD) $(LDFLAGS) start.o parent_child.o -o parent_child.coff
+	../bin/coff2noff parent_child.coff parent_child
+
+seq_child.o: seq_child.c
+	$(CC) $(CFLAGS) -c seq_child.c
+seq_child: seq_child.o start.o
+	$(LD) $(LDFLAGS) start.o seq_child.o -o seq_child.coff
+	../bin/coff2noff seq_child.coff seq_child
+
+share.o: share.c
+	$(CC) $(CFLAGS) -c share.c
+share: share.o start.o
+	$(LD) $(LDFLAGS) start.o share.o -o share.coff
+	../bin/coff2noff share.coff share
+
+sharekid.o: sharekid.c
+	$(CC) $(CFLAGS) -c sharekid.c
+sharekid: sharekid.o start.o
+	$(LD) $(LDFLAGS) start.o sharekid.o -o sharekid.coff
+	../bin/coff2noff sharekid.coff sharekid
 
 # the following use defective_libc
 
