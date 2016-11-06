@@ -143,7 +143,10 @@ Initialize(int argc, char **argv)
     scheduler = new(std::nothrow) Scheduler();		// initialize the ready queue
     if (randomYield)				// start the timer (if needed)
 	timer = new(std::nothrow) Timer(TimerInterruptHandler, 0, randomYield);
-    threadToBeDestroyed = NULL;
+    if (threadToBeDestroyed != NULL) {
+	delete threadToBeDestroyed->space;
+	threadToBeDestroyed = NULL;
+    }
 
     // We didn't explicitly allocate the current thread we are running in.
     // But if it ever tries to give up the CPU, we better have a Thread
