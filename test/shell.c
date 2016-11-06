@@ -60,7 +60,8 @@ int main()
 
             /* backspace deletes the last character */
             if (c == 127) {
-                i--;
+                if (--i < 0)
+                    i = 0;
                 continue;
             }
 
