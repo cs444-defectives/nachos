@@ -448,25 +448,32 @@ static int _exec(void)
     int arg_vp;
     int num_args;
     char arg_buf[MAX_ARGS][MAX_ARG_LEN];
-    for (num_args = 0; num_args < MAX_ARGS; num_args++) {
 
-        /* get address of the string */
-        arg_vp = intimport(args_vp + (4 * num_args));
+    /* if passed a null pointer, there are no args */
+    if (!args_vp) {
+        num_args = 0;
 
-        /* don't deference null pointers */
-        if (arg_vp == 0)
-            break;
+    } else {
+        for (num_args = 0; num_args < MAX_ARGS; num_args++) {
 
-        /* copy string argument into kernelspace arguments array */
-        bytes_read = strimport(arg_buf[num_args], MAX_ARG_LEN, arg_vp);
+            /* get address of the string */
+            arg_vp = intimport(args_vp + (4 * num_args));
 
-        /* stop if we get a NULL pointer or an empty string */
-        if (bytes_read == -1 || !bytes_read)
-            break;
+            /* don't deference null pointers */
+            if (!arg_vp)
+                break;
 
-        /* abort if any argument is too long */
-        if (bytes_read == MAX_ARG_LEN)
-            return -1;
+            /* copy string argument into kernelspace arguments array */
+            bytes_read = strimport(arg_buf[num_args], MAX_ARG_LEN, arg_vp);
+
+            /* stop if we get a NULL pointer or an empty string */
+            if (bytes_read == -1 || !bytes_read)
+                break;
+
+            /* abort if any argument is too long */
+            if (bytes_read == MAX_ARG_LEN)
+                return -1;
+        }
     }
 
     /* abort if we ran out of space before reading all arguments */
