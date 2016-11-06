@@ -15,19 +15,19 @@ main()
 
   SpaceId kid;
   int joinval, i;
-  char *args[2];  
+  char *args[2];
 
   prints("PARENT exists\n", ConsoleOutput);
-  
+
   for(i=0; i<NUMKIDS; i++) {
     kid = Fork();
     if (kid != 0) {
       prints("PARENT after fork; kid pid is ", ConsoleOutput);
       printd((int)kid, ConsoleOutput);
       prints("\n", ConsoleOutput);
-    
+
       joinval = Join(kid);
-    
+
       prints("PARENT off Join with value of ", ConsoleOutput);
       printd(joinval, ConsoleOutput);
       prints("\n", ConsoleOutput);
@@ -35,8 +35,8 @@ main()
     }
     else {
       args[0] = "kid";
-      args[1] = (char *)0;  
-      Exec("kid", args);
+      args[1] = (char *)0;
+      Exec("test/kid", args);
       prints("ERROR: Exec failure\n", ConsoleOutput);
       Halt();
     }
@@ -56,7 +56,7 @@ OpenFileId file;
 
   p = s;
   while (*p++ != '\0') count++;
-  Write(s, count, file);  
+  Write(s, count, file);
 
 }
 
@@ -72,12 +72,12 @@ OpenFileId file;
   int i, pos=0, divisor=1000000000, d, zflag=1;
   char c;
   char buffer[11];
-  
+
   if (n < 0) {
     buffer[pos++] = '-';
     n = -n;
   }
-  
+
   if (n == 0) {
     Write("0",1,file);
     return;
