@@ -13,6 +13,10 @@
 #ifndef SYSCALLS_H
 #define SYSCALLS_H
 
+#define MAX_FILE_NAME 128
+#define MAX_ARG_LEN 128
+#define MAX_ARGS 16
+
 #include "copyright.h"
 
 /* system call codes -- used by the stubs to tell the kernel which system call
@@ -58,7 +62,7 @@ typedef int SpaceId;
  * of the current address space. Should not return unless there is an
  * error, in which case a -1 is returned.
  */
-int Exec(char *name);
+int Exec(char *name, char *args[]);
  
 /* Only return once the the user program "id" has finished.  
  * Return the exit status.

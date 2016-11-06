@@ -12,19 +12,6 @@ int main(int argc, char **argv)
         return 2;
     }
 
-    /* DEBUG: print number of arguments */
-    print_string("cat sees argc as ");
-    print_int(argc);
-    print_string(" and argv as:\n");
-
-    /* DEBUG: print arguments */
-    for (i = 0; i < argc; i++) {
-        print_string("- \"");
-        print_string(argv[i]);
-        print_string("\"\n");
-    }
-    print_string("Begin concatenated files\n");
-
     /* print files given as arguments, one by one */
     for (i = 1; i < argc; i++) {
 

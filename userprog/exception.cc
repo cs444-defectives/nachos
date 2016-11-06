@@ -21,6 +21,8 @@
 #include <string.h>
 
 #define MAX_FILE_NAME 128
+#define MAX_ARG_LEN 128
+#define MAX_ARGS 16
 
 #ifdef USE_TLB
 
@@ -60,20 +62,76 @@ void HandleTLBFault(int vaddr)
 
 #endif
 
-static int strimport(char *buf, int max_size, char *virt_address)
+/* if you're using this to debug, you're screwed */
+static void show_memory(void)
 {
+    AddrSpace *space = currentThread->space;
+    int size = space->size;
+
+    const int row_length = 32;
     int i;
+    char c;
+
+    for (int row = 0; row < (size / row_length); row++) {
+        printf("0x%08x    ", row * row_length);
+        for (int col = 0; col < row_length; col++) {
+            i = row * row_length + col;
+            c = machine->mainMemory[space->Translate(i)];
+            printf("%02x", (unsigned char) c);
+        }
+        printf(" ");
+
+        for (int col = 0; col < row_length; col++) {
+            i = row * row_length + col;
+            c = machine->mainMemory[space->Translate(i)];
+            printf("%c", c < ' ' ? '.' : c);
+        }
+        printf("\n");
+    }
+}
+
+/* brings a userspace integer into kernelspace */
+static int intimport(int virt_address)
+{
+    int src = currentThread->space->Translate(virt_address);
+    if (src == 0)
+        return -1;
+    return WordToHost(*(unsigned int *) &machine->mainMemory[src]);
+}
+
+/* jams a kernelspace integer into userspace */
+static void intexport(int data, int virt_address)
+{
+    int dest = currentThread->space->Translate(virt_address);
+    *(unsigned int *) &machine->mainMemory[dest] = WordToHost((unsigned int) data);
+}
+
+/*
+ * Brings a userspace string into kernelspace. Returns the number of bytes
+ * read, or -1 if the virtual address points to NULL.
+ */
+static int strimport(char *buf, int max_size, int virt_address)
+{
+    int i, src;
     for (i = 0; i < max_size; i++) {
-        if ((buf[i] = machine->mainMemory[currentThread->space->Translate((int) virt_address + i)]) == '\0')
+        src = currentThread->space->Translate(virt_address + i);
+        if (src == 0)
+            return -1;
+        if ((buf[i] = machine->mainMemory[src]) == '\0')
             break;
     }
     return i;
 }
 
-/* copies a filename from userland, returns true if it fit in the buffer */
-static bool import_filename(char *buf, int size, char *virt_address)
+/* jams a kernelspace string into userspace, return -1 if null pointer. */
+static void strexport(char *buf, int max_size, int virt_address)
 {
-    return strimport(buf, size, virt_address) != size;
+    int i, dest;
+    for (i = 0; i < max_size; i++) {
+        dest = currentThread->space->Translate(virt_address + i);
+        if ((machine->mainMemory[dest] = buf[i]) == '\0')
+            break;
+    }
 }
 
 /* update the program counter */
@@ -98,8 +156,14 @@ void forkCb(int _) {
 static void _create(void)
 {
     char filename[MAX_FILE_NAME];
+    int bytes_read = strimport(filename, MAX_FILE_NAME, machine->ReadRegister(4));
+
+    /* abort if we get a null string */
+    if (bytes_read == -1)
+        return;
+
     /* don't create the file if the filename is too long */
-    if (!import_filename(filename, MAX_FILE_NAME, (char *) machine->ReadRegister(4)))
+    if (bytes_read == MAX_FILE_NAME)
         return;
 
     DEBUG('a', "creating file: %s\n", filename);
@@ -231,7 +295,14 @@ static int _open(void)
     Lock *fid_assignment = currentThread->space->fid_assignment;
     OpenFileId fid;
 
-    if (!import_filename(filename, MAX_FILE_NAME, (char *) machine->ReadRegister(4)))
+    int bytes_read = strimport(filename, MAX_FILE_NAME, machine->ReadRegister(4));
+
+    /* abort if we get a null string */
+    if (bytes_read == -1)
+        return -1;
+
+    /* don't create the file if the filename is too long */
+    if (bytes_read == MAX_FILE_NAME)
         return -1;
 
     OpenFile *fo = fileSystem->Open(filename);
@@ -360,22 +431,101 @@ static int _join(void)
 
 static int _exec(void)
 {
+    /* read in the name of the executable */
     char filename[MAX_FILE_NAME];
+    int bytes_read = strimport(filename, MAX_FILE_NAME, machine->ReadRegister(4));
 
-    if (!import_filename(filename, MAX_FILE_NAME, (char *) machine->ReadRegister(4)))
+    /* abort if we get a null string */
+    if (bytes_read == -1)
+        return -1;
+
+    /* abort if the filename is too long */
+    if (bytes_read == MAX_FILE_NAME)
+        return -1;
+
+    /* read in arguments */
+    int args_vp = machine->ReadRegister(5);
+    int arg_vp;
+    int num_args;
+    char arg_buf[MAX_ARGS][MAX_ARG_LEN];
+    for (num_args = 0; num_args < MAX_ARGS; num_args++) {
+
+        /* get address of the string */
+        arg_vp = intimport(args_vp + (4 * num_args));
+
+        /* don't deference null pointers */
+        if (arg_vp == 0)
+            break;
+
+        /* copy string argument into kernelspace arguments array */
+        bytes_read = strimport(arg_buf[num_args], MAX_ARG_LEN, arg_vp);
+
+        /* stop if we get a NULL pointer or an empty string */
+        if (bytes_read == -1 || !bytes_read)
+            break;
+
+        /* abort if any argument is too long */
+        if (bytes_read == MAX_ARG_LEN)
+            return -1;
+    }
+
+    /* abort if we ran out of space before reading all arguments */
+    if (num_args == MAX_ARGS)
         return -1;
 
     OpenFile *executable = fileSystem->Open(filename);
-
     if (executable == NULL)
         return -1;
 
     currentThread->space->Exec(executable);
-
     delete executable;
 
     currentThread->space->InitRegisters();
-    currentThread->space->RestoreState(); // doesn't do anything rn
+    currentThread->space->RestoreState();
+
+    /*
+     * inject arguments into the new stack
+     * the following is modified from Kearns' arghalt:
+     * http://www.cs.wm.edu/~kearns/444F16/program/arghalt.html
+     */
+
+    unsigned int argv[MAX_ARGS];
+    unsigned int sp = machine->ReadRegister(StackReg);
+
+    /* put argv[0] (the filename) into the stack */
+    int len = strlen(filename) + 1;
+    sp -= len;
+    strexport(filename, len, sp);
+    argv[0] = sp;
+
+    /* put each argument into the stack */
+    for (int i = 0; i < num_args; i++) {
+
+        /* allocate enough stack space for the argument */
+        len = strlen(arg_buf[i]) + 1;
+        sp -= len;
+
+        /* store the argument on the stack */
+        strexport(arg_buf[i], len, sp);
+
+        /* keep track of the address of the new argument for argv */
+        argv[i + 1] = sp;
+    }
+
+    /* align stack on quad boundary */
+    sp = sp & ~3;
+
+    /* fill the argv array, following MIPS little-endian format */
+    sp -= sizeof(int) * (num_args + 1);
+    for (int i = 0; i < num_args + 1; i++)
+        intexport(argv[i], sp + i * sizeof(int));
+
+    /* Put argc into R4 and the argv pointer in R5 */
+    machine->WriteRegister(4, num_args + 1);
+    machine->WriteRegister(5, sp);
+
+    /* update the stack pointer so the process starts below the argc/argv stuff */
+    machine->WriteRegister(StackReg, sp - 8);
 
     return 0;
 }

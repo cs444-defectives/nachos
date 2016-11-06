@@ -8,13 +8,9 @@ int main(int argc, char **argv)
     OpenFileId infid, outfid;
 
     if (argc != 3) {
-        print_string("Usage: cp <infile> <outfile>\nN.b. Outfile must not exist.\n");
+        print_string("Usage: cp <infile> <outfile>\n");
         return 2;
     }
-
-    /* DEBUG: print number of arguments */
-    print_int(argc);
-    print_string(" Arguments\n");
 
     /* try to create and open the output file */
     outfile = argv[2];
@@ -25,6 +21,7 @@ int main(int argc, char **argv)
         return 1;
     }
 
+    /* try to open the output file */
     infile = argv[1];
     infid = Open(argv[1]);
     if (infid == -1) {

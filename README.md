@@ -15,9 +15,15 @@ General rule: If there's a limit, it is 128. The following limits are relevant:
   - the maximum number of living or dead-but-not-joined threads in the system
     at a given time (MAX_THREADS = 128)
 
+Exception:
+
+  - you can pass a maximum of 16 arguments to programs spawned with Exec()
+    (MAX_ARGS = 16)
+
 ## TODO
 
-  - ...
+  - Exec with args and shell (cp, cat) testing
+  - Test against Kearns' new test programs
 
 ---
 
