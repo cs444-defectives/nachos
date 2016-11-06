@@ -17,7 +17,7 @@ main()
   /* loop to delay kid initially */
 
   if ((kid=Fork()) == 0) {
-      Exec("deepkid2", (char **) 0);
+      Exec("test/deepkid2", (char **) 0);
       print("ERROR: exec failed in kid\n");
       Exit(100);
   }

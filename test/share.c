@@ -36,7 +36,7 @@ main()
     args[0] = "sharekid";
     args[1] = (char *) 0;
 
-    Exec("sharekid", args);
+    Exec("test/sharekid", args);
     Halt();
   }
 

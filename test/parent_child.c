@@ -29,7 +29,7 @@ main()
     Halt();
   /* not reached */
   } else 
-    Exec("kid", (char **) 0);
+    Exec("test/kid", (char **) 0);
 }
 
 /* Print a null-terminated string "s" on open file descriptor "file". */

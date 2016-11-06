@@ -2,7 +2,32 @@
 
 An extension of the provided NACHOS code to be a ~real~ operating system.
 
-## Restrictions
+## Test program modifications
+
+During testing, we modified the test programs in the following ways:
+
+  - Where Exec had the old, without-args signature, we added an additional NULL argument to get them to run with the new signature.
+  - Where Exec gives the name of a test binary, we qualified the name with 'test/' so that nachos can be run in the same place that `make` is run: the main Nachos 2 directory. To run echo in the shell, for example, the session would look like this:
+
+```bash
+$ cd nachos2
+$ make
+$ userprog/nachos -x test/shell
+defectives> test/echo hello world!
+hello world!
+defectives> test/halt
+Machine halting!
+
+Ticks: total 12147978905, idle 12147973058, system 2320, user 3527
+Disk I/O: reads 0, writes 0
+Console I/O: reads 33, writes 37
+Paging: faults 0
+Network I/O: packets received 0, sent 0
+
+Cleaning up...
+```
+
+## Numeric limits
 
 General rule: If there's a limit, it is 128. The following limits are relevant:
 
