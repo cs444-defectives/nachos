@@ -36,7 +36,8 @@ CFLAGS = -G 0 -c $(INCDIR) -DCHANGED -nostartfiles
 
 all: halt shell matmult sort file_test dup hellocons hellofile fromcons \
 	fileio fork exec cat cp echo exec_with_args arg_seq_child argkid argtest \
-	deepfork deepkid1 deepkid2 kid maxfork parent_child seq_child share sharekid
+	deepfork deepkid1 deepkid2 kid maxfork parent_child seq_child share \
+	sharekid script
 
 
 start.o: start.s ../userprog/syscall.h
@@ -166,6 +167,12 @@ sharekid.o: sharekid.c
 sharekid: sharekid.o start.o
 	$(LD) $(LDFLAGS) start.o sharekid.o -o sharekid.coff
 	../bin/coff2noff sharekid.coff sharekid
+
+script.o: script.c
+	$(CC) $(CFLAGS) -c script.c
+script: script.o start.o
+	$(LD) $(LDFLAGS) start.o script.o -o script.coff
+	../bin/coff2noff script.coff script
 
 # the following use defective_libc
 

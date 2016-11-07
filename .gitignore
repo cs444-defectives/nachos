@@ -34,3 +34,4 @@ bin/coff2noff
 test/*
 !test/*.c
 !test/*.h
+!test/script.txt
