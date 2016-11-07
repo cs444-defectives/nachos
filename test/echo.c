@@ -1,3 +1,4 @@
+#ifdef CHANGED
 #include "defective_libc.h"
 
 int main(int argc, char **argv)
@@ -11,3 +12,4 @@ int main(int argc, char **argv)
     print_string("\n");
     return 0;
 }
+#endif /* CHANGED */

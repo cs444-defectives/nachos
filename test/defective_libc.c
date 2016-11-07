@@ -1,3 +1,4 @@
+#ifdef CHANGED
 #include "syscall.h"
 #include "defective_libc.h"
 
@@ -83,3 +84,4 @@ char *split_string(char *str, char split_at)
     }
     return (char *) 0;
 }
+#endif /* CHANGED */

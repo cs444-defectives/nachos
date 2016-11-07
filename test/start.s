@@ -106,6 +106,7 @@ Write:
 	j	$31
 	.end Write
 
+#ifdef CHANGED
 	.globl Dup
 	.ent	Dup
 Dup:
@@ -113,6 +114,7 @@ Dup:
 	syscall
 	j	$31
 	.end Dup
+#endif /* CHANGED */
 
 	.globl Close
 	.ent	Close

@@ -1,3 +1,4 @@
+#ifdef CHANGED
 #include "syscall.h"
 #include "defective_libc.h"
 
@@ -41,3 +42,4 @@ int main(int argc, char **argv)
     Close(infid);
     return 0;
 }
+#endif /* CHANGED */

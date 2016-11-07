@@ -1,3 +1,4 @@
+#ifdef CHANGED
 #include "machine.h"
 #include "bitmap.h"
 
@@ -9,3 +10,4 @@ public:
     int AllocatePage();
     void DeallocatePage(int ppn);
 };
+#endif /* CHANGED */

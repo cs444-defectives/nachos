@@ -1,3 +1,4 @@
+#ifdef CHANGED
 #include "memorymanager.h"
 
 MemoryManager::MemoryManager() {
@@ -13,3 +14,4 @@ int MemoryManager::AllocatePage() {
 void MemoryManager::DeallocatePage(int ppn) {
     bitmap->Clear(ppn);
 }
+#endif /* CHANGED */

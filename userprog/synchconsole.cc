@@ -1,3 +1,4 @@
+#ifdef CHANGED
 #include "synchconsole.h"
 #include <new>
 
@@ -82,3 +83,4 @@ void SynchConsole::WriteBytes(char *s, int n)
 
 void SynchConsole::ReadAvailable() { reads->V(); }
 void SynchConsole::WriteDone() { writes->V(); }
+#endif /* CHANGED */

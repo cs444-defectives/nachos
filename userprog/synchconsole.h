@@ -1,3 +1,4 @@
+#ifdef CHANGED
 #pragma once
 
 #include "synch.h"
@@ -45,3 +46,4 @@ class SynchConsole {
     Semaphore *reads, *writes;
     Lock *lock;
 };
+#endif /* CHANGED */
