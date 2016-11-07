@@ -122,22 +122,15 @@ int main(int argc, char **argv)
             s = args[nargs - 2];
             
             /* output to file */
-            if (eq_string(s, OUTPUT_TO_FILE)) {
+            if (eq_string(s, OUTPUT_TO_FILE))
                 output_filename = args[nargs - 1];
-                print_string("output redirected to ");
-                print_string(output_filename);
-                print_string("\n");
 
             /* input from file */
-            } else if (eq_string(s, INPUT_FROM_FILE)) {
+            else if (eq_string(s, INPUT_FROM_FILE))
                 input_filename = args[nargs - 1];
-                print_string("input redirected to ");
-                print_string(input_filename);
-                print_string("\n");
 
-            } else {
+            else
                 break;
-            }
 
             /* the new last argument is the one before the redir character */
             nargs -= 2;
