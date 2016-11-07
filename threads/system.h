@@ -31,6 +31,7 @@ extern void Cleanup();				// Cleanup, called when
 
 extern Thread *currentThread;			// the thread holding the CPU
 extern Thread *threadToBeDestroyed;  		// the thread that just finished
+extern Lock *threadToBeDestroyedLock;   // for locking the thread that just finished pointer
 extern Scheduler *scheduler;			// the ready list
 extern Interrupt *interrupt;			// interrupt status
 extern Statistics *stats;			// performance metrics

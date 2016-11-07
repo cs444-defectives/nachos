@@ -13,6 +13,7 @@
 
 Thread *currentThread;			// the thread we are running now
 Thread *threadToBeDestroyed;  		// the thread that just finished
+Lock *threadToBeDestroyedLock;
 Scheduler *scheduler;			// the ready list
 Interrupt *interrupt;			// interrupt status
 Statistics *stats;			// performance metrics
@@ -166,6 +167,7 @@ Initialize(int argc, char **argv)
     for (int i = 0; i < MAX_THREADS; i++)
         threads[i] = NULL;
     threadsLock = new(std::nothrow) Lock("thread array lock");
+    threadToBeDestroyedLock = new(std::nothrow) Lock("thread to be destroyed lock");
 
     // add thread to our global list of threads
     threads[0] = currentThread;
