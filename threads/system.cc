@@ -141,11 +141,10 @@ Initialize(int argc, char **argv)
     stats = new(std::nothrow) Statistics();			// collect statistics
     interrupt = new(std::nothrow) Interrupt;			// start up interrupt handling
     scheduler = new(std::nothrow) Scheduler();		// initialize the ready queue
-    if (randomYield)				// start the timer (if needed)
 	timer = new(std::nothrow) Timer(TimerInterruptHandler, 0, randomYield);
     if (threadToBeDestroyed != NULL) {
-	delete threadToBeDestroyed->space;
-	threadToBeDestroyed = NULL;
+        delete threadToBeDestroyed->space;
+        threadToBeDestroyed = NULL;
     }
 
     // We didn't explicitly allocate the current thread we are running in.
