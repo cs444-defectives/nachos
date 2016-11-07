@@ -6,8 +6,12 @@ An extension of the provided NACHOS code to be a ~real~ operating system.
 
 During testing, we modified the test programs in the following ways:
 
-  - Where Exec had the old, without-args signature, we added an additional NULL argument to get them to run with the new signature.
-  - Where Exec gives the name of a test binary, we qualified the name with 'test/' so that nachos can be run in the same place that `make` is run: the main Nachos 2 directory. To run echo in the shell, for example, the session would look like this:
+  - Where Exec had the old, without-args signature, we added an additional NULL
+    argument to get them to run with the new signature.
+  - Where Exec gives the name of a test binary, we qualified the name with
+    'test/' so that nachos can be run in the same place that `make` is run: the
+    main Nachos 2 directory. To run echo in the shell, for example, the session
+    would look like this:
 
 ```bash
 $ cd nachos2
@@ -27,9 +31,9 @@ Network I/O: packets received 0, sent 0
 Cleaning up...
 ```
 
-The shell accepts redirects at the END of the input line, in any order,
-separated by spaces. Only the last of each input/output redirect spec is
-actually followed. For example:
+Also, note that the shell accepts redirects at the END of the input line, in
+any order, separated by spaces. Only the last of each input/output redirect
+spec is actually followed. For example:
 
 ```
 defectives> test/cat Makefile > somefile      # OK, output goes to 'somefile'
@@ -63,11 +67,6 @@ There is one exception to the general numeric limit rule:
   - you can pass a maximum of 16 arguments to programs spawned with Exec()
     (MAX_ARGS = 16)
 
-## TODO
-
-  - Exec with args and shell (cp, cat) testing
-  - Test against Kearns' new test programs
-
 ---
 
 # Project 2 README
@@ -76,69 +75,39 @@ _Group 3: Kelvin Abrokwa-Johnson, Quint Guvernator, Anna Li_
 
 We have changed code in the following files:
 
-  - `Makefile.common` (to add and remove files to project)
-  - `threads/system.{cc,h}` (to handle all the new stuff....??)
-  - `threads/synch.{cc,h}` (add Debug statements??)
-  - `threads/thread.cc` (add more attributes to Thread object??)
-  - `userprog/addrspace.cc` (Change page table to non 1 to 1 mapping)
-  - `userprog/exception.cc` (add functionality for system to handle more than Halt)
+  - TODO: run `git diff --stat` before submission
 
 We have added the following files to the project:
 
-  - `filesys/openfile.cc`
-  - `filesys/openfile.h`
-  - `test/arg_seq_child.c`
-  - `test/argkid.c`
-  - `test/argtest.c`
-  - `test/cat.c`
-  - `test/cp.c`
-  - `test/deepfork.c`
-  - `test/deepkid1.c`
-  - `test/deepkid2.c`
-  - `test/defective_libc.c`
-  - `test/dup.c`
-  - `test/echo.c`
-  - `test/exec.c`
-  - `test/exec_with_args.c`
-  - `test/file_test.c`
-  - `test/fileio.c`
-  - `test/fork.c`
-  - `test/fromcons.c`
-  - `test/hellocons.c`
-  - `test/hellofile.c`
-  - `test/kid.c`
-  - `test/parent_child.c`
-  - `test/seq_child.c`
-  - `test/share.c`
-  - `test/sharekid.c`
-  - `test/shell.c`
-  - `threads/memorymanager.{cc, h}`
-  - `userprog/synchconsole.{cc, h}`
+  - TODO: run `git diff --stat` before submission
 
 ## System Calls
 
-All system calls were passed to the exception handler and thus implemented in exception.cc. 
-Additional supporting files were modified or created to help with relevant
-processes.
-Our system uses a global array, open_files, to keep track of the OpenFile objects. Another global array, threads, is also used to keep track of the
-threads in our system. 
-A unique spaceID is given to every new thread that is created. 
-Talk about exit codes, how spaceids are assigned?, other global variables..
+All system calls were passed to the exception handler and thus implemented in
+exception.cc. We use several helper functions to prevent the switch block from
+growing out of control and to enable (modified and limited) calling of syscalls
+from other syscalls (especially useful when implementing #SCRIPT). Additional
+supporting files were modified or created to help with relevant processes. Our
+system uses an array `open_files` for each addrspace to keep track of OpenFile
+objects. We track threads in a global array `threads`. Threads can be alive or
+dead. Dead threads can either be `!done`, which keeps their return value for a
+potential future Join(), or `done`, where they will be garbage collected at the
+next context switch. Living threads can also be `done`, meaning that their
+parents are now dead and no longer care about the return value of the thread. A
+unique SpaceID is given to every new thread that is created, where each new
+SpaceID is one higher than the last. These IDs are not reclaimed, so each is
+unique even if the thread's data is long gone.
 
+- `::Exit`: when this syscall is called, the current thread is marked as 'dead'
+  and the argument given is set as the thread's return value. The parent would
+  get this return value on a future Join().
 
-- `::Exit`: when this syscall is called, the current thread is marked as
-               'dead'. The parent thread joins with the current thread,
-               and removes all of it's child threads that are marked as 
-               'dead'. 
-
-- `::Exec`: when this syscall is called, the filename is read. If the
-               filename is NULL or too long, the method returns.
-               This exec takes in arguments and puts them into the
-               kernelspace arguments array. If any of these arguments
-               are NULL or too long the method returns. In addition,
-               if there is not enough kernel space for all of the
-               arguments the method returns. The stack pointer is
-               updated to start at the argv array.
+- `::Exec`: when this syscall is called, the filename and arguments are read in
+  from userspace. If the file given is an NOFF binary, it gets its own address
+  space, inherits files from the parent, etc. If the file given is a #SCRIPT,
+  we instead create an addrspace for the userspace shell binary, suppress its
+  prompt output, trick the shell into thinking that the #SCRIPT file is console
+  input, and run it like we would normally run the shell.
 
 - `::Join`: when this syscall is called, a spaceID is grabbed. The 
                global threads array is searched for an index with this
