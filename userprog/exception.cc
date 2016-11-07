@@ -148,13 +148,11 @@ static void updatePC()
     machine->WriteRegister(NextPCReg, pc);
 }
 
-#ifdef CHANGED
 void forkCb(int _) {
     currentThread->RestoreUserState();
     currentThread->space->RestoreState();
     machine->Run();
 }
-#endif
 
 static void _create(int filename_va)
 {
@@ -333,8 +331,6 @@ static void _exit(int exitCode)
     currentThread->exitCode = exitCode; // store exit code
     currentThread->dead = true; // mark as dead
     currentThread->join->V(); // permission for parent to proceed
-
-    int parentIdx = currentThread->parentSpaceId % MAX_THREADS;
 
     // iterate over thread's children and delete dead ones
     for (int i = 0; i < MAX_THREADS; i++) {

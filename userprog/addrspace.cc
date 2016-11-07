@@ -61,9 +61,6 @@ SwapHeader (NoffHeader *noffH)
 AddrSpace::AddrSpace(OpenFile *executable)
 {
     NoffHeader noffH;
-#ifndef CHANGED
-    unsigned int size;
-#endif /* not CHANGED */
 
     /* allocate space for open files, plus console in/out cookies */
     open_files = new OpenFile* [MAX_OPEN_FILES];
@@ -103,7 +100,6 @@ AddrSpace::AddrSpace(OpenFile *executable)
 					numPages, size);
 #ifndef USE_TLB
     pageTable = new(std::nothrow) TranslationEntry[numPages];
-#ifdef CHANGED // page table non 1:1
     for (unsigned int i = 0; i < numPages; i++) {
         pageTable[i].virtualPage = i;
         pageTable[i].physicalPage = memoryManager->AllocatePage();
@@ -114,59 +110,25 @@ AddrSpace::AddrSpace(OpenFile *executable)
                         // a separate page, we could set its
                         // pages to be read-only
     }
-#else
-// first, set up the translation
-    for (unsigned int i = 0; i < numPages; i++) {
-        pageTable[i].virtualPage = i;	// for now, virtual page # = phys page #
-        pageTable[i].physicalPage = i;
-        pageTable[i].valid = true;
-        pageTable[i].use = false;
-        pageTable[i].dirty = false;
-        pageTable[i].readOnly = false;  // if the code segment was entirely on
-                        // a separate page, we could set its
-                        // pages to be read-only
-    }
-#endif /* CHANGED - page table non 1:1 */
 #endif
 
-#ifdef CHANGED
 // zero out the pages allocated to this process
     for (unsigned int i = 0; i < numPages; i++) {
         bzero(&machine->mainMemory[pageTable[i].physicalPage * PageSize], PageSize);
     }
-#else
-// zero out the entire address space, to zero the unitialized data segment
-// and the stack segment
-    bzero(machine->mainMemory, size);
-#endif /* CHANGED */
 
 // then, copy in the code and data segments into memory
     if (noffH.code.size > 0) {
-#ifdef CHANGED
         for (int i = 0; i < noffH.code.size; i++)
             executable->ReadAt(&machine->mainMemory[Translate(i)], 1, i + noffH.code.inFileAddr);
-#else
-        DEBUG('a', "Initializing code segment, at 0x%x, size %d\n",
-			noffH.code.virtualAddr, noffH.code.size);
-        executable->ReadAt(&(machine->mainMemory[noffH.code.virtualAddr]),
-			noffH.code.size, noffH.code.inFileAddr);
-#endif /* CHANGED */
     }
     if (noffH.initData.size > 0) {
-#ifdef CHANGED
         for (int i = 0; i < noffH.initData.inFileAddr; i++)
             executable->ReadAt(&machine->mainMemory[Translate(i + noffH.code.size)], 1, i + noffH.initData.inFileAddr);
-#else
-        DEBUG('a', "Initializing data segment, at 0x%x, size %d\n",
-			noffH.initData.virtualAddr, noffH.initData.size);
-        executable->ReadAt(&(machine->mainMemory[noffH.initData.virtualAddr]),
-			noffH.initData.size, noffH.initData.inFileAddr);
-#endif /* CHANGED */
     }
 }
 
 
-#ifdef CHANGED
 /**
  * This constructor is used for `fork` calls
  * Instead of loading a program it copies the parent's address space
@@ -285,7 +247,6 @@ int AddrSpace::Translate(int virtAddr) {
     return (ppn * PageSize) + offset;
 
 }
-#endif
 
 //----------------------------------------------------------------------
 // AddrSpace::~AddrSpace
@@ -294,9 +255,7 @@ int AddrSpace::Translate(int virtAddr) {
 
 AddrSpace::~AddrSpace()
 {
-#ifdef CHANGED
    Deallocate();
-#endif
 #ifndef USE_TLB
    delete pageTable;
 #endif

@@ -40,22 +40,15 @@ class AddrSpace {
     OpenFile **open_files;
     Semaphore *num_open_files;
     Lock *fid_assignment;
-#ifdef CHANGED
     unsigned int size;    // make these public for forking reasons
     unsigned int numPages;
     void Exec(OpenFile *executable);
     void Deallocate();
-#endif
 
   private:
 #ifndef USE_TLB
     TranslationEntry *pageTable;	// Assume linear page table translation
 #endif					// for now!
-
-#ifndef CHANGED
-    unsigned int numPages;		// Number of pages in the virtual
-#endif
-					// address space
 };
 
 #endif // ADDRSPACE_H

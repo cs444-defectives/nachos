@@ -43,10 +43,7 @@
 #ifdef USER_PROGRAM
 #include "machine.h"
 #include "addrspace.h"
-
-#ifdef CHANGED
 #include "syscall.h"
-#endif
 
 #endif
 
@@ -107,7 +104,6 @@ class Thread {
     const char* getName() { return (name); }
     void Print() { printf("%s, ", name); }
 
-#ifdef CHANGED
     SpaceId spaceId;
     Semaphore *join;
     Lock *joinLock;
@@ -115,7 +111,6 @@ class Thread {
     int exitCode;
     SpaceId parentSpaceId;
     bool done; // parent has joined or died
-#endif
 
   private:
     // some of the private data for this class is listed above

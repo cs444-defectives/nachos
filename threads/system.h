@@ -16,12 +16,9 @@
 #include "stats.h"
 #include "timer.h"
 #include <new>
-
-#ifdef CHANGED
 #include "memorymanager.h"
 #include "syscall.h"
 #include "synch.h"
-#endif
 
 // Initialization and cleanup routines
 extern void Initialize(int argc, char **argv); 	// Initialization,
@@ -42,14 +39,12 @@ extern Timer *timer;				// the hardware alarm clock
 extern Machine* machine;	// user program memory and registers
 #include "synchconsole.h"
 extern SynchConsole *sconsole;
-#ifdef CHANGED
 extern MemoryManager *memoryManager;
 #define MAX_THREADS 128
 extern SpaceId _spaceId;
 extern Lock *spaceIdLock;
 extern Thread* threads[MAX_THREADS];
 extern Lock *threadsLock;
-#endif /* CHANGED */
 #endif
 
 #ifdef FILESYS_NEEDED 		// FILESYS or FILESYS_STUB

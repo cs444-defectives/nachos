@@ -31,13 +31,11 @@ SynchDisk   *synchDisk;
 #ifdef USER_PROGRAM	// requires either FILESYS or FILESYS_STUB
 Machine *machine;	// user program memory and registers
 SynchConsole *sconsole;
-#ifdef CHANGED
 MemoryManager *memoryManager;
 SpaceId _spaceId;
 Lock *spaceIdLock;
 Thread* threads[MAX_THREADS];
 Lock *threadsLock;
-#endif
 #endif
 
 #ifdef NETWORK
@@ -160,7 +158,6 @@ Initialize(int argc, char **argv)
 #ifdef USER_PROGRAM
     machine = new(std::nothrow) Machine(debugUserProg);	// this must come first
     sconsole = new(std::nothrow) SynchConsole();
-#ifdef CHANGED
     memoryManager = new(std::nothrow) MemoryManager();
     _spaceId = 0;
     spaceIdLock = new(std::nothrow) Lock("space id lock");
@@ -172,7 +169,6 @@ Initialize(int argc, char **argv)
     // add thread to our global list of threads
     threads[0] = currentThread;
     currentThread->spaceId = 0;
-#endif
 #endif
 
 #ifdef FILESYS
