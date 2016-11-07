@@ -75,11 +75,26 @@ _Group 3: Kelvin Abrokwa-Johnson, Quint Guvernator, Anna Li_
 
 We have changed code in the following files:
 
-  - TODO: run `git diff --stat` before submission
+  - Makefile.common
+  - threads/scheduler.cc
+  - threads/synch.cc
+  - threads/synch.h
+  - threads/system.cc
+  - threads/system.h
+  - threads/thread.cc
+  - threads/thread.h
+  - userprog/addrspace.cc
+  - userprog/addrspace.h
+  - userprog/exception.cc
+  - userprog/progtest.cc
+  - userprog/synchconsole.cc
+  - userprog/synchconsole.h
+  - userprog/syscall.h
 
 We have added the following files to the project:
 
-  - TODO: run `git diff --stat` before submission
+  - threads/memorymanager.cc
+  - threads/memorymanager.h
 
 ## System Calls
 
@@ -98,9 +113,10 @@ unique SpaceID is given to every new thread that is created, where each new
 SpaceID is one higher than the last. These IDs are not reclaimed, so each is
 unique even if the thread's data is long gone.
 
-- `::Exit`: when this syscall is called, the current thread is marked as 'dead'
+- `::Exit`: when this syscall is called, the current thread is marked as `dead`
   and the argument given is set as the thread's return value. The parent would
-  get this return value on a future Join().
+  get this return value on a future Join(). Threads also `V()` their join semaphore
+  on Exit to ensure a joining thread has permission to proceed.
 
 - `::Exec`: when this syscall is called, the filename and arguments are read in
   from userspace. If the file given is an NOFF binary, it gets its own address
@@ -109,24 +125,26 @@ unique even if the thread's data is long gone.
   prompt output, trick the shell into thinking that the #SCRIPT file is console
   input, and run it like we would normally run the shell.
 
-- `::Join`: when this syscall is called, a spaceID is grabbed. The 
-               global threads array is searched for an index with this
-               spaceID.
+- `::Join`: when this syscall is called, we find the appropriate thread in our
+  global `threads` array (its index is `spaceId % MAX_THREADS`). The joining
+  thread the `P()`'s the joined thread's join semaphore. It then marks that
+  thread as `done` (meaning no more information is desired of that thread);
 
 - `::Create`: when this syscall is called, the filename is read into a
-               buffer and a new file is created only if the filename 
-               is below a certain length, MAX_FILE_NAME. 
+               buffer and a new file is created only if the filename
+               is below a certain length, MAX_FILE_NAME.
 
-- `::Open`: when this syscall is called, a filename is read. The method 
-               returns prematurely if the filename is NULL or if it is too long. Otherwise, the file is opened and added to the global
+- `::Open`: when this syscall is called, a filename is read. The method
+               returns prematurely if the filename is NULL or if it is too long.
+               Otherwise, the file is opened and added to the global
                open_files array. The latter operation is protected under
                a combination of locks and semaphores.
 
 - `::Read`: when this syscall is called, the id of the OpenFile is
                grabbed. If the file does not exist, is null, or is the
                console output, the method returns, and nothing is read.
-               Otherwise, we read the whole file into main memory and 
-               return the number of bytes read.  
+               Otherwise, we read the whole file into main memory and
+               return the number of bytes read.
 
 - `::Write`: when this syscall is called, the id of the OpenFile is
                grabbed. If the file does not exist, is null, or is the
@@ -134,27 +152,36 @@ unique even if the thread's data is long gone.
                Otherwise, we write the whole file into main memory(?).
 
 - `::Close`: when this syscall is called, the id of the OpenFile is
-               grabbed. If the file does not exist or is null, the 
-               method returns. Otherwise, the number of file 
+               grabbed. If the file does not exist or is null, the
+               method returns. Otherwise, the number of file
                references for this OpenFile is decremented by 1. This
-               operation is protected using semaphores.  
+               operation is protected using semaphores.
                If the resulting file references is 0, the OpenFile is
-               removed from the global array of open_files. 
+               removed from the global array of open_files.
 
-- `::Fork`: when this syscall is called, the parent thread pauses and
-               creates a new child thread with the same exact address
-               address space (?) as itself. Any file references are
-               updated. The child thread is assigned a spaceID and
-               dded to our global threads array, under the protection
-               of locks. The program counter is updated for both the
-               both the parent and child thread, and the child thread
-               begins to run. Under successful completion, the 
-               spaceID of the child thread is returned. Otherwise, a -1
-               is returned.
+- `::Fork`: when this syscall is called, new Thread and Addrspace objects
+  are created. The AddrSpace object is instatiated with a constructor that
+  takes the parent address space and copies all appropriate information. The
+  new thread is assigned the next smallest spaceId such that the index
+  `spaceId % MAX_THREADS` in the threads array is an empty slot. We
+  populate parent and child registers appriately and start the child with a
+  call to `machine->Run()`
 
 - `::Dup`: when this syscall is called, stdin or stdout is redirected
-               to a file specified by the user. The reference count for the new file is increased, under protection of semaphores and locks. The new file id is returned. 
+   to a file specified by the user. The reference count for the new
+   file is increased, under protection of semaphores and locks.
+   The new file id is returned.
 
-## SynchConsole
 
-TODO??
+### Atomic Read/Write
+
+Each `OpenFile` object has a `lock` field. On reads, the calling
+thread `Acquire`'s the lock before doing all of its writing for that
+call. It then releases the lock. this way, only only thread can
+be writing or reading at a time.
+
+### Helpers
+
+We implemented programs like `echo` and libraries like `defective_libc.c`
+which really smoothed out our development flows. We also implemented a
+number of extra tests to ensure we were meeting requirements.
