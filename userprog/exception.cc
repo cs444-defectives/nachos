@@ -23,6 +23,9 @@
 #define MAX_FILE_NAME 128
 #define MAX_ARG_LEN 128
 #define MAX_ARGS 16
+#define SHELL_PATH "test/shell"
+#define SCRIPT_HEADER "#SCRIPT\n"
+#define LEN_SCRIPT_HEADER 8
 
 #ifdef USE_TLB
 
@@ -153,10 +156,10 @@ void forkCb(int _) {
 }
 #endif
 
-static void _create(void)
+static void _create(int filename_va)
 {
     char filename[MAX_FILE_NAME];
-    int bytes_read = strimport(filename, MAX_FILE_NAME, machine->ReadRegister(4));
+    int bytes_read = strimport(filename, MAX_FILE_NAME, filename_va);
 
     /* abort if we get a null string */
     if (bytes_read == -1)
@@ -170,11 +173,9 @@ static void _create(void)
     fileSystem->Create(filename, 0);
 }
 
-static int _read(void)
+static int _read(int buf_va, int size, OpenFileId fid)
 {
-    char *userland_str = (char *) machine->ReadRegister(4);
-    int size = machine->ReadRegister(5);
-    OpenFileId fid = machine->ReadRegister(6);
+    char *userland_str = (char *) buf_va;
     int bytesRead = 0;
     AddrSpace *space = currentThread->space;
     OpenFile **open_files = space->open_files;
@@ -212,11 +213,9 @@ static int _read(void)
     return bytesRead;
 }
 
-static void _write(void)
+static void _write(int buf_va, int size, OpenFileId fid)
 {
-    char *userland_str = (char *) machine->ReadRegister(4);
-    int size = machine->ReadRegister(5);
-    OpenFileId fid = machine->ReadRegister(6);
+    char *userland_str = (char *) buf_va;
     AddrSpace *space = currentThread->space;
     OpenFile **open_files = space->open_files;
     OpenFile *f;
@@ -250,9 +249,8 @@ static void _write(void)
     f->lock->Release();
 }
 
-static void _close(void)
+static void _close(OpenFileId fid)
 {
-    OpenFileId fid = machine->ReadRegister(4);
     OpenFile **open_files = currentThread->space->open_files;
     Semaphore *num_open_files = currentThread->space->num_open_files;
     Lock *fid_assignment = currentThread->space->fid_assignment;
@@ -290,17 +288,19 @@ static void _close(void)
     num_open_files->V();
 }
 
-static int _open(void)
+/*
+ * To let kernelspace call this open helper function to parse #SCRIPTs, we
+ * assume filename has already been translated from userspace (successfully or
+ * otherwise). It's ugly design, I know.
+ */
+static int _open(char *filename, int bytes_read)
 {
-    char filename[MAX_FILE_NAME];
     OpenFile **open_files = currentThread->space->open_files;
     Semaphore *num_open_files = currentThread->space->num_open_files;
     Lock *fid_assignment = currentThread->space->fid_assignment;
     OpenFileId fid;
 
-    int bytes_read = strimport(filename, MAX_FILE_NAME, machine->ReadRegister(4));
-
-    /* abort if we get a null string */
+    /* abort if we got a null string */
     if (bytes_read == -1)
         return -1;
 
@@ -328,10 +328,8 @@ static int _open(void)
     return fid;
 }
 
-static void _exit(void)
+static void _exit(int exitCode)
 {
-    int exitCode = machine->ReadRegister(4);
-
     currentThread->exitCode = exitCode; // store exit code
     currentThread->dead = true; // mark as dead
     currentThread->join->V(); // permission for parent to proceed
@@ -403,10 +401,8 @@ static SpaceId _fork(void)
     return _spaceId;
 }
 
-static int _join(void)
+static int _join(SpaceId spaceId)
 {
-    SpaceId spaceId = machine->ReadRegister(4);
-
     int tidx = spaceId % MAX_THREADS;
 
     int exitCode;
@@ -424,11 +420,20 @@ static int _join(void)
     return exitCode;
 }
 
-static int _exec(void)
+static bool is_script(OpenFile *f)
+{
+    char script_header[LEN_SCRIPT_HEADER + 1];
+    f->ReadAt(script_header, LEN_SCRIPT_HEADER, 0);
+    script_header[LEN_SCRIPT_HEADER] = '\0';
+    return strcmp(script_header, (char *) SCRIPT_HEADER) == 0;
+}
+
+static int _exec(int filename_va, int args_va)
 {
     /* read in the name of the executable */
     char filename[MAX_FILE_NAME];
-    int bytes_read = strimport(filename, MAX_FILE_NAME, machine->ReadRegister(4));
+    int bytes_read = strimport(filename, MAX_FILE_NAME, filename_va);
+    char script_header[LEN_SCRIPT_HEADER];
 
     /* abort if we get a null string */
     if (bytes_read == -1)
@@ -438,45 +443,72 @@ static int _exec(void)
     if (bytes_read == MAX_FILE_NAME)
         return -1;
 
-    /* read in arguments */
-    int args_vp = machine->ReadRegister(5);
-    int arg_vp;
+    /* get executable file, abort if it doesn't exist */
+    OpenFile *executable = fileSystem->Open(filename);
+    if (executable == NULL)
+        return -1;
+
+    /* arguments */
+    int arg_va;
     int num_args;
     char arg_buf[MAX_ARGS][MAX_ARG_LEN];
 
-    /* if passed a null pointer, there are no args */
-    if (!args_vp) {
-        num_args = 0;
+    /*
+     * If the filename passed to Exec is a script, we set the actual executable
+     * to the shell, passing in a special argument to disable shell prompts. We
+     * then replace ConsoleInput with an open copy of the script file that has
+     * been seeked to the second line. This lets us "interpret" script input as
+     * if it were typed on the shell.
+     */
+    if (is_script(executable)) {
 
+        /* replace ConsoleInput with the script file, advancing past header */
+        _close((int) ConsoleInput);
+        _open(filename, strlen(filename));
+        currentThread->space->open_files[ConsoleInput]->Read(script_header, LEN_SCRIPT_HEADER);
+        executable = fileSystem->Open((char *) SHELL_PATH);
+        ASSERT(executable != NULL);
+
+        /* disable prompts in the shell */
+        strcpy(arg_buf[0], SHELL_FLAG_DISABLE_PROMPTS);
+        num_args = 1;
+
+    /*
+     * If the filename passed to Exec is a true, blue NOFF binary, we need to
+     * get the actual arguments given to us by the user.
+     */
     } else {
-        for (num_args = 0; num_args < MAX_ARGS; num_args++) {
 
-            /* get address of the string */
-            arg_vp = intimport(args_vp + (4 * num_args));
+        /* if passed a null pointer, there are no args */
+        if (!args_va) {
+            num_args = 0;
 
-            /* don't deference null pointers */
-            if (!arg_vp)
-                break;
+        } else {
+            for (num_args = 0; num_args < MAX_ARGS; num_args++) {
 
-            /* copy string argument into kernelspace arguments array */
-            bytes_read = strimport(arg_buf[num_args], MAX_ARG_LEN, arg_vp);
+                /* get address of the string */
+                arg_va = intimport(args_va + (4 * num_args));
 
-            /* stop if we get a NULL pointer or an empty string */
-            if (bytes_read == -1 || !bytes_read)
-                break;
+                /* don't deference null pointers */
+                if (!arg_va)
+                    break;
 
-            /* abort if any argument is too long */
-            if (bytes_read == MAX_ARG_LEN)
-                return -1;
+                /* copy string argument into kernelspace arguments array */
+                bytes_read = strimport(arg_buf[num_args], MAX_ARG_LEN, arg_va);
+
+                /* stop if we get a NULL pointer or an empty string */
+                if (bytes_read == -1 || !bytes_read)
+                    break;
+
+                /* abort if any argument is too long */
+                if (bytes_read == MAX_ARG_LEN)
+                    return -1;
+            }
         }
     }
 
     /* abort if we ran out of space before reading all arguments */
     if (num_args == MAX_ARGS)
-        return -1;
-
-    OpenFile *executable = fileSystem->Open(filename);
-    if (executable == NULL)
         return -1;
 
     currentThread->space->Exec(executable);
@@ -532,9 +564,8 @@ static int _exec(void)
     return 0;
 }
 
-static int _dup(void)
+static int _dup(OpenFileId fid)
 {
-    OpenFileId fid = machine->ReadRegister(4);
     OpenFile **open_files = currentThread->space->open_files;
     Semaphore *num_open_files = currentThread->space->num_open_files;
     Lock *fid_assignment = currentThread->space->fid_assignment;
@@ -583,6 +614,11 @@ void ExceptionHandler(ExceptionType which)
 {
     int type = machine->ReadRegister(2);
 
+    /* for ugly _open() */
+    char filename[MAX_FILE_NAME];
+    int filename_va;
+    int bytes_read;
+
     switch (which) {
     case SyscallException:
         switch (type) {
@@ -593,41 +629,48 @@ void ExceptionHandler(ExceptionType which)
 
         case SC_Exit:
             DEBUG('a', "Exit, initiated by user code exit.\n");
-            _exit();
+            _exit(machine->ReadRegister(4));
             break;
 
         case SC_Create:
-            _create();
+            _create(machine->ReadRegister(4));
             updatePC();
             break;
 
         case SC_Open:
             DEBUG('a', "opening file\n");
-            machine->WriteRegister(2, _open());
+            filename_va = machine->ReadRegister(4);
+            bytes_read = strimport(filename, MAX_FILE_NAME, filename_va);
+            machine->WriteRegister(2, _open(filename, bytes_read));
+
             updatePC();
             break;
 
         case SC_Dup:
             DEBUG('a', "duping file\n");
-            machine->WriteRegister(2, _dup());
+            machine->WriteRegister(2, _dup(machine->ReadRegister(4)));
             updatePC();
             break;
 
         case SC_Read:
             DEBUG('a', "Read file, initiated by user program.\n");
-            machine->WriteRegister(2, _read());
+            machine->WriteRegister(2, _read(machine->ReadRegister(4),
+                                            machine->ReadRegister(5),
+                                            machine->ReadRegister(6)));
             updatePC();
             break;
 
         case SC_Write:
             DEBUG('a', "Write file, initiated by user program.\n");
-            _write();
+            _write(machine->ReadRegister(4),
+                   machine->ReadRegister(5),
+                   machine->ReadRegister(6));
             updatePC();
             break;
 
         case SC_Close:
             DEBUG('a', "closing a file\n");
-            _close();
+            _close(machine->ReadRegister(4));
             updatePC();
             break;
 
@@ -638,13 +681,14 @@ void ExceptionHandler(ExceptionType which)
 
         case SC_Join:
             DEBUG('a', "Join, initiated by user program\n");
-            machine->WriteRegister(2, _join());
+            machine->WriteRegister(2, _join(machine->ReadRegister(4)));
             break;
 
         case SC_Exec:
             DEBUG('a', "user thread %s called exec\n", currentThread->getName());
             updatePC();
-            if (_exec() == -1)
+            if (_exec(machine->ReadRegister(4),
+                      machine->ReadRegister(5)) == -1)
                 machine->WriteRegister(2, -1);
             break;
 
