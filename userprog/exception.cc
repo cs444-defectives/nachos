@@ -421,6 +421,7 @@ static int _join(void)
 
     threadsLock->Acquire();
     threadToBeDestroyed = threads[tidx]; // mark thread for deletion
+    currentThread->Yield();
     threads[tidx] = NULL;
     threadsLock->Release();
 
