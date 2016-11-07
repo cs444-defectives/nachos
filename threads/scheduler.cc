@@ -128,7 +128,6 @@ Scheduler::Run (Thread *nextThread)
     // point, we were still running on the old thread's stack!
     for (int i = 0; i < MAX_THREADS; i++) {
         if (threads[i] != NULL && threads[i]->dead && threads[i]->done) {
-            fprintf(stderr, "thread <%d> being deleted\n", threads[i]->spaceId);
             delete threads[i];
             threads[i] = NULL;
         }
