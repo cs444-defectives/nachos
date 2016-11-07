@@ -3,6 +3,8 @@
 
 #define MAX_LINE 128
 #define ARG_SEPARATOR ' '
+#define OUTPUT_TO_FILE ">"
+#define INPUT_FROM_FILE "<"
 
 /*
  * line becomes the filename, args becomes the args array. returns number of
@@ -50,7 +52,12 @@ int main()
     char *prompt = "defectives> ";
     SpaceId p;
 
+    /* for i/o redirection */
+    char *s;
+    char *input_filename, *output_filename;
+
     while (1) {
+        input_filename = output_filename = (char *) 0;
         print_string(prompt);
 
         /* read characters from the user */
@@ -98,6 +105,33 @@ int main()
             continue;
         }
 
+        /* parse i/o redirects */
+        while (1) {
+            s = args[nargs - 2];
+            
+            /* output to file */
+            if (eq_string(s, OUTPUT_TO_FILE)) {
+                output_filename = args[nargs - 1];
+                print_string("output redirected to ");
+                print_string(output_filename);
+                print_string("\n");
+
+            /* input from file */
+            } else if (eq_string(s, INPUT_FROM_FILE)) {
+                input_filename = args[nargs - 1];
+                print_string("input redirected to ");
+                print_string(input_filename);
+                print_string("\n");
+
+            } else {
+                break;
+            }
+
+            /* the new last argument is the one before the redir character */
+            nargs -= 2;
+            args[nargs] = (char *) 0;
+        }
+
         /* we're in the parent */
         /* FIXME: fork crashes kernel after the fifth shell command */
         if (p = Fork()) {
@@ -105,6 +139,20 @@ int main()
 
         /* we're in the child */
         } else {
+
+            /* input from file, if requested */
+            if (input_filename) {
+                Close(ConsoleInput);
+                Open(input_filename);
+            }
+
+            /* output to file, if requested */
+            if (output_filename) {
+                Create(output_filename);
+                Close(ConsoleOutput);
+                Open(output_filename);
+            }
+
             err = Exec(line, args);
             if (err == -1) {
                 print_string("No such script or binary '");
