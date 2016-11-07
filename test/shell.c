@@ -44,7 +44,7 @@ static int get_args_from_line(char *line, char **args)
     return -1;
 }
 
-int main()
+int main(int argc, char **argv)
 {
     int i, err, nargs;
     char c, line[MAX_LINE];
@@ -56,9 +56,21 @@ int main()
     char *s;
     char *input_filename, *output_filename;
 
+    int prompt_enabled = 1;
+
+    /*
+     * If we're calling shell with the DISABLE_PROMPTS argument, don't print a
+     * prompt for each input line. This is important for when we use the shell
+     * to interpret #SCRIPT files.
+     */
+    if (argc >= 2 && eq_string(argv[1], (char *) SHELL_FLAG_DISABLE_PROMPTS))
+        prompt_enabled = 0;
+
     while (1) {
         input_filename = output_filename = (char *) 0;
-        print_string(prompt);
+
+        if (prompt_enabled)
+            print_string(prompt);
 
         /* read characters from the user */
         i = 0;

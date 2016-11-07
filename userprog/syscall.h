@@ -16,6 +16,7 @@
 #define MAX_FILE_NAME 128
 #define MAX_ARG_LEN 128
 #define MAX_ARGS 16
+#define SHELL_FLAG_DISABLE_PROMPTS "-s"
 
 #include "copyright.h"
 
