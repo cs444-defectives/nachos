@@ -9,6 +9,16 @@ int len_string(char *str)
     return i;
 }
 
+/* returns 1 if strings have same chars, else 0 */
+int eq_string(char *x, char *y)
+{
+    char c, d;
+    while ((c = *x++) == (d = *y++))
+        if (!c)
+            return 1;
+    return 0;
+}
+
 void write_string(char *str, int fid)
 {
     int n;

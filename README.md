@@ -2,7 +2,7 @@
 
 An extension of the provided NACHOS code to be a ~real~ operating system.
 
-## Test program modifications
+## Caveats
 
 During testing, we modified the test programs in the following ways:
 
@@ -27,9 +27,27 @@ Network I/O: packets received 0, sent 0
 Cleaning up...
 ```
 
-## Numeric limits
+The shell accepts redirects at the END of the input line, in any order,
+separated by spaces. Only the last of each input/output redirect spec is
+actually followed. For example:
 
-General rule: If there's a limit, it is 128. The following limits are relevant:
+```
+defectives> test/cat Makefile > somefile      # OK, output goes to 'somefile'
+defectives> test/cat Makefile > a > somefile  # OK, but output goes to 'somefile', not 'a'
+defectives> test/fromcons < somefile > a      # OK, output to 'a' and input from 'somefile'
+defectives> > somefile test/cat Makefile      # NOPE
+defectives> test/cat Makefile >somefile       # NOPE
+defectives> test/cat Makefile >> somefile     # NOPE
+```
+
+True to its name, `cat` can accept multiple files and will concatenate them. It
+also accepts the special filename "-" (without quotes) to read from stdin. This
+is mostly for testing. Unfortunately we can't read until ^D (EOF) like unix
+`cat` because of some hokey business in the machine-emulated filesystem, so we
+instead read until newline.
+
+General rule: If there's a numeric limit, it is 128. The following limits are
+relevant:
 
   - the longest possible input line in the shell, including the null byte
     (MAX_LINE = 128)
@@ -40,7 +58,7 @@ General rule: If there's a limit, it is 128. The following limits are relevant:
   - the maximum number of living or dead-but-not-joined threads in the system
     at a given time (MAX_THREADS = 128)
 
-Exception:
+There is one exception to the general numeric limit rule:
 
   - you can pass a maximum of 16 arguments to programs spawned with Exec()
     (MAX_ARGS = 16)
