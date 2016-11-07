@@ -236,6 +236,8 @@ static void _write(void)
         return;
 
     char c;
+
+    f->lock->Acquire(); // guanrantee atomic writes
     while (size) {
         c = machine->mainMemory[space->Translate((int) userland_str)];
         if (f->is_real_file)
@@ -245,6 +247,7 @@ static void _write(void)
         userland_str++;
         size--;
     }
+    f->lock->Release();
 }
 
 static void _close(void)
@@ -338,18 +341,14 @@ static void _exit(void)
     // iterate over thread's children and delete dead ones
     for (int i = 0; i < MAX_THREADS; i++) {
         if (threads[i] != NULL
-            && threads[i]->parentSpaceId == currentThread->spaceId
-            && threads[i]->dead) {
-            threadToBeDestroyed = threads[i]; // hard delete children
-            currentThread->Yield();
+            && threads[i]->parentSpaceId == currentThread->spaceId) {
+            threads[i]->done = true;
         }
     }
 
-    if (threads[parentIdx] == NULL
-        || threads[parentIdx]->spaceId != currentThread->parentSpaceId)
-        threadToBeDestroyed = currentThread; // hard delete this thread
-
-    currentThread->Finish(); // soft delete
+    currentThread->dead = true; // indicate that you have finished running
+    (void) interrupt->SetLevel(IntOff);
+    currentThread->Sleep();
 }
 
 static SpaceId _fork(void)
@@ -416,14 +415,9 @@ static int _join(void)
         threads[tidx]->joinLock->Acquire();
         threads[tidx]->join->P();
         exitCode = threads[tidx]->exitCode;
+        threads[tidx]->done = true;
         threads[tidx]->joinLock->Release();
     }
-
-    threadsLock->Acquire();
-    threadToBeDestroyed = threads[tidx]; // mark thread for deletion
-    currentThread->Yield();
-    threads[tidx] = NULL;
-    threadsLock->Release();
 
     updatePC();
 

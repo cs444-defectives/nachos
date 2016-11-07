@@ -114,6 +114,7 @@ class Thread {
     bool dead;
     int exitCode;
     SpaceId parentSpaceId;
+    bool done; // parent has joined or died
 #endif
 
   private:

@@ -41,6 +41,7 @@ Thread::Thread(const char* threadName)
 #ifdef USER_PROGRAM
     space = NULL;
     dead = false;
+    done = false;
     join = new(std::nothrow) Semaphore("thread join", 0);
     joinLock = new(std::nothrow) Lock("thread join sempahore lock");
 #endif
@@ -151,7 +152,7 @@ Thread::Finish ()
 
     DEBUG('t', "Finishing thread \"%s\"\n", getName());
 
-    // threadToBeDestroyed = currentThread;
+    threadToBeDestroyed = currentThread;
     Sleep();					// invokes SWITCH
     // not reached
 }

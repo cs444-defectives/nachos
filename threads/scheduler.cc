@@ -70,7 +70,12 @@ Scheduler::ReadyToRun (Thread *thread)
 Thread *
 Scheduler::FindNextToRun ()
 {
-    return (Thread *)readyList->Remove();
+    Thread *next;
+    while (next = (Thread *)readyList->Remove()) {
+        if (next == NULL || !next->dead) { // don't run threads that are to be cleaned up
+            return next;
+        }
+    }
 }
 
 //----------------------------------------------------------------------
@@ -121,10 +126,12 @@ Scheduler::Run (Thread *nextThread)
     // we need to delete its carcass.  Note we cannot delete the thread
     // before now (for example, in Thread::Finish()), because up to this
     // point, we were still running on the old thread's stack!
-    if (threadToBeDestroyed != NULL) {
-        DEBUG('t', "Deleting thread with space ID %d\n", threadToBeDestroyed->spaceId);
-        delete threadToBeDestroyed;
-        threadToBeDestroyed = NULL;
+    for (int i = 0; i < MAX_THREADS; i++) {
+        if (threads[i] != NULL && threads[i]->dead && threads[i]->done) {
+            fprintf(stderr, "thread <%d> being deleted\n", threads[i]->spaceId);
+            delete threads[i];
+            threads[i] = NULL;
+        }
     }
 
 #ifdef USER_PROGRAM
