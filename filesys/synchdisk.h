@@ -14,6 +14,13 @@
 #include "disk.h"
 #include "synch.h"
 
+struct DiskPageDescriptor {
+  int sector;       /* sector on disk */
+  SpaceId process;  /* process that "owns" (asked for) the page */
+  int ram_page;
+  bool locked;      /* make page ineligable for replacement */
+}
+
 // The following class defines a "synchronous" disk abstraction.
 // As with other I/O devices, the raw physical disk is an asynchronous device --
 // requests to read or write portions of the disk return immediately,
@@ -41,6 +48,9 @@ class SynchDisk {
     void RequestDone();			// Called by the disk device interrupt
 					// handler, to signal that the
 					// current disk operation is complete.
+
+    /* translates between RAM pages and disk pages (sectors) */
+    struct DiskPageDescriptor[NUM_SECTORS] diskPages;
 
   private:
     Disk *disk;		  		// Raw disk device
