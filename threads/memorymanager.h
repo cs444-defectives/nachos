@@ -3,9 +3,17 @@
 
 class MemoryManager {
 private:
-    BitMap *bitmap;
+    BitMap *ramBitmap;
+    BitMap *ramCoupled;
+    BitMap *diskBitmap;
+    int last_evicted;
+    void ram_page_to_disk(int ram_phys_page, int sector);
+    void disk_page_to_ram(int sector, int ram_phys_page);
 public:
     MemoryManager();
-    int AllocatePage();
-    void DeallocatePage(int ppn);
+    int AllocateRAMPage();
+    void DeallocateRAMPage(int ppn);
+    int AllocateDiskPage();
+    void DeallocateDiskPage(int ppn);
+    void Fault(int userland_va);
 };
