@@ -95,12 +95,10 @@ USERPROG_O = addrspace.o bitmap.o exception.o progtest.o console.o machine.o \
 	mipssim.o translate.o synchconsole.o memorymanager.o
 
 VM_H = ../filesys/synchdisk.h \
-        ../userprog/synchconsole.h \
         ../machine/disk.h
 VM_C = ../filesys/synchdisk.cc \
-        ../userprog/synchconsole.cc \
         ../machine/disk.cc
-VM_O = synchdisk.o synchconsole.o disk.o
+VM_O = synchdisk.o disk.o
 
 FILESYS_H =../filesys/directory.h \
 	../filesys/filehdr.h\

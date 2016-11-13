@@ -52,10 +52,8 @@ extern Lock *threadsLock;
 extern FileSystem  *fileSystem;
 #endif
 
-#ifdef FILESYS
 #include "synchdisk.h"
 extern SynchDisk   *synchDisk;
-#endif
 
 #ifdef NETWORK
 #include "post.h"

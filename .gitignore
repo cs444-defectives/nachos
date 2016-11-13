@@ -4,6 +4,7 @@
 *.o
 *.obj
 userprog/swtch.s
+vm/swtch.s
 
 # Precompiled Headers
 *.gch
@@ -30,8 +31,12 @@ userprog/swtch.s
 *.app
 *.coff
 userprog/nachos
+vm/nachos
 bin/coff2noff
 test/*
 !test/*.c
 !test/*.h
 !test/script.txt
+
+# Nachos-generated
+DISK

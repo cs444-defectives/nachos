@@ -24,9 +24,7 @@ Timer *timer;				// the hardware timer device,
 FileSystem  *fileSystem;
 #endif
 
-#ifdef FILESYS
 SynchDisk   *synchDisk;
-#endif
 
 #ifdef USER_PROGRAM	// requires either FILESYS or FILESYS_STUB
 Machine *machine;	// user program memory and registers
@@ -171,9 +169,7 @@ Initialize(int argc, char **argv)
     currentThread->spaceId = 0;
 #endif
 
-#ifdef FILESYS
     synchDisk = new(std::nothrow) SynchDisk("DISK");
-#endif
 
 #ifdef FILESYS_NEEDED
     fileSystem = new(std::nothrow) FileSystem(format);
@@ -204,9 +200,7 @@ Cleanup()
     delete fileSystem;
 #endif
 
-#ifdef FILESYS
     delete synchDisk;
-#endif
 
     delete timer;
     delete scheduler;
