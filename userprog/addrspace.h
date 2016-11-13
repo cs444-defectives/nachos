@@ -45,7 +45,9 @@ class AddrSpace {
     void Exec(OpenFile *executable);
     void Deallocate();
 
-  private:
+    /* maps user pages to disk sectors */
+    int *sectorTable;
+
 #ifndef USE_TLB
     TranslationEntry *pageTable;	// Assume linear page table translation
 #endif					// for now!

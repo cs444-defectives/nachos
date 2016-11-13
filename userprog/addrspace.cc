@@ -100,17 +100,20 @@ AddrSpace::AddrSpace(OpenFile *executable)
 					numPages, size);
 #ifndef USE_TLB
     pageTable = new(std::nothrow) TranslationEntry[numPages];
+    sectorTable = new int[numPages];
+
     for (unsigned int i = 0; i < numPages; i++) {
+        sectorTable[i] = memoryManager->AllocateDiskPage(i);
         pageTable[i].virtualPage = i;
-        pageTable[i].physicalPage = memoryManager->AllocatePage();
-        pageTable[i].valid = true;
+        pageTable[i].physicalPage = -1; /* dummy value, clobbered immediately */
+        pageTable[i].valid = false;     /* will fetch from disk on first access */
         pageTable[i].use = false;
         pageTable[i].dirty = false;
-        pageTable[i].readOnly = false;  // if the code segment was entirely on
-                        // a separate page, we could set its
-                        // pages to be read-only
+        pageTable[i].readOnly = false;
     }
 #endif
+
+    /* TODO: Kelvin should work his magic from the -x flag here too */
 
 // zero out the pages allocated to this process
     for (unsigned int i = 0; i < numPages; i++) {
@@ -138,11 +141,13 @@ AddrSpace::AddrSpace(AddrSpace *parent) {
     size = parent->size;
     numPages = parent->numPages;
     pageTable = new(std::nothrow) TranslationEntry[numPages];
+    sectorTable = new int[numPages];
 
     for (unsigned int i = 0; i < numPages; i++) {
+        sectorTable[i] = memoryManager->AllocateDiskPage(i);
         pageTable[i].virtualPage = i;
-        pageTable[i].physicalPage = memoryManager->AllocatePage();
-        pageTable[i].valid = true;
+        pageTable[i].physicalPage = -1; /* dummy value, clobbered immediately */
+        pageTable[i].valid = false;     /* will fetch from disk on first access */
         pageTable[i].use = false;
         pageTable[i].dirty = false;
         pageTable[i].readOnly = false;
@@ -194,17 +199,19 @@ void AddrSpace::Exec(OpenFile *executable) {
 					numPages, size);
 
     pageTable = new(std::nothrow) TranslationEntry[numPages];
+    sectorTable = new int[numPages];
 
     for (unsigned int i = 0; i < numPages; i++) {
+        sectorTable[i] = memoryManager->AllocateDiskPage(i);
         pageTable[i].virtualPage = i;
-        pageTable[i].physicalPage = memoryManager->AllocatePage();
-        pageTable[i].valid = true;
+        pageTable[i].physicalPage = -1; /* dummy value, clobbered immediately */
+        pageTable[i].valid = false;     /* will fetch from disk on first access */
         pageTable[i].use = false;
         pageTable[i].dirty = false;
-        pageTable[i].readOnly = false;  // if the code segment was entirely on
-                        // a separate page, we could set its
-                        // pages to be read-only
+        pageTable[i].readOnly = false;
     }
+
+    /* TODO: Kelvin should work his magic from the -x flag here too */
 
     for (unsigned int i = 0; i < numPages; i++) {
         bzero(&machine->mainMemory[pageTable[i].physicalPage * PageSize], PageSize);
@@ -230,9 +237,8 @@ void AddrSpace::Exec(OpenFile *executable) {
  * deallocate allocated pages
  */
 void AddrSpace::Deallocate() {
-    for (unsigned int i = 0; i < numPages; i++) {
-        memoryManager->DeallocatePage(pageTable[i].physicalPage);
-    }
+    for (unsigned int i = 0; i < numPages; i++)
+        memoryManager->DeallocateDiskPage(sectorTable[i]);
 }
 
 /**

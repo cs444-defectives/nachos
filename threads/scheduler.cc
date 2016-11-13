@@ -71,7 +71,7 @@ Thread *
 Scheduler::FindNextToRun ()
 {
     Thread *next;
-    while (next = (Thread *)readyList->Remove()) {
+    while ((next = (Thread *)readyList->Remove())) {
         if (next == NULL || !next->dead) { // don't run threads that are to be cleaned up
             return next;
         }
