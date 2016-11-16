@@ -53,4 +53,17 @@ class AddrSpace {
 #endif					// for now!
 };
 
+class DiskBuffer {
+  public:
+    DiskBuffer(int *sectorTable);
+    ~DiskBuffer();
+    int Write(char *data, int numBytes); // write bytes to buffer
+    void Flush(); // write buffer to disk
+  private:
+    char buffer[SectorSize];
+    int *sectorTable;
+    int bidx; // buffer index
+    int stidx; // sector table index
+};
+
 #endif // ADDRSPACE_H
