@@ -692,6 +692,9 @@ void ExceptionHandler(ExceptionType which)
             printf("Undefined SYSCALL %d\n", type);
             ASSERT(false);
         }
+    case PageFaultException:
+        memoryManager->Fault(machine->ReadRegister(BadVAddrReg));
+        break;
 #ifdef USE_TLB
     case PageFaultException:
         HandleTLBFault(machine->ReadRegister(BadVAddrReg));

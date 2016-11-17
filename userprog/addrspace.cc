@@ -120,7 +120,7 @@ AddrSpace::AddrSpace(OpenFile *executable)
         bzero(&machine->mainMemory[pageTable[i].physicalPage * PageSize], PageSize);
     }
 
-// then, copy in the code and data segments into memory
+    // then, copy in the code and data segments into memory
     if (noffH.code.size > 0) {
         for (int i = 0; i < noffH.code.size; i++)
             executable->ReadAt(&machine->mainMemory[Translate(i)], 1, i + noffH.code.inFileAddr);
@@ -130,37 +130,22 @@ AddrSpace::AddrSpace(OpenFile *executable)
             executable->ReadAt(&machine->mainMemory[Translate(i + noffH.code.size)], 1, i + noffH.initData.inFileAddr);
     }
     */
-    char buffer[SectorSize];
+
     DiskBuffer *diskBuffer = new(std::nothrow) DiskBuffer(sectorTable);
+    char c;
 
     if (noffH.code.size > 0) {
-        int offset = 0;
-        int nBytes;
-        do {
-            /* number of bytes to read min(sector size, bytes left in code segment) */
-            nBytes = SectorSize < noffH.code.size - offset ? SectorSize : noffH.code.size - offset;
-            /* how far into executable to start reading */
-            offset += nBytes;
-            /* read code into buffer */
-            executable->ReadAt(buffer, nBytes, offset + noffH.code.inFileAddr);
-            /* write buffer to disk buffer object */
-            diskBuffer->Write(buffer, nBytes);
-        } while(nBytes > 0);
+        for (int i = 0; i < noffH.code.size; i++) {
+            executable->ReadAt(&c, 1, i + noffH.code.inFileAddr);
+            diskBuffer->Write(&c, 1);
+        }
     }
 
     if (noffH.initData.size > 0) {
-        int offset = 0;
-        int nBytes;
-        do {
-            /* number of bytes to read min(sector size, bytes left in code segment) */
-            nBytes = SectorSize < noffH.initData.size - offset ? SectorSize : noffH.initData.size - offset;
-            /* how far into executable to start reading */
-            offset += nBytes;
-            /* read code into buffer */
-            executable->ReadAt(buffer, nBytes, offset + noffH.initData.inFileAddr);
-            /* write buffer to disk buffer object */
-            diskBuffer->Write(buffer, nBytes);
-        } while (nBytes > 0);
+        for (int i = 0; i< noffH.initData.size; i++) {
+            executable->ReadAt(&c, 1, i + noffH.initData.inFileAddr);
+            diskBuffer->Write(&c, 1);
+        }
     }
 
     // write the last bit of data to disk
@@ -300,6 +285,7 @@ void AddrSpace::Exec(OpenFile *executable) {
         } while (nBytes > 0);
     }
 
+
     // write the last bit of data to disk
     diskBuffer->Flush();
 }
@@ -313,7 +299,6 @@ DiskBuffer::DiskBuffer(int *st) {
 
 int DiskBuffer::Write(char *data, int numBytes) {
     for (int i = 0; i < numBytes; i++, bidx++) {
-        fprintf(stderr, "bidx: %d\n", bidx);
         buffer[bidx] = data[i];
         if (bidx == SectorSize - 1) {
             Flush();
@@ -323,11 +308,12 @@ int DiskBuffer::Write(char *data, int numBytes) {
 }
 
 void DiskBuffer::Flush() {
-    fprintf(stderr, "flushing to page -> %d\n", sectorTable[stidx]);
-    synchDisk->WriteSector(sectorTable[stidx], buffer);
-    stidx++;
-    bidx = -1; // -1 because it it `++`ed in the loop that is calling flush
-               // and we want to start at 0
+    if (bidx > 0) { // if buffer is not empty
+        synchDisk->WriteSector(sectorTable[stidx], buffer);
+        stidx++;
+        bidx = -1; // -1 because it it `++`ed in the loop that is calling flush
+                   // and we want to start at 0
+    }
 }
 
 /**

@@ -89,9 +89,9 @@ void MemoryManager::Fault(int user_page) {
     disk_page_to_ram(sector, page);
 
     /* tell user program where the new page is */
-    TranslationEntry *p = currentThread->space->pageTable + user_page;
-    p->physicalPage = page;
-    p->valid = true;
+    TranslationEntry *pageTable = currentThread->space->pageTable;
+    pageTable[user_page].physicalPage = page;
+    pageTable[user_page].valid = true;
 }
 
 /*
