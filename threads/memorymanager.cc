@@ -99,6 +99,7 @@ void MemoryManager::Fault(int user_page) {
  * we want, copy the page into that page in RAM.
  */
 void MemoryManager::disk_page_to_ram(int sector, int ram_phys_page) {
+    DEBUG('a', "Copying disk sector <%d> to RAM page <%d>\n", sector, ram_phys_page);
     synchDisk->ReadSector(sector, machine->mainMemory + ram_phys_page * PageSize);
 }
 
@@ -107,5 +108,6 @@ void MemoryManager::disk_page_to_ram(int sector, int ram_phys_page) {
  * we need to flush to, copy the RAM page into the disk sector.
  */
 void MemoryManager::ram_page_to_disk(int ram_phys_page, int sector) {
+    DEBUG('a', "Copying RAM page <%d> to disk sector <%d>\n", ram_phys_page, sector);
     synchDisk->WriteSector(sector, machine->mainMemory + ram_phys_page * PageSize);
 }

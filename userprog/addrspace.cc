@@ -113,24 +113,6 @@ AddrSpace::AddrSpace(OpenFile *executable)
     }
 #endif
 
-
-    // zero out the pages allocated to this process
-    /*
-    for (unsigned int i = 0; i < numPages; i++) {
-        bzero(&machine->mainMemory[pageTable[i].physicalPage * PageSize], PageSize);
-    }
-
-    // then, copy in the code and data segments into memory
-    if (noffH.code.size > 0) {
-        for (int i = 0; i < noffH.code.size; i++)
-            executable->ReadAt(&machine->mainMemory[Translate(i)], 1, i + noffH.code.inFileAddr);
-    }
-    if (noffH.initData.size > 0) {
-        for (int i = 0; i < noffH.initData.inFileAddr; i++)
-            executable->ReadAt(&machine->mainMemory[Translate(i + noffH.code.size)], 1, i + noffH.initData.inFileAddr);
-    }
-    */
-
     DiskBuffer *diskBuffer = new(std::nothrow) DiskBuffer(sectorTable);
     char c;
 
@@ -140,6 +122,7 @@ AddrSpace::AddrSpace(OpenFile *executable)
             diskBuffer->Write(&c, 1);
         }
     }
+
 
     if (noffH.initData.size > 0) {
         for (int i = 0; i< noffH.initData.size; i++) {
@@ -232,26 +215,6 @@ void AddrSpace::Exec(OpenFile *executable) {
         pageTable[i].readOnly = false;
     }
 
-    /*
-    for (unsigned int i = 0; i < numPages; i++) {
-        bzero(&machine->mainMemory[pageTable[i].physicalPage * PageSize], PageSize);
-    }
-
-    // read code into memory
-    if (noffH.code.size > 0) {
-        for (int i = 0; i < noffH.code.size; i++)
-            executable->ReadAt(&machine->mainMemory[Translate(i)], 1, i + noffH.code.inFileAddr);
-    }
-
-    // read data segment into memory
-    if (noffH.initData.size > 0) {
-        for (int i = 0; i < noffH.initData.inFileAddr; i++)
-            executable->ReadAt(
-                    &machine->mainMemory[Translate(i + noffH.code.size)],
-                    1,
-                    i + noffH.initData.inFileAddr);
-    }
-    */
     char buffer[SectorSize];
     DiskBuffer *diskBuffer = new(std::nothrow) DiskBuffer(sectorTable);
 
@@ -300,8 +263,9 @@ DiskBuffer::DiskBuffer(int *st) {
 int DiskBuffer::Write(char *data, int numBytes) {
     for (int i = 0; i < numBytes; i++, bidx++) {
         buffer[bidx] = data[i];
-        if (bidx == SectorSize - 1) {
+        if (bidx == SectorSize - 1) {/* buffer is full */
             Flush();
+            bidx = -1; // will be `++`ed in this for-loop
         }
     }
     return 0; // TODO: return number of bytes written
@@ -309,10 +273,10 @@ int DiskBuffer::Write(char *data, int numBytes) {
 
 void DiskBuffer::Flush() {
     if (bidx > 0) { // if buffer is not empty
+        DEBUG('z', "Writing to sector %d\n", sectorTable[stidx]);
         synchDisk->WriteSector(sectorTable[stidx], buffer);
         stidx++;
-        bidx = -1; // -1 because it it `++`ed in the loop that is calling flush
-                   // and we want to start at 0
+        bidx = 0;
     }
 }
 

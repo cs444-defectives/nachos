@@ -693,7 +693,9 @@ void ExceptionHandler(ExceptionType which)
             ASSERT(false);
         }
     case PageFaultException:
-        memoryManager->Fault(machine->ReadRegister(BadVAddrReg));
+        DEBUG('a', "User thread <%s> threw a page fault for address <%d>\n",
+                currentThread->getName(), machine->ReadRegister(BadVAddrReg / PageSize));
+        memoryManager->Fault(machine->ReadRegister(BadVAddrReg) / PageSize);
         break;
 #ifdef USE_TLB
     case PageFaultException:
