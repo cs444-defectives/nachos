@@ -31,4 +31,5 @@ public:
     void DeallocateDiskPage(int sector);
     void Fault(int userland_va);
     void Decouple(int virtualPage);
+    int NumSectorsAvailable();
 };

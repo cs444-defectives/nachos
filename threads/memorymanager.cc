@@ -19,6 +19,10 @@ void MemoryManager::deallocateRAMPage(int ppn) {
     ramBitmap->Clear(ppn);
 }
 
+int MemoryManager::NumSectorsAvailable() {
+    return diskBitmap->NumClear();
+}
+
 /*
  * user_page: user's virtual page
  */
