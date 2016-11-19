@@ -73,9 +73,14 @@ void MemoryManager::evict(void) {
     /* destroy the page in RAM */
     deallocateRAMPage(p->ram_page);
     p->ram_page = -1;
+
+    DEBUG('z', "Evicting RAM page <%d>\n", last_evicted);
 }
 
 void MemoryManager::Fault(int user_page) {
+    DEBUG('z', "Memory manager handling page fault for virtual page <%d>\n", user_page);
+    // make sure the page is actually invalid
+    ASSERT(!currentThread->space->pageTable[user_page].valid);
 
     /* do we need to evict a page first? */
     while (!ramBitmap->NumClear())
@@ -119,9 +124,9 @@ void MemoryManager::ram_page_to_disk(int ram_phys_page, int sector) {
  * Called to copy on write
  */
 void MemoryManager::Decouple(int virtualPage) {
-    DEBUG('z', "Thread <%d> wrote to shared page <%d>\n",
-            currentThread->getName(), currentThread->space->sectorTable[virtualPage]);
     TranslationEntry *pageTable = currentThread->space->pageTable;
+    DEBUG('z', "Thread <%s> wrote to shared virtual page <%d> which is in RAM page <%d>\n",
+            currentThread->getName(), currentThread->space->sectorTable[virtualPage], pageTable[virtualPage].physicalPage);
     int sector = AllocateDiskPage(virtualPage);
     DEBUG('z', "Copying RAM page <%d> to disk sector <%d>\n", pageTable[virtualPage].physicalPage, sector);
     synchDisk->WriteSector(sector, machine->mainMemory + pageTable[virtualPage].physicalPage * PageSize);

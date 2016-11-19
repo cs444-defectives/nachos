@@ -98,6 +98,9 @@ static void show_memory(void)
 /* brings a userspace integer into kernelspace */
 static int intimport(int virt_address)
 {
+    // make sure page is in RAM
+    if (!currentThread->space->pageTable[virt_address / PageSize].valid)
+        memoryManager->Fault(virt_address / PageSize);
     int src = currentThread->space->Translate(virt_address);
     if (src == 0)
         return -1;
@@ -107,6 +110,9 @@ static int intimport(int virt_address)
 /* jams a kernelspace integer into userspace */
 static void intexport(int data, int virt_address)
 {
+    // make sure page is in RAM
+    if (!currentThread->space->pageTable[virt_address / PageSize].valid)
+        memoryManager->Fault(virt_address / PageSize);
     int dest = currentThread->space->Translate(virt_address);
     *(unsigned int *) &machine->mainMemory[dest] = WordToHost((unsigned int) data);
 }
@@ -119,6 +125,7 @@ static int strimport(char *buf, int max_size, int virt_address)
 {
     int i, src;
     for (i = 0; i < max_size; i++) {
+        // check for page fault
         if (!currentThread->space->pageTable[virt_address / PageSize].valid)
             memoryManager->Fault(virt_address / PageSize);
         src = currentThread->space->Translate(virt_address + i);
@@ -240,10 +247,12 @@ static void _write(int buf_va, int size, OpenFileId fid)
 
     f->lock->Acquire(); // guanrantee atomic writes
     while (size) {
+        if (!currentThread->space->pageTable[(int)userland_str / PageSize].valid)
+            memoryManager->Fault((int)userland_str / PageSize);
         c = machine->mainMemory[space->Translate((int) userland_str)];
         if (f->is_real_file)
             f->Write(&c, 1);
-        else
+        else;
             sconsole->WriteChar(c);
         userland_str++;
         size--;
@@ -654,7 +663,7 @@ void ExceptionHandler(ExceptionType which)
             break;
 
         case SC_Read:
-            DEBUG('a', "Read file, initiated by user program.\n");
+            DEBUG('a', "Read file, initiated by user thread <%s>\n", currentThread->getName());
             machine->WriteRegister(2, _read(machine->ReadRegister(4),
                                             machine->ReadRegister(5),
                                             machine->ReadRegister(6)));
@@ -662,7 +671,7 @@ void ExceptionHandler(ExceptionType which)
             break;
 
         case SC_Write:
-            DEBUG('a', "Write file, initiated by user program.\n");
+            DEBUG('a', "Write file, initiated by user thread <%s>\n", currentThread->getName());
             _write(machine->ReadRegister(4),
                    machine->ReadRegister(5),
                    machine->ReadRegister(6));
@@ -697,15 +706,19 @@ void ExceptionHandler(ExceptionType which)
             printf("Undefined SYSCALL %d\n", type);
             ASSERT(false);
         }
+        break;
+
     case PageFaultException:
         DEBUG('a', "Thread <%s> threw a page fault for virtual page <%d>\n",
-                currentThread->getName(), machine->ReadRegister(BadVAddrReg / PageSize));
+                currentThread->getName(), machine->ReadRegister(BadVAddrReg) / PageSize);
         memoryManager->Fault(machine->ReadRegister(BadVAddrReg) / PageSize);
         break;
+
     case ReadOnlyException:
         DEBUG('a', "Thread <%s> threw a read only exception\n");
         memoryManager->Decouple(machine->ReadRegister(BadVAddrReg) / PageSize);
         break;
+
 #ifdef USE_TLB
     case PageFaultException:
         HandleTLBFault(machine->ReadRegister(BadVAddrReg));
