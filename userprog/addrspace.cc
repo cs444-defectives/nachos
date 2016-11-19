@@ -171,10 +171,7 @@ AddrSpace::AddrSpace(AddrSpace *parent) {
 /**
  * Deallocate pages and reallocate for new executable
  */
-void AddrSpace::Exec(OpenFile *executable) {
-    Deallocate();
-    delete[] pageTable;
-
+bool AddrSpace::Exec(OpenFile *executable) {
     NoffHeader noffH;
 
     executable->ReadAt((char *)&noffH, sizeof(noffH), 0);
@@ -191,16 +188,20 @@ void AddrSpace::Exec(OpenFile *executable) {
     numPages = divRoundUp(size, PageSize);
     size = numPages * PageSize;
 
-    ASSERT(numPages <= NumPhysPages);		// check we're not trying
-						// to run anything too big --
-						// at least until we have
-						// virtual memory
+    // not enough disk sectors, bail
+    if ((int)numPages > memoryManager->NumSectorsAvailable())
+        return false;
 
     DEBUG('a', "Initializing address space, num pages %d, size %d\n",
 					numPages, size);
 
+    // trash execers addr space
+    Deallocate();
+    delete pageTable;
+
     pageTable = new(std::nothrow) TranslationEntry[numPages];
     sectorTable = new int[numPages];
+
 
     for (unsigned int i = 0; i < numPages; i++) {
         sectorTable[i] = memoryManager->AllocateDiskPage(i);
@@ -231,6 +232,7 @@ void AddrSpace::Exec(OpenFile *executable) {
 
     // write the last bit of data to disk
     diskBuffer->Flush();
+    return 0;
 }
 
 /* for writing executables to disk */
@@ -277,8 +279,9 @@ int AddrSpace::Translate(int virtAddr) {
     vpn = (unsigned) virtAddr / PageSize;
     offset = (unsigned) virtAddr % PageSize;
     ppn = pageTable[vpn].physicalPage;
+    DEBUG('q', "Translating: %d\n\t virtual page: %d\n\t offset: %d\n\t physical page: %d\n",
+            virtAddr, vpn, offset, ppn);
     return (ppn * PageSize) + offset;
-
 }
 
 //----------------------------------------------------------------------

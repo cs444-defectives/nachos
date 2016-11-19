@@ -42,7 +42,7 @@ class AddrSpace {
     Lock *fid_assignment;
     unsigned int size;    // make these public for forking reasons
     unsigned int numPages;
-    void Exec(OpenFile *executable);
+    bool Exec(OpenFile *executable);
     void Deallocate();
 
     /* maps user pages to disk sectors */

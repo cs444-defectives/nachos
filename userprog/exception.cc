@@ -123,11 +123,12 @@ static void intexport(int data, int virt_address)
  */
 static int strimport(char *buf, int max_size, int virt_address)
 {
+    // TODO: test and set lock
     int i, src;
     for (i = 0; i < max_size; i++) {
         // check for page fault
-        if (!currentThread->space->pageTable[virt_address / PageSize].valid)
-            memoryManager->Fault(virt_address / PageSize);
+        if (!currentThread->space->pageTable[(virt_address + i) / PageSize].valid)
+            memoryManager->Fault((virt_address + i) / PageSize);
         src = currentThread->space->Translate(virt_address + i);
         if (src == 0)
             return -1;
@@ -439,6 +440,7 @@ static bool is_script(OpenFile *f)
 
 static int _exec(int filename_va, int args_va)
 {
+    fprintf(stderr, "!\n");
     /* read in the name of the executable */
     char filename[MAX_FILE_NAME];
     int bytes_read = strimport(filename, MAX_FILE_NAME, filename_va);
@@ -447,6 +449,7 @@ static int _exec(int filename_va, int args_va)
     /* abort if we get a null string */
     if (bytes_read == -1)
         return -1;
+
 
     /* abort if the filename is too long */
     if (bytes_read == MAX_FILE_NAME)
@@ -520,8 +523,10 @@ static int _exec(int filename_va, int args_va)
     if (num_args == MAX_ARGS)
         return -1;
 
-    currentThread->space->Exec(executable);
-    delete executable;
+    if (!currentThread->space->Exec(executable))
+        return -1;
+
+    /* we are committed to the exec at this point */
 
     currentThread->space->InitRegisters();
     currentThread->space->RestoreState();
@@ -695,7 +700,7 @@ void ExceptionHandler(ExceptionType which)
             break;
 
         case SC_Exec:
-            DEBUG('z', "user thread %s called exec\n", currentThread->getName());
+            DEBUG('a', "user thread <%s> called exec\n", currentThread->getName());
             updatePC();
             if (_exec(machine->ReadRegister(4),
                       machine->ReadRegister(5)) == -1)
