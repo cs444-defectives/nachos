@@ -66,6 +66,7 @@ void HandleTLBFault(int vaddr)
 #endif
 
 /* if you're using this to debug, you're screwed */
+/*
 static void show_memory(void)
 {
     AddrSpace *space = currentThread->space;
@@ -92,6 +93,7 @@ static void show_memory(void)
         printf("\n");
     }
 }
+*/
 
 /* brings a userspace integer into kernelspace */
 static int intimport(int virt_address)
@@ -117,6 +119,8 @@ static int strimport(char *buf, int max_size, int virt_address)
 {
     int i, src;
     for (i = 0; i < max_size; i++) {
+        if (!currentThread->space->pageTable[virt_address / PageSize].valid)
+            memoryManager->Fault(virt_address / PageSize);
         src = currentThread->space->Translate(virt_address + i);
         if (src == 0)
             return -1;
@@ -620,21 +624,22 @@ void ExceptionHandler(ExceptionType which)
         switch (type) {
 
         case SC_Halt:
-            DEBUG('a', "Shutdown, initiated by user program.\n");
+            DEBUG('a', "Halt, intiated by user thread <%s>\n", currentThread->getName());
             interrupt->Halt();
 
         case SC_Exit:
-            DEBUG('a', "Exit, initiated by user code exit.\n");
+            DEBUG('a', "Exit, initiated by user thread <%s>\n", currentThread->getName());
             _exit(machine->ReadRegister(4));
             break;
 
         case SC_Create:
+            DEBUG('a', "Create, intiated by user thread <%s>\n", currentThread->getName());
             _create(machine->ReadRegister(4));
             updatePC();
             break;
 
         case SC_Open:
-            DEBUG('a', "opening file\n");
+            DEBUG('a', "Open file, initiated by user thread <%s>\n", currentThread->getName());
             filename_va = machine->ReadRegister(4);
             bytes_read = strimport(filename, MAX_FILE_NAME, filename_va);
             machine->WriteRegister(2, _open(filename, bytes_read));
@@ -643,7 +648,7 @@ void ExceptionHandler(ExceptionType which)
             break;
 
         case SC_Dup:
-            DEBUG('a', "duping file\n");
+            DEBUG('a', "Dup, initiated by user thread <%s>\n", currentThread->getName());
             machine->WriteRegister(2, _dup(machine->ReadRegister(4)));
             updatePC();
             break;
@@ -665,13 +670,13 @@ void ExceptionHandler(ExceptionType which)
             break;
 
         case SC_Close:
-            DEBUG('a', "closing a file\n");
+            DEBUG('a', "Closing a file\n");
             _close(machine->ReadRegister(4));
             updatePC();
             break;
 
         case SC_Fork:
-            DEBUG('a', "forking a thread\n");
+            DEBUG('a', "Forking thread <%s>\n", currentThread->getName());
             machine->WriteRegister(2, _fork());
             break;
 
@@ -681,7 +686,7 @@ void ExceptionHandler(ExceptionType which)
             break;
 
         case SC_Exec:
-            DEBUG('a', "user thread %s called exec\n", currentThread->getName());
+            DEBUG('z', "user thread %s called exec\n", currentThread->getName());
             updatePC();
             if (_exec(machine->ReadRegister(4),
                       machine->ReadRegister(5)) == -1)
@@ -693,9 +698,13 @@ void ExceptionHandler(ExceptionType which)
             ASSERT(false);
         }
     case PageFaultException:
-        DEBUG('a', "User thread <%s> threw a page fault for address <%d>\n",
+        DEBUG('a', "Thread <%s> threw a page fault for virtual page <%d>\n",
                 currentThread->getName(), machine->ReadRegister(BadVAddrReg / PageSize));
         memoryManager->Fault(machine->ReadRegister(BadVAddrReg) / PageSize);
+        break;
+    case ReadOnlyException:
+        DEBUG('a', "Thread <%s> threw a read only exception\n");
+        memoryManager->Decouple(machine->ReadRegister(BadVAddrReg) / PageSize);
         break;
 #ifdef USE_TLB
     case PageFaultException:

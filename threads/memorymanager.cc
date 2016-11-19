@@ -19,6 +19,9 @@ void MemoryManager::deallocateRAMPage(int ppn) {
     ramBitmap->Clear(ppn);
 }
 
+/*
+ * user_page: user's virtual page
+ */
 int MemoryManager::AllocateDiskPage(int user_page) {
     ASSERT(diskBitmap->NumClear() > 0);
     int sector = diskBitmap->Find();
@@ -96,10 +99,10 @@ void MemoryManager::Fault(int user_page) {
 
 /*
  * Given a physical page number in RAM and a disk sector that has a memory page
- * we want, copy the page into that page in RAM.
+ * we want, copy the disk sector into the ram page
  */
 void MemoryManager::disk_page_to_ram(int sector, int ram_phys_page) {
-    DEBUG('a', "Copying disk sector <%d> to RAM page <%d>\n", sector, ram_phys_page);
+    DEBUG('z', "Copying disk sector <%d> to RAM page <%d>\n", sector, ram_phys_page);
     synchDisk->ReadSector(sector, machine->mainMemory + ram_phys_page * PageSize);
 }
 
@@ -111,3 +114,20 @@ void MemoryManager::ram_page_to_disk(int ram_phys_page, int sector) {
     DEBUG('a', "Copying RAM page <%d> to disk sector <%d>\n", ram_phys_page, sector);
     synchDisk->WriteSector(sector, machine->mainMemory + ram_phys_page * PageSize);
 }
+
+/*
+ * Called to copy on write
+ */
+void MemoryManager::Decouple(int virtualPage) {
+    DEBUG('z', "Thread <%d> wrote to shared page <%d>\n",
+            currentThread->getName(), currentThread->space->sectorTable[virtualPage]);
+    TranslationEntry *pageTable = currentThread->space->pageTable;
+    int sector = AllocateDiskPage(virtualPage);
+    DEBUG('z', "Copying RAM page <%d> to disk sector <%d>\n", pageTable[virtualPage].physicalPage, sector);
+    synchDisk->WriteSector(sector, machine->mainMemory + pageTable[virtualPage].physicalPage * PageSize);
+    currentThread->space->sectorTable[virtualPage] = sector; // update sector table
+    pageTable[virtualPage].readOnly = false; // turn read only bit off
+    pageTable[virtualPage].valid = false; // cause page fault so that the page can be
+                                          // brought into RAM through exception handling
+}
+

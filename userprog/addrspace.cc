@@ -123,7 +123,6 @@ AddrSpace::AddrSpace(OpenFile *executable)
         }
     }
 
-
     if (noffH.initData.size > 0) {
         for (int i = 0; i< noffH.initData.size; i++) {
             executable->ReadAt(&c, 1, i + noffH.initData.inFileAddr);
@@ -148,18 +147,16 @@ AddrSpace::AddrSpace(AddrSpace *parent) {
     sectorTable = new int[numPages];
 
     for (unsigned int i = 0; i < numPages; i++) {
-        sectorTable[i] = memoryManager->AllocateDiskPage(i);
-        pageTable[i].virtualPage = i;
-        pageTable[i].physicalPage = -1; /* dummy value, clobbered immediately */
-        pageTable[i].valid = false;     /* will fetch from disk on first access */
-        pageTable[i].use = false;
-        pageTable[i].dirty = false;
-        pageTable[i].readOnly = false;
-    }
+        sectorTable[i] = parent->sectorTable[i];
+        pageTable[i].physicalPage = parent->pageTable[i].physicalPage;
+        pageTable[i].valid =  parent->pageTable[i].valid;
+        pageTable[i].use = parent->pageTable[i].use;
+        pageTable[i].dirty = parent->pageTable[i].dirty;
 
-    // copy parent's memory into childs space
-    for (unsigned int i = 0; i < size; i++)
-        machine->mainMemory[Translate(i)] = machine->mainMemory[parent->Translate(i)];
+        // set to read only so that we can decouple parent and child on write
+        pageTable[i].readOnly = true;
+        parent->pageTable[i].readOnly = true;
+    }
 
     // copy parent's open_files array
     open_files = new OpenFile* [MAX_OPEN_FILES];
@@ -215,39 +212,22 @@ void AddrSpace::Exec(OpenFile *executable) {
         pageTable[i].readOnly = false;
     }
 
-    char buffer[SectorSize];
     DiskBuffer *diskBuffer = new(std::nothrow) DiskBuffer(sectorTable);
+    char c;
 
     if (noffH.code.size > 0) {
-        int offset = 0;
-        int nBytes;
-        do {
-            /* number of bytes to read min(sector size, bytes left in code segment) */
-            nBytes = SectorSize < noffH.code.size - offset ? SectorSize : noffH.code.size - offset;
-            /* how far into executable to start reading */
-            offset += nBytes;
-            /* read code into buffer */
-            executable->ReadAt(buffer, nBytes, offset + noffH.code.inFileAddr);
-            /* write buffer to disk buffer object */
-            diskBuffer->Write(buffer, nBytes);
-        } while(nBytes > 0);
+        for (int i = 0; i < noffH.code.size; i++) {
+            executable->ReadAt(&c, 1, i + noffH.code.inFileAddr);
+            diskBuffer->Write(&c, 1);
+        }
     }
 
     if (noffH.initData.size > 0) {
-        int offset = 0;
-        int nBytes;
-        do {
-            /* number of bytes to read min(sector size, bytes left in code segment) */
-            nBytes = SectorSize < noffH.initData.size - offset ? SectorSize : noffH.initData.size - offset;
-            /* how far into executable to start reading */
-            offset += nBytes;
-            /* read code into buffer */
-            executable->ReadAt(buffer, nBytes, offset + noffH.initData.inFileAddr);
-            /* write buffer to disk buffer object */
-            diskBuffer->Write(buffer, nBytes);
-        } while (nBytes > 0);
+        for (int i = 0; i< noffH.initData.size; i++) {
+            executable->ReadAt(&c, 1, i + noffH.initData.inFileAddr);
+            diskBuffer->Write(&c, 1);
+        }
     }
-
 
     // write the last bit of data to disk
     diskBuffer->Flush();
