@@ -143,6 +143,9 @@ static void strexport(char *buf, int max_size, int virt_address)
 {
     int i, dest;
     for (i = 0; i < max_size; i++) {
+        // check for page fault
+        if (!currentThread->space->pageTable[(virt_address + i) / PageSize].valid)
+            memoryManager->Fault((virt_address + i) / PageSize);
         dest = currentThread->space->Translate(virt_address + i);
         if ((machine->mainMemory[dest] = buf[i]) == '\0')
             break;
@@ -440,7 +443,6 @@ static bool is_script(OpenFile *f)
 
 static int _exec(int filename_va, int args_va)
 {
-    fprintf(stderr, "!\n");
     /* read in the name of the executable */
     char filename[MAX_FILE_NAME];
     int bytes_read = strimport(filename, MAX_FILE_NAME, filename_va);

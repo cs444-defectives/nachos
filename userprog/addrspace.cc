@@ -232,7 +232,8 @@ bool AddrSpace::Exec(OpenFile *executable) {
 
     // write the last bit of data to disk
     diskBuffer->Flush();
-    return 0;
+
+    return true;
 }
 
 /* for writing executables to disk */
