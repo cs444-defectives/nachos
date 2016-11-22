@@ -25,19 +25,19 @@ main()
     prints("Starting matmult\n", ConsoleOutput);
 
     for (i = 0; i < Dim; i++)       /* first initialize the matrices */
-    for (j = 0; j < Dim; j++) {
-         A[i][j] = i;
-         B[i][j] = j;
-         C[i][j] = 0;
-    }
+        for (j = 0; j < Dim; j++) {
+             A[i][j] = i;
+             B[i][j] = j;
+             C[i][j] = 0;
+        }
 
     prints("Initialization Complete\n", ConsoleOutput);
 
     for (i = 0; i < Dim; i++) {     /* then multiply them together */
         prints("i = ", ConsoleOutput); printd(i, ConsoleOutput); prints("\n", ConsoleOutput);
-    for (j = 0; j < Dim; j++)
+        for (j = 0; j < Dim; j++)
             for (k = 0; k < Dim; k++)
-         C[i][j] += A[i][k] * B[k][j];
+                C[i][j] += A[i][k] * B[k][j];
     }
 
     prints("C[", ConsoleOutput); printd(Dim-1, ConsoleOutput);
