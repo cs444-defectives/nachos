@@ -87,8 +87,13 @@ void MemoryManager::evict(void) {
 
 void MemoryManager::Fault(int user_page) {
     DEBUG('z', "Memory manager handling page fault for virtual page <%d>\n", user_page);
+
     // make sure the page is actually invalid
     ASSERT(!currentThread->space->pageTable[user_page].valid);
+
+    // update page fault statistics
+    // updated here because all page faults go through here
+    stats->numPageFaults++;
 
     /* do we need to evict a page first? */
     while (!ramBitmap->NumClear())
