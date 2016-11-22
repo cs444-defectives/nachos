@@ -56,7 +56,7 @@ void MemoryManager::DeallocateDiskPage(int sector) {
  * TODO: the algorithm is bad as af
  */
 void MemoryManager::evict(void) {
-    ASSERT(!diskBitmap->NumClear());
+    ASSERT(!ramBitmap->NumClear());
 
     /*
      * starting at the last sector we evicted, find the next sector that's in
