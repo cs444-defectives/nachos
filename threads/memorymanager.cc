@@ -16,6 +16,7 @@ int MemoryManager::allocateRAMPage() {
 }
 
 void MemoryManager::deallocateRAMPage(int ppn) {
+    DEBUG('z', "Deallocating RAM page <%d>\n", ppn);
     ramBitmap->Clear(ppn);
 }
 
@@ -36,7 +37,9 @@ int MemoryManager::AllocateDiskPage(int user_page) {
 }
 
 void MemoryManager::DeallocateDiskPage(int sector) {
-    ASSERT(!ramHeld->Test(sector));
+    // if disk sector is in RAM make sure it isn't held there
+    if (diskPages[sector].ram_page >= 0)
+        ASSERT(!ramHeld->Test(diskPages[sector].ram_page));
 
     DEBUG('z', "Deallocating disk sector <%d>\n", sector);
 
@@ -61,11 +64,14 @@ void MemoryManager::evict(void) {
     /*
      * starting at the last sector we evicted, find the next sector that's in
      * RAM but isn't stuck there
-     * Here we iterate through disk to find an evitable page
+     * Here we iterate through disk to find an evictable page
      */
     DiskPageDescriptor *p;
-    while ((last_evicted = (last_evicted + 1) % NumSectors)) {
+    while (true) {
+        last_evicted = (last_evicted + 1) % NumSectors;
         p = diskPages + last_evicted;
+        if (p == NULL)
+            continue;
         if (p->ram_page > 0 && !ramHeld->Test(p->ram_page))
             break;
     }
@@ -79,8 +85,8 @@ void MemoryManager::evict(void) {
         ram_page_to_disk(p->ram_page, last_evicted);
 
     /* destroy the page in RAM */
-    deallocateRAMPage(p->ram_page);
     DEBUG('z', "Evicting RAM page <%d>\n", p->ram_page);
+    deallocateRAMPage(p->ram_page);
     p->ram_page = -1;
 
 }

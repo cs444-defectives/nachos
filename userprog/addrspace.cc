@@ -270,12 +270,17 @@ void DiskBuffer::Flush() {
 }
 
 /**
- * deallocate allocated pages
+ * deallocate allocated pages and sectors
  */
 void AddrSpace::Deallocate() {
+    // TODO: also deallocate RAM
     for (unsigned int i = 0; i < numPages; i++)
-        if (!pageTable[i].readOnly) // don't trash address space if you're sharing with someone
+        // don't trash address space if you're sharing with someone
+        if (!pageTable[i].readOnly)
             memoryManager->DeallocateDiskPage(sectorTable[i]);
+        else
+            // decrement disk page ref count if you're sharing
+            memoryManager->diskPages[sectorTable[i]].refCount--;
 }
 
 /**
