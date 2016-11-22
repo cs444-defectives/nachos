@@ -84,17 +84,12 @@ AddrSpace::AddrSpace(OpenFile *executable)
     	SwapHeader(&noffH);
     ASSERT(noffH.noffMagic == NOFFMAGIC);
 
-// how big is address space?
+    // how big is address space?
     size = noffH.code.size + noffH.initData.size + noffH.uninitData.size
 			+ UserStackSize;	// we need to increase the size
 						// to leave room for the stack
     numPages = divRoundUp(size, PageSize);
     size = numPages * PageSize;
-
-    ASSERT(numPages <= NumPhysPages);		// check we're not trying
-						// to run anything too big --
-						// at least until we have
-						// virtual memory
 
     DEBUG('a', "Initializing address space, num pages %d, size %d\n",
 					numPages, size);
@@ -130,8 +125,8 @@ AddrSpace::AddrSpace(OpenFile *executable)
         }
     }
 
-    // write the last bit of data to disk
-    diskBuffer->Flush();
+    // disk buffer flushes on delete to get the last bit of data out
+    delete diskBuffer;
 }
 
 
@@ -202,7 +197,6 @@ bool AddrSpace::Exec(OpenFile *executable) {
     pageTable = new(std::nothrow) TranslationEntry[numPages];
     sectorTable = new int[numPages];
 
-
     for (unsigned int i = 0; i < numPages; i++) {
         sectorTable[i] = memoryManager->AllocateDiskPage(i);
         pageTable[i].virtualPage = i;
@@ -230,8 +224,8 @@ bool AddrSpace::Exec(OpenFile *executable) {
         }
     }
 
-    // write the last bit of data to disk
-    diskBuffer->Flush();
+    // disk buffer flushes on delete to get the last bit of data out
+    delete diskBuffer;
 
     return true;
 }
@@ -241,6 +235,10 @@ DiskBuffer::DiskBuffer(int *st) {
     sectorTable = st;
     bidx = 0;
     stidx = 0;
+}
+
+DiskBuffer::~DiskBuffer() {
+    Flush();
 }
 
 int DiskBuffer::Write(char *data, int numBytes) {
