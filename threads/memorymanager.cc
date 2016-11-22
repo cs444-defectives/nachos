@@ -61,11 +61,12 @@ void MemoryManager::evict(void) {
     /*
      * starting at the last sector we evicted, find the next sector that's in
      * RAM but isn't stuck there
+     * Here we iterate through disk to find an evitable page
      */
     DiskPageDescriptor *p;
     while ((last_evicted = (last_evicted + 1) % NumSectors)) {
         p = diskPages + last_evicted;
-        if (p->ram_page > 0 && !ramHeld->Test(last_evicted))
+        if (p->ram_page > 0 && !ramHeld->Test(p->ram_page))
             break;
     }
 
@@ -79,9 +80,9 @@ void MemoryManager::evict(void) {
 
     /* destroy the page in RAM */
     deallocateRAMPage(p->ram_page);
+    DEBUG('z', "Evicting RAM page <%d>\n", p->ram_page);
     p->ram_page = -1;
 
-    DEBUG('z', "Evicting RAM page <%d>\n", last_evicted);
 }
 
 void MemoryManager::Fault(int user_page) {
