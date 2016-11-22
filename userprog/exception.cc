@@ -346,7 +346,6 @@ static int _open(char *filename, int bytes_read)
 static void _exit(int exitCode)
 {
     currentThread->exitCode = exitCode; // store exit code
-    currentThread->dead = true; // mark as dead
     currentThread->join->V(); // permission for parent to proceed
 
     // iterate over thread's children and delete dead ones
@@ -356,6 +355,8 @@ static void _exit(int exitCode)
             threads[i]->done = true;
         }
     }
+
+    // TODO: figure out if parent is dead and set done <- true if so
 
     currentThread->dead = true; // indicate that you have finished running
     (void) interrupt->SetLevel(IntOff);

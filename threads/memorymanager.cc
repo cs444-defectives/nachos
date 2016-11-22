@@ -37,6 +37,9 @@ int MemoryManager::AllocateDiskPage(int user_page) {
 
 void MemoryManager::DeallocateDiskPage(int sector) {
     ASSERT(!ramHeld->Test(sector));
+
+    DEBUG('z', "Deallocating disk sector <%d>\n", sector);
+
     DiskPageDescriptor *p = diskPages + sector;
 
     /* delete the RAM page if it exists */

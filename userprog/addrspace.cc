@@ -256,7 +256,7 @@ int DiskBuffer::Write(char *data, int numBytes) {
 
 void DiskBuffer::Flush() {
     if (bidx > 0) { // if buffer is not empty
-        DEBUG('z', "Writing to sector %d\n", sectorTable[stidx]);
+        DEBUG('z', "Flushing disk buffer to sector <%d>\n", sectorTable[stidx]);
         synchDisk->WriteSector(sectorTable[stidx], buffer);
         stidx++;
         bidx = 0;
@@ -268,7 +268,8 @@ void DiskBuffer::Flush() {
  */
 void AddrSpace::Deallocate() {
     for (unsigned int i = 0; i < numPages; i++)
-        memoryManager->DeallocateDiskPage(sectorTable[i]);
+        if (!pageTable[i].readOnly) // don't trash address space if you're sharing with someone
+            memoryManager->DeallocateDiskPage(sectorTable[i]);
 }
 
 /**
