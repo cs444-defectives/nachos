@@ -8,6 +8,7 @@ struct DiskPageDescriptor {
   int process;  /* process that "owns" (asked for) the page */
   int ram_page;
   int user_page;
+  int refCount;
 };
 
 class MemoryManager {
@@ -23,8 +24,6 @@ private:
     void deallocateRAMPage(int ppn);
     void evict(void);
 
-    /* translates between disk pages and RAM pages (sectors) */
-    DiskPageDescriptor diskPages[NumSectors];
 public:
     MemoryManager();
     int AllocateDiskPage(int user_page);
@@ -32,4 +31,7 @@ public:
     void Fault(int userland_va);
     void Decouple(int virtualPage);
     int NumSectorsAvailable();
+
+    /* translates between disk pages and RAM pages (sectors) */
+    DiskPageDescriptor diskPages[NumSectors];
 };

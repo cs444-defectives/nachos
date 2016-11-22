@@ -105,6 +105,9 @@ AddrSpace::AddrSpace(OpenFile *executable)
         pageTable[i].use = false;
         pageTable[i].dirty = false;
         pageTable[i].readOnly = false;
+
+        // initialize sector ref count
+        memoryManager->diskPages[sectorTable[i]].refCount = 1;
     }
 #endif
 
@@ -148,9 +151,11 @@ AddrSpace::AddrSpace(AddrSpace *parent) {
         pageTable[i].use = parent->pageTable[i].use;
         pageTable[i].dirty = parent->pageTable[i].dirty;
 
+        // COW stuff
         // set to read only so that we can decouple parent and child on write
         pageTable[i].readOnly = true;
         parent->pageTable[i].readOnly = true;
+        memoryManager->diskPages[sectorTable[i]].refCount++; // increment ref count for this sector
     }
 
     // copy parent's open_files array
@@ -205,6 +210,9 @@ bool AddrSpace::Exec(OpenFile *executable) {
         pageTable[i].use = false;
         pageTable[i].dirty = false;
         pageTable[i].readOnly = false;
+
+        // initialize sector ref count
+        memoryManager->diskPages[sectorTable[i]].refCount = 1;
     }
 
     DiskBuffer *diskBuffer = new(std::nothrow) DiskBuffer(sectorTable);

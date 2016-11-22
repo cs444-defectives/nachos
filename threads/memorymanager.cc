@@ -138,14 +138,38 @@ void MemoryManager::ram_page_to_disk(int ram_phys_page, int sector) {
  */
 void MemoryManager::Decouple(int virtualPage) {
     TranslationEntry *pageTable = currentThread->space->pageTable;
-    DEBUG('z', "Thread <%s> wrote to shared virtual page <%d> which is in RAM page <%d>\n",
-            currentThread->getName(), currentThread->space->sectorTable[virtualPage], pageTable[virtualPage].physicalPage);
+    int *sectorTable = currentThread->space->sectorTable;
+
+    // turn read only bit off
+    pageTable[virtualPage].readOnly = false;
+
+    DEBUG('z', "Thread <%s> wrote to shared sector <%d> which is in RAM page <%d>\n",
+            currentThread->getName(), sectorTable[virtualPage], pageTable[virtualPage].physicalPage);
+
+    // no need to copy, this thread is the only one referencing this page
+    if (diskPages[sectorTable[virtualPage]].refCount == 1) {
+        DEBUG('z', "Thread <%s>'s virtual page <%d> is not actually shared\n",
+                currentThread->getName(), sectorTable[virtualPage]);
+        return;
+    }
+
     int sector = AllocateDiskPage(virtualPage);
+
     DEBUG('z', "Copying RAM page <%d> to disk sector <%d>\n", pageTable[virtualPage].physicalPage, sector);
+
+    // copy RAM page to newly allocated disk sector
     synchDisk->WriteSector(sector, machine->mainMemory + pageTable[virtualPage].physicalPage * PageSize);
-    currentThread->space->sectorTable[virtualPage] = sector; // update sector table
-    pageTable[virtualPage].readOnly = false; // turn read only bit off
-    pageTable[virtualPage].valid = false; // cause page fault so that the page can be
-                                          // brought into RAM through exception handling
+
+    // update sector table
+    sectorTable[virtualPage] = sector;
+
+    // turn read only bit off
+    pageTable[virtualPage].readOnly = false;
+
+    // decrease the sector reference count
+    diskPages[sectorTable[virtualPage]].refCount--;
+
+    // cause page fault so that the page can be brought into RAM through exception handling
+    pageTable[virtualPage].valid = false;
 }
 
