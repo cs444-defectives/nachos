@@ -185,11 +185,9 @@ bool AddrSpace::Exec(OpenFile *executable) {
     size = noffH.code.size + noffH.initData.size + noffH.uninitData.size
 			+ UserStackSize;	// we need to increase the size
 						// to leave room for the stack
-    numPages = divRoundUp(size, PageSize);
-    size = numPages * PageSize;
 
     // not enough disk sectors, bail
-    if ((int)numPages > memoryManager->NumSectorsAvailable())
+    if ((int)divRoundUp(size, PageSize) > memoryManager->NumSectorsAvailable())
         return false;
 
     DEBUG('a', "Initializing address space, num pages %d, size %d\n",
@@ -198,6 +196,10 @@ bool AddrSpace::Exec(OpenFile *executable) {
     // trash execers addr space
     Deallocate();
     delete pageTable;
+
+    // calculating num pages must come after Deallocate because it clobbers the old numPages
+    numPages = divRoundUp(size, PageSize);
+    size = numPages * PageSize;
 
     pageTable = new(std::nothrow) TranslationEntry[numPages];
     sectorTable = new int[numPages];
@@ -277,7 +279,9 @@ void AddrSpace::Deallocate() {
     for (unsigned int i = 0; i < numPages; i++)
         // don't trash address space if you're sharing with someone
         if (!pageTable[i].readOnly)
+        {
             memoryManager->DeallocateDiskPage(sectorTable[i]);
+        }
         else
             // decrement disk page ref count if you're sharing
             memoryManager->diskPages[sectorTable[i]].refCount--;
