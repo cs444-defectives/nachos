@@ -19,12 +19,12 @@ private:
     int last_evicted;
     void ram_page_to_disk(int ram_phys_page, int sector);
     void disk_page_to_ram(int sector, int ram_phys_page);
-
     int allocateRAMPage();
     void deallocateRAMPage(int ppn);
     void evict(void);
 
 public:
+    Lock *diskPagesLock;
     MemoryManager();
     int AllocateDiskPage(int user_page);
     void DeallocateDiskPage(int sector);

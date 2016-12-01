@@ -7,6 +7,7 @@ MemoryManager::MemoryManager() {
     ramBitmap = new BitMap(NumPhysPages);
     ramHeld = new BitMap(NumPhysPages);
     diskBitmap = new BitMap(NumSectors);
+    diskPagesLock = new Lock("disk pages lock");
     last_evicted = 0;
 }
 
@@ -38,6 +39,8 @@ int MemoryManager::AllocateDiskPage(int user_page) {
 
 void MemoryManager::DeallocateDiskPage(int sector) {
     // if disk sector is in RAM make sure it isn't held there
+    diskPagesLock->Acquire();
+
     if (diskPages[sector].ram_page >= 0)
         ASSERT(!ramHeld->Test(diskPages[sector].ram_page));
 
@@ -45,11 +48,13 @@ void MemoryManager::DeallocateDiskPage(int sector) {
 
     DiskPageDescriptor *p = diskPages + sector;
 
-    /* delete the RAM page if it exists */
+    // delete the RAM page if it exists
     if (p->ram_page > 0) {
         deallocateRAMPage(p->ram_page);
         p->ram_page = -1;
     }
+
+    diskPagesLock->Release();
 
     diskBitmap->Clear(sector);
 }
@@ -60,6 +65,8 @@ void MemoryManager::DeallocateDiskPage(int sector) {
  */
 void MemoryManager::evict(void) {
     ASSERT(!ramBitmap->NumClear());
+
+    diskPagesLock->Acquire();
 
     /*
      * starting at the last sector we evicted, find the next sector that's in
@@ -89,6 +96,7 @@ void MemoryManager::evict(void) {
     deallocateRAMPage(p->ram_page);
     p->ram_page = -1;
 
+    diskPagesLock->Release();
 }
 
 void MemoryManager::Fault(int user_page) {
@@ -101,7 +109,9 @@ void MemoryManager::Fault(int user_page) {
     // updated here because all page faults go through here
     stats->numPageFaults++;
 
-    /* do we need to evict a page first? */
+    // FIXME: do better, think test and set
+    // disable interrupts of RAM allocation
+    // do we need to evict a page first?
     while (!ramBitmap->NumClear())
         evict();
 
