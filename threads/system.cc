@@ -34,6 +34,8 @@ SpaceId _spaceId;
 Lock *spaceIdLock;
 Thread* threads[MAX_THREADS];
 Lock *threadsLock;
+SpaceId threadBeingDestroyed;
+Lock *threadBeingDestroyedLock;
 #endif
 
 #ifdef NETWORK
@@ -163,6 +165,7 @@ Initialize(int argc, char **argv)
         threads[i] = NULL;
     threadsLock = new(std::nothrow) Lock("thread array lock");
     threadToBeDestroyedLock = new(std::nothrow) Lock("thread to be destroyed lock");
+    threadBeingDestroyedLock = new(std::nothrow) Lock("thread being destroyed lock");
 
     // add thread to our global list of threads
     threads[0] = currentThread;

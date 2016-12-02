@@ -16,6 +16,7 @@
 #include "copyright.h"
 #include "filesys.h"
 #include "synch.h"
+#include "syscall.h"
 
 #define UserStackSize		1024 	// increase this as necessary!
 #define MAX_OPEN_FILES 128
@@ -25,7 +26,7 @@ class AddrSpace {
     AddrSpace(OpenFile *executable);	// Create an address space,
 					// initializing it with the program
 					// stored in the file "executable"
-    AddrSpace(AddrSpace *parent);
+    AddrSpace(AddrSpace *parent, SpaceId spaceId);
     ~AddrSpace();			// De-allocate an address space
 
     void InitRegisters();		// Initialize user-level CPU registers,

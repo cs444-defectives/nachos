@@ -128,7 +128,10 @@ Scheduler::Run (Thread *nextThread)
     // point, we were still running on the old thread's stack!
     for (int i = 0; i < MAX_THREADS; i++) {
         if (threads[i] != NULL && threads[i]->dead && threads[i]->done) {
+            threadBeingDestroyedLock->Acquire();
+            threadBeingDestroyed = threads[i]->spaceId;
             delete threads[i];
+            threadBeingDestroyedLock->Release();
             threads[i] = NULL;
         }
     }

@@ -107,6 +107,11 @@ AddrSpace::AddrSpace(OpenFile *executable)
         pageTable[i].readOnly = false;
 
         // initialize sector ref count
+        Process *process = new Process;
+        process->spaceId = currentThread->spaceId;
+        process->next = NULL;
+        process->user_page = i;
+        memoryManager->diskPages[sectorTable[i]].processes = process;
         memoryManager->diskPages[sectorTable[i]].refCount = 1;
     }
 #endif
@@ -138,7 +143,7 @@ AddrSpace::AddrSpace(OpenFile *executable)
  * Instead of loading a program it copies the parent's address space
  * and open files
  */
-AddrSpace::AddrSpace(AddrSpace *parent) {
+AddrSpace::AddrSpace(AddrSpace *parent, SpaceId spaceId) {
     size = parent->size;
     numPages = parent->numPages;
     pageTable = new(std::nothrow) TranslationEntry[numPages];
@@ -155,7 +160,14 @@ AddrSpace::AddrSpace(AddrSpace *parent) {
         // set to read only so that we can decouple parent and child on write
         pageTable[i].readOnly = true;
         parent->pageTable[i].readOnly = true;
-        memoryManager->diskPages[sectorTable[i]].refCount++; // increment ref count for this sector
+        // add process to list of processes sharing sector
+        Process *process = new Process;
+        process->spaceId = spaceId;
+        process->user_page = i;
+        process->next = memoryManager->diskPages[sectorTable[i]].processes;
+        memoryManager->diskPages[sectorTable[i]].processes = process;
+        // increment ref count for this sector
+        memoryManager->diskPages[sectorTable[i]].refCount++;
     }
 
     // copy parent's open_files array
@@ -194,7 +206,10 @@ bool AddrSpace::Exec(OpenFile *executable) {
 					numPages, size);
 
     // trash execers addr space
+    threadBeingDestroyedLock->Acquire();
+    threadBeingDestroyed = currentThread->spaceId;
     Deallocate();
+    threadBeingDestroyedLock->Release();
     delete pageTable;
 
     // calculating num pages must come after Deallocate because it clobbers the old numPages
@@ -275,16 +290,28 @@ void DiskBuffer::Flush() {
  * deallocate allocated pages and sectors
  */
 void AddrSpace::Deallocate() {
-    // TODO: also deallocate RAM
-    for (unsigned int i = 0; i < numPages; i++)
+    for (unsigned int i = 0; i < numPages; i++) {
         // don't trash address space if you're sharing with someone
-        if (!pageTable[i].readOnly)
-        {
+        if (/*!pageTable[i].readOnly || */memoryManager->diskPages[sectorTable[i]].refCount == 1) {
             memoryManager->DeallocateDiskPage(sectorTable[i]);
-        }
-        else
-            // decrement disk page ref count if you're sharing
+        } else {
+            // remove yourself from list of processes sharing the page
+            Process *process = memoryManager->diskPages[sectorTable[i]].processes;
+            if (process->spaceId == threadBeingDestroyed) {
+                memoryManager->diskPages[sectorTable[i]].processes = process->next;
+                delete process;
+            } else {
+                ASSERT(process->next != NULL);
+                while (process->next->spaceId != threadBeingDestroyed)
+                    process = process->next;
+                Process *p = process->next; // this process
+                process->next = p->next;
+                delete p;
+            }
+            // decrement disk sector ref count
             memoryManager->diskPages[sectorTable[i]].refCount--;
+        }
+    }
 }
 
 /**

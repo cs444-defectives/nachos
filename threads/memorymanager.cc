@@ -11,6 +11,21 @@ MemoryManager::MemoryManager() {
     last_evicted = 0;
 }
 
+void MemoryManager::printDisk() {
+    for (int i = 0; i < NumSectors; i++) {
+        if (diskPages + i != 0x0) {
+            fprintf(stdout, "sector = %d, ram page = %d, ref count = %d, processes = ",
+                    i, diskPages[i].refCount, diskPages[i].ram_page);
+            Process *process = diskPages[i].processes;
+            while (process != NULL) {
+                fprintf(stdout, "%d, ", process->spaceId);
+                process = process->next;
+            }
+            fprintf(stdout, "\n");
+        }
+    }
+}
+
 int MemoryManager::allocateRAMPage() {
     ASSERT(ramBitmap->NumClear() > 0);
     return ramBitmap->Find();
@@ -31,9 +46,13 @@ int MemoryManager::NumSectorsAvailable() {
 int MemoryManager::AllocateDiskPage(int user_page) {
     ASSERT(diskBitmap->NumClear() > 0);
     int sector = diskBitmap->Find();
-    diskPages[sector].process = currentThread->spaceId;
-    diskPages[sector].user_page = user_page;
+    Process *process = new Process;
+    process->spaceId = currentThread->spaceId;
+    process->next = NULL;
+    process->user_page = user_page;
+    diskPages[sector].processes = process;
     diskPages[sector].ram_page = -1;
+    diskPages[sector].refCount = 0;
     return sector;
 }
 
@@ -48,11 +67,20 @@ void MemoryManager::DeallocateDiskPage(int sector) {
 
     DiskPageDescriptor *p = diskPages + sector;
 
+    // can't deallocate shared sectors
+    ASSERT(p->refCount == 1);
+
     // delete the RAM page if it exists
     if (p->ram_page > 0) {
         deallocateRAMPage(p->ram_page);
         p->ram_page = -1;
     }
+
+    //delete p->processes;
+    //p->processes = NULL;
+
+    // TODO: Garbage collect?
+    p = NULL;
 
     diskPagesLock->Release();
 
@@ -83,18 +111,27 @@ void MemoryManager::evict(void) {
             break;
     }
 
-    /* invalidate the RAM page in the user's page table */
-    TranslationEntry *pte = threads[p->process]->space->pageTable + p->user_page;
-    pte->valid = false;
+    // invalidate the RAM page of everyone using this page
+    Process *process = p->processes;
+    TranslationEntry *pte;
+    while (process != NULL) {
+        pte = threads[process->spaceId]->space->pageTable + process->user_page;
+        pte->valid = false;
+        process = process->next;
+    }
 
-    /* write the page to disk if it's been modified */
+    //if ((int)pte == 0x20)
+    //    printDisk();
+
+    // write the page to disk if it's been modified
     if (pte->dirty)
         ram_page_to_disk(p->ram_page, last_evicted);
 
-    /* destroy the page in RAM */
+    // destroy the page in RAM
     DEBUG('z', "Thread <%s> evicting RAM page <%d>\n",
             currentThread->getName(), p->ram_page);
     deallocateRAMPage(p->ram_page);
+
     p->ram_page = -1;
 
     diskPagesLock->Release();
@@ -118,9 +155,8 @@ void MemoryManager::Fault(int user_page) {
 
     int page = allocateRAMPage();
 
-    /* bookkeeping for eviction and deallocation */
+    // bookkeeping for eviction and deallocation
     int sector = currentThread->space->sectorTable[user_page];
-    diskPages[sector].process = currentThread->spaceId;
     diskPages[sector].ram_page = page;
 
     /* copy page from disk to RAM */
@@ -154,39 +190,65 @@ void MemoryManager::ram_page_to_disk(int ram_phys_page, int sector) {
  * Called to copy on write
  */
 void MemoryManager::Decouple(int virtualPage) {
+    diskPagesLock->Acquire();
+
     TranslationEntry *pageTable = currentThread->space->pageTable;
     int *sectorTable = currentThread->space->sectorTable;
+
+    DEBUG('z', "Thread <%s> wrote to shared sector <%d> virtual "
+            "page <%d> which is in RAM page <%d>\n",
+            currentThread->getName(), sectorTable[virtualPage],
+            virtualPage, pageTable[virtualPage].physicalPage);
 
     // turn read only bit off
     pageTable[virtualPage].readOnly = false;
 
-    DEBUG('z', "Thread <%s> wrote to shared sector <%d> which is in RAM page <%d>\n",
-            currentThread->getName(), sectorTable[virtualPage], pageTable[virtualPage].physicalPage);
-
     // no need to copy, this thread is the only one referencing this page
     if (diskPages[sectorTable[virtualPage]].refCount == 1) {
-        DEBUG('z', "Thread <%s>'s virtual page <%d> is not actually shared\n",
-                currentThread->getName(), sectorTable[virtualPage]);
+        DEBUG('z', "Thread <%s>'s disk sector <%d> virtual page <%d> is not actually shared\n",
+                currentThread->getName(), virtualPage, sectorTable[virtualPage]);
+        diskPagesLock->Release();
         return;
     }
 
     int sector = AllocateDiskPage(virtualPage);
 
-    DEBUG('z', "Copying RAM page <%d> to disk sector <%d>\n", pageTable[virtualPage].physicalPage, sector);
+    DEBUG('z', "Copying RAM page <%d> to disk sector <%d> due to shared page write\n",
+            pageTable[virtualPage].physicalPage, sector);
 
     // copy RAM page to newly allocated disk sector
-    synchDisk->WriteSector(sector, machine->mainMemory + pageTable[virtualPage].physicalPage * PageSize);
+    synchDisk->WriteSector(sector,
+            machine->mainMemory + pageTable[virtualPage].physicalPage * PageSize);
+
+    // decrement old sector reference count
+    diskPages[sectorTable[virtualPage]].refCount--;
+
+    // remove from old sector processes list
+    Process *process = diskPages[sectorTable[virtualPage]].processes;
+    if (process->spaceId == currentThread->spaceId) {
+        diskPages[virtualPage].processes = process->next;
+    } else {
+        while (process->next->spaceId != currentThread->spaceId)
+            process = process->next;
+        Process *p = process->next;
+        process->next = p->next;
+        process = p;
+    }
 
     // update sector table
     sectorTable[virtualPage] = sector;
 
-    // turn read only bit off
-    pageTable[virtualPage].readOnly = false;
+    // insert process descriptor into disk sector processes list
+    process->next = NULL;
+    diskPages[sector].processes = process;
 
-    // decrease the sector reference count
-    diskPages[sectorTable[virtualPage]].refCount--;
+    // set sector reference count
+    diskPages[sectorTable[virtualPage]].refCount = 1;
 
-    // cause page fault so that the page can be brought into RAM through exception handling
+    // cause page fault so that the page can be
+    // brought into RAM through exception handling
     pageTable[virtualPage].valid = false;
+
+    diskPagesLock->Release();
 }
 

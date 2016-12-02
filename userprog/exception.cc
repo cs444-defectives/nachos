@@ -95,6 +95,7 @@ static void show_memory(void)
 }
 */
 
+
 /* brings a userspace integer into kernelspace */
 static int intimport(int virt_address)
 {
@@ -346,7 +347,6 @@ static int _open(char *filename, int bytes_read)
 static void _exit(int exitCode)
 {
     currentThread->exitCode = exitCode; // store exit code
-    currentThread->join->V(); // permission for parent to proceed
 
     // iterate over thread's children and delete dead ones
     for (int i = 0; i < MAX_THREADS; i++) {
@@ -356,9 +356,12 @@ static void _exit(int exitCode)
         }
     }
 
+    currentThread->dead = true; // indicate that you have finished running
+
+    currentThread->join->V(); // permission for parent to proceed
+
     // TODO: figure out if parent is dead and set done <- true if so
 
-    currentThread->dead = true; // indicate that you have finished running
     (void) interrupt->SetLevel(IntOff);
     currentThread->Sleep();
 }
@@ -369,18 +372,6 @@ static SpaceId _fork(void)
 
     // tell child about its parent so that it can kill itself later if need be
     childThread->parentSpaceId = currentThread->spaceId;
-
-    // copy parent's address space
-    childThread->space = new(std::nothrow) AddrSpace(currentThread->space);
-
-    /* increment reference count for each file */
-    OpenFile **child_files = childThread->space->open_files;
-    OpenFile *f;
-    for (int i = 0; i < MAX_OPEN_FILES; i++) {
-        f = child_files[i];
-        if (f != NULL)
-            f->refcount++;
-    }
 
     // assign space id
     // WARNING: MAY LEAD TO DEADLOCK
@@ -399,6 +390,19 @@ static SpaceId _fork(void)
 
     childThread->spaceId = _spaceId;
     spaceIdLock->Release();
+
+    // copy parent's address space
+    childThread->space = new(std::nothrow) AddrSpace(currentThread->space, _spaceId);
+
+    /* increment reference count for each file */
+    OpenFile **child_files = childThread->space->open_files;
+    OpenFile *f;
+    for (int i = 0; i < MAX_OPEN_FILES; i++) {
+        f = child_files[i];
+        if (f != NULL)
+            f->refcount++;
+    }
+
 
     threadsLock->Acquire();
     threads[_spaceId % MAX_THREADS] = childThread; // put child thread in threads array

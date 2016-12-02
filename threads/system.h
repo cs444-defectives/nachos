@@ -45,6 +45,8 @@ extern SpaceId _spaceId;
 extern Lock *spaceIdLock;
 extern Thread* threads[MAX_THREADS];
 extern Lock *threadsLock;
+extern SpaceId threadBeingDestroyed;
+extern Lock *threadBeingDestroyedLock;
 #endif
 
 #ifdef FILESYS_NEEDED 		// FILESYS or FILESYS_STUB
