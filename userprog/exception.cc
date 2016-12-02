@@ -528,8 +528,7 @@ static int _exec(int filename_va, int args_va)
 
         // disk content
         char sectorBuf[PageSize];
-        int i;
-        for (i = 0; i < numPages; i++) {
+        for (int i = 0; i < numPages; i++) {
             executable->ReadAt(sectorBuf, PageSize, 16472 + i * PageSize);
             synchDisk->WriteSector(space->sectorTable[i], sectorBuf);
         }
@@ -544,12 +543,16 @@ static int _exec(int filename_va, int args_va)
         executable->ReadAt((char *) currentThread->machineState, MachineStateSize * 4, 16);
 
         // stack
-        executable->ReadAt((char *) currentThread->stack, StackSize * sizeof(int), 88);
+        for (int i = 0, stack_element; i < StackSize; i++) {
+            executable->ReadAt((char *) &stack_element, sizeof(int), 88 + i * sizeof(int));
+            intexport(stack_element, i);
+        }
 
         // stackTop
         executable->ReadAt(intBuf, 4, 12);
         int stackTop = (int)currentThread->stack + to_int(intBuf);
-        currentThread->stackTop = (int *)stackTop;
+        //currentThread->stackTop = (int *)stackTop;
+        machine->WriteRegister(StackReg, stackTop);
 
         // swap address spaces
         AddrSpace *oldSpace = currentThread->space;
@@ -559,8 +562,7 @@ static int _exec(int filename_va, int args_va)
         // populate registers
         currentThread->RestoreUserState();
 
-
-        updatePC();
+        //updatePC();
         return 0;
 
     /*
