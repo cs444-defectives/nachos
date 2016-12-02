@@ -21,27 +21,24 @@ static int get_args_from_line(char *line, char **args)
     /* filename of the executable is conventionally the first argument */
     args[0] = line;
 
-    /* if there are no arguments */
-    if (!args_left) {
-        args[1] = (char *) 0;
-        return 1;
-    }
-
     /* chop each argument and add to the array */
     for (arg = 1; arg < MAX_ARGS; arg++) {
-        args[arg] = args_left;
 
-        args_left = split_string(args_left, ARG_SEPARATOR);
+        /* get rid of duplicate spaces */
+        while (args_left && *args_left == ARG_SEPARATOR)
+            args_left++;
 
+        /* place a null pointer after the last argument */
         if (!args_left) {
-            arg++;
             args[arg] = (char *) 0;
             return arg;
         }
 
-        /* get rid of duplicate spaces */
-        while (*args_left == ARG_SEPARATOR)
-            args_left++;
+        /* store the next argument */
+        args[arg] = args_left;
+
+        /* get the following argument; also terminate the previous with '\0' */
+        args_left = split_string(args_left, ARG_SEPARATOR);
     }
 
     return -1;
@@ -69,7 +66,9 @@ int main(int argc, char **argv)
     if (argc >= 2 && eq_string(argv[1], (char *) SHELL_FLAG_DISABLE_PROMPTS))
         prompt_enabled = 0;
 
+    /* REPL */
     while (1) {
+
         input_filename = output_filename = (char *) 0;
 
         if (prompt_enabled)
@@ -120,8 +119,9 @@ int main(int argc, char **argv)
             continue;
         }
 
-        /* parse i/o redirects */
-        while (1) {
+        /* look for i/o redirects, as long as it's possible we could have one */
+        while (nargs > 2) {
+
             s = args[nargs - 2];
 
             /* output to file */
