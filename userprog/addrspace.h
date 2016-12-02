@@ -24,9 +24,10 @@
 class AddrSpace {
   public:
     AddrSpace(OpenFile *executable);	// Create an address space,
-					// initializing it with the program
-					// stored in the file "executable"
-    AddrSpace(AddrSpace *parent, SpaceId spaceId);
+					                    // initializing it with the program
+					                    // stored in the file "executable"
+    AddrSpace(AddrSpace *parent, SpaceId spaceId); // Constructor for forking
+    AddrSpace(int numPages);
     ~AddrSpace();			// De-allocate an address space
 
     void InitRegisters();		// Initialize user-level CPU registers,

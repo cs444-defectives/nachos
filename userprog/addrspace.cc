@@ -106,12 +106,12 @@ AddrSpace::AddrSpace(OpenFile *executable)
         pageTable[i].dirty = false;
         pageTable[i].readOnly = false;
 
-        // initialize sector ref count
         Process *process = new Process;
         process->spaceId = currentThread->spaceId;
         process->next = NULL;
         process->user_page = i;
         memoryManager->diskPages[sectorTable[i]].processes = process;
+        // initialize sector ref count
         memoryManager->diskPages[sectorTable[i]].refCount = 1;
     }
 #endif
@@ -135,6 +135,35 @@ AddrSpace::AddrSpace(OpenFile *executable)
 
     // disk buffer flushes on delete to get the last bit of data out
     delete diskBuffer;
+}
+
+/**
+ * Constructor for checkpoint
+ */
+AddrSpace::AddrSpace(int np)
+{
+    numPages = np;
+    size = numPages * PageSize;
+    pageTable = new(std::nothrow) TranslationEntry[numPages];
+    sectorTable = new int[numPages];
+
+    for (unsigned int i = 0; i < numPages; i++) {
+        sectorTable[i] = memoryManager->AllocateDiskPage(i);
+        pageTable[i].virtualPage = i;
+        pageTable[i].physicalPage = -1;
+        pageTable[i].valid = false;
+        pageTable[i].use = false;
+        pageTable[i].dirty = false;
+        pageTable[i].readOnly = false;
+
+        Process *process = new Process;
+        process->spaceId = currentThread->spaceId;
+        process->next = NULL;
+        process->user_page = i;
+        memoryManager->diskPages[sectorTable[i]].processes = process;
+        // initialize sector ref count
+        memoryManager->diskPages[sectorTable[i]].refCount = 1;
+    }
 }
 
 

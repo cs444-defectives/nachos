@@ -449,6 +449,28 @@ static bool is_script(OpenFile *f)
     return strcmp(script_header, (char *) SCRIPT_HEADER) == 0;
 }
 
+static bool is_checkpoint(OpenFile *f)
+{
+    char header[LEN_MAGIC + 1];
+    f->ReadAt(header, LEN_MAGIC, 0);
+    header[LEN_MAGIC] = '\0';
+    return strcmp(header, (char *) CHECKPOINT_HEADER) == 0;
+}
+
+/**
+ * Convert 4 chars to an int
+ * Little-Endian
+ */
+int to_int(char *buf)
+{
+    int i = 0;
+    i |= ((int) buf[0]);
+    i |= ((int) buf[1]) << 1;
+    i |= ((int) buf[2]) << 2;
+    i |= ((int) buf[3]) << 3;
+    return i;
+}
+
 static int _exec(int filename_va, int args_va)
 {
     /* read in the name of the executable */
@@ -475,11 +497,14 @@ static int _exec(int filename_va, int args_va)
     char arg_buf[MAX_ARGS][MAX_ARG_LEN];
 
     /*
-     * If the filename passed to Exec is a script, we set the actual executable
-     * to the shell, passing in a special argument to disable shell prompts. We
-     * then replace ConsoleInput with an open copy of the script file that has
-     * been seeked to the second line. This lets us "interpret" script input as
-     * if it were typed on the shell.
+     * If the filename passed to Exec is a script,
+     * we set the actual executable to the shell,
+     * passing in a special argument to disable
+     * shell prompts. We then replace ConsoleInput
+     * with an open copy of the script file that has
+     * been seeked to the second line. This lets
+     * us "interpret" script input as if it were typed
+     * on the shell.
      */
     if (is_script(executable)) {
 
@@ -494,11 +519,59 @@ static int _exec(int filename_va, int args_va)
         strcpy(arg_buf[0], SHELL_FLAG_DISABLE_PROMPTS);
         num_args = 1;
 
+    }
+    else if (is_checkpoint(executable)) {
+        char intBuf[4];
+
+        // numPages
+        executable->ReadAt(intBuf, 4, 8);
+        int numPages = to_int(intBuf);
+
+        // create the thread's AddrSpace
+        AddrSpace *space = new AddrSpace(numPages);
+
+        // disk content
+        char sectorBuf[PageSize];
+        int i;
+        for (i = 0; i < numPages; i++) {
+            executable->ReadAt(sectorBuf, PageSize, 16472 + i * PageSize);
+            synchDisk->WriteSector(space->sectorTable[i], sectorBuf);
+        }
+
+        // make sure the file ends with GOODBYE
+        char goodbye[9];
+        goodbye[8] = '\0';
+        executable->ReadAt(goodbye, 8, 16472 + numPages * PageSize);
+        ASSERT(strcmp(goodbye, CHECKPOINT_FOOTER) == 0);
+
+        // machineState
+        executable->ReadAt((char *) currentThread->machineState, MachineStateSize * 4, 16);
+
+        // stack
+        executable->ReadAt((char *) currentThread->stack, StackSize * sizeof(int), 88);
+
+        // stackTop
+        executable->ReadAt(intBuf, 4, 12);
+        int stackTop = (int)currentThread->stack + to_int(intBuf);
+        currentThread->stackTop = (int *)stackTop;
+
+        // swap address spaces
+        AddrSpace *oldSpace = currentThread->space;
+        currentThread->space = space;
+        delete oldSpace;
+
+        // populate registers
+        currentThread->RestoreUserState();
+
+
+        updatePC();
+        return 0;
+    }
     /*
      * If the filename passed to Exec is a true, blue NOFF binary, we need to
      * get the actual arguments given to us by the user.
      */
-    } else {
+    else {
 
         /* if passed a null pointer, there are no args */
         if (!args_va) {
@@ -615,10 +688,14 @@ static int _dup(OpenFileId fid)
 
 static int _checkPoint(int name_va)
 {
+    /* save state to state array */
+    currentThread->SaveUserState();
+
+    AddrSpace *space = currentThread->space;
+
     /* read in the filename */
     char filename[MAX_FILE_NAME];
     int bytes_read = strimport(filename, MAX_FILE_NAME, name_va);
-    AddrSpace *space = currentThread->space;
 
     /* abort if we get a null string */
     if (bytes_read == -1)
@@ -649,17 +726,16 @@ static int _checkPoint(int name_va)
     f->Write((char *) &space->numPages, 4);
 
     /* 12-15: how far we're into the stack */
-    int stack_depth = (int) currentThread->stack - (int) currentThread->stackTop;
-    fprintf(stderr, "%d\n", stack_depth);
+    unsigned int stack_depth = (unsigned int) currentThread->stackTop - (unsigned int) currentThread->stack;
     f->Write((char *) &stack_depth, 4);
 
     /* 16-87: the other 18 registers */
-    f->Write((char *) &currentThread->machineState, 4 * NumTotalRegs);
+    f->Write((char *) currentThread->machineState, 4 * MachineStateSize);
 
-    /* 88-8279: thread's stack */
-    f->Write((char *) &currentThread->stack, UserStackSize);
+    /* 88-16471: thread's stack */
+    f->Write((char *) currentThread->stack, StackSize * sizeof(int));
 
-    /* 8280: disk contents for each page in sector table */
+    /* 16472: disk contents for each page in sector table */
     char buf[SectorSize];
     for (unsigned int i = 0; i < space->numPages; i++) {
         synchDisk->ReadSector(space->sectorTable[i], buf);
