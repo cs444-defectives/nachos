@@ -37,7 +37,7 @@ CFLAGS = -G 0 -c $(INCDIR) -DCHANGED -nostartfiles
 all: halt shell matmult sort file_test dup hellocons hellofile fromcons \
 	fileio fork exec cat cp echo exec_with_args arg_seq_child argkid argtest \
 	deepfork deepkid1 deepkid2 kid maxfork parent_child seq_child share \
-	sharekid script
+	sharekid script ckmatmult rematmult xmatmult qsort Xkid ckpttorture
 
 
 start.o: start.s ../userprog/syscall.h
@@ -223,3 +223,39 @@ exec_with_args.o: exec_with_args.c
 exec_with_args: exec_with_args.o start.o defective_libc.o
 	$(LD) $(LDFLAGS) start.o exec_with_args.o defective_libc.o -o exec_with_args.coff
 	../bin/coff2noff exec_with_args.coff exec_with_args
+
+ckmatmult.o: ckmatmult.c
+	$(CC) $(CFLAGS) -c ckmatmult.c
+ckmatmult: ckmatmult.o start.o
+	$(LD) $(LDFLAGS) start.o ckmatmult.o -o ckmatmult.coff
+	../bin/coff2noff ckmatmult.coff ckmatmult
+
+rematmult.o: rematmult.c
+	$(CC) $(CFLAGS) -c rematmult.c
+rematmult: rematmult.o start.o
+	$(LD) $(LDFLAGS) start.o rematmult.o -o rematmult.coff
+	../bin/coff2noff rematmult.coff rematmult
+
+xmatmult.o: xmatmult.c
+	$(CC) $(CFLAGS) -c xmatmult.c
+xmatmult: xmatmult.o start.o
+	$(LD) $(LDFLAGS) start.o xmatmult.o -o xmatmult.coff
+	../bin/coff2noff xmatmult.coff xmatmult
+
+qsort.o: qsort.c
+	$(CC) $(CFLAGS) -c qsort.c
+qsort: qsort.o start.o
+	$(LD) $(LDFLAGS) start.o qsort.o -o qsort.coff
+	../bin/coff2noff qsort.coff qsort
+
+Xkid.o: Xkid.c
+	$(CC) $(CFLAGS) -c Xkid.c
+Xkid: Xkid.o start.o
+	$(LD) $(LDFLAGS) start.o Xkid.o -o Xkid.coff
+	../bin/coff2noff Xkid.coff Xkid
+
+ckpttorture.o: ckpttorture.c
+	$(CC) $(CFLAGS) -c ckpttorture.c
+ckpttorture: ckpttorture.o start.o
+	$(LD) $(LDFLAGS) start.o ckpttorture.o -o ckpttorture.coff
+	../bin/coff2noff ckpttorture.coff ckpttorture

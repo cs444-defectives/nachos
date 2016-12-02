@@ -114,6 +114,14 @@ Dup:
 	j	$31
 	.end Dup
 
+	.globl CheckPoint
+	.ent	CheckPoint
+CheckPoint:
+	addiu $2,$0,SC_CheckPoint
+	syscall
+	j	$31
+	.end CheckPoint
+
 	.globl Close
 	.ent	Close
 Close:
