@@ -539,9 +539,6 @@ static int _exec(int filename_va, int args_va)
         executable->ReadAt(goodbye, 8, 16472 + numPages * PageSize);
         ASSERT(strcmp(goodbye, CHECKPOINT_FOOTER) == 0);
 
-        // machineState
-        executable->ReadAt((char *) currentThread->machineState, MachineStateSize * 4, 16);
-
         // stack
         for (int i = 0, stack_element; i < StackSize; i++) {
             executable->ReadAt((char *) &stack_element, sizeof(int), 88 + i * sizeof(int));
@@ -551,7 +548,6 @@ static int _exec(int filename_va, int args_va)
         // stackTop
         executable->ReadAt(intBuf, 4, 12);
         int stackTop = (int)currentThread->stack + to_int(intBuf);
-        //currentThread->stackTop = (int *)stackTop;
         machine->WriteRegister(StackReg, stackTop);
 
         // swap address spaces
@@ -559,10 +555,16 @@ static int _exec(int filename_va, int args_va)
         currentThread->space = space;
         delete oldSpace;
 
+        // machineState
+        executable->ReadAt((char *) currentThread->machineState, MachineStateSize * 4, 16);
+
         // populate registers
         currentThread->RestoreUserState();
 
-        //updatePC();
+        // invalidate all RAM
+        for (int i = 0; i < numPages; i++)
+            space->pageTable[i].valid = false;
+
         return 0;
 
     /*
