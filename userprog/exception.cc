@@ -516,8 +516,7 @@ static int _exec(int filename_va, int args_va)
         strcpy(arg_buf[0], SHELL_FLAG_DISABLE_PROMPTS);
         num_args = 1;
 
-    }
-    else if (is_checkpoint(executable)) {
+    } else if (is_checkpoint(executable)) {
         char intBuf[4];
 
         // numPages
@@ -563,12 +562,12 @@ static int _exec(int filename_va, int args_va)
 
         updatePC();
         return 0;
-    }
+
     /*
      * If the filename passed to Exec is a true, blue NOFF binary, we need to
      * get the actual arguments given to us by the user.
      */
-    else {
+    } else {
 
         /* if passed a null pointer, there are no args */
         if (!args_va) {
@@ -683,6 +682,8 @@ static int _checkPoint(int name_va)
     /* save state to state array */
     currentThread->SaveUserState();
 
+    /* TODO FIXME: force all ram pages to flush out to disk */
+
     AddrSpace *space = currentThread->space;
 
     /* read in the filename */
@@ -712,22 +713,32 @@ static int _checkPoint(int name_va)
     IntStatus oldLevel = interrupt->SetLevel(IntOff);
 
     /* 0-7: checkpoint header */
+    DEBUG('w', "writing checkpoint header\n");
     f->Write((char *) CHECKPOINT_HEADER, LEN_MAGIC);
 
     /* 8-11: number of pages in addrspace */
-    f->Write((char *) &space->numPages, 4);
+    DEBUG('w', "writing number or pages in addrspace\n");
+    f->Write((char *) &space->numPages, sizeof(int));
 
-    /* 12-15: how far we're into the stack */
-    unsigned int stack_depth = (unsigned int) currentThread->stackTop - (unsigned int) currentThread->stack;
-    f->Write((char *) &stack_depth, 4);
+    /* 12-15: the current userspace stack pointer */
+    DEBUG('w', "writing current userspace stack pointer\n");
+    unsigned int sp = machine->ReadRegister(StackReg);
+    f->Write((char *) &sp, 4);
 
     /* 16-87: the other 18 registers */
-    f->Write((char *) currentThread->machineState, 4 * MachineStateSize);
+    DEBUG('w', "writing machine registers\n");
+    f->Write((char *) currentThread->machineState, sizeof(int) * MachineStateSize);
 
     /* 88-16471: thread's stack */
-    f->Write((char *) currentThread->stack, StackSize * sizeof(int));
+    DEBUG('w', "writing thread's stack\n");
+    int stack_element;
+    for (int i = 0; i < StackSize; i++) {
+        stack_element = intimport(i);
+        f->Write((char *) &stack_element, sizeof(int));
+    }
 
     /* 16472: disk contents for each page in sector table */
+    DEBUG('w', "writing memory from disk\n");
     char buf[SectorSize];
     for (unsigned int i = 0; i < space->numPages; i++) {
         synchDisk->ReadSector(space->sectorTable[i], buf);
