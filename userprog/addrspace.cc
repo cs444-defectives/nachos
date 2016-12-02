@@ -292,7 +292,8 @@ void DiskBuffer::Flush() {
 void AddrSpace::Deallocate() {
     for (unsigned int i = 0; i < numPages; i++) {
         // don't trash address space if you're sharing with someone
-        if (/*!pageTable[i].readOnly || */memoryManager->diskPages[sectorTable[i]].refCount == 1) {
+        memoryManager->diskPagesLock->Acquire();
+        if (!pageTable[i].readOnly || memoryManager->diskPages[sectorTable[i]].refCount == 1) {
             memoryManager->DeallocateDiskPage(sectorTable[i]);
         } else {
             // remove yourself from list of processes sharing the page
@@ -311,6 +312,7 @@ void AddrSpace::Deallocate() {
             // decrement disk sector ref count
             memoryManager->diskPages[sectorTable[i]].refCount--;
         }
+        memoryManager->diskPagesLock->Release();
     }
 }
 

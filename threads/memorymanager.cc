@@ -13,12 +13,12 @@ MemoryManager::MemoryManager() {
 
 void MemoryManager::printDisk() {
     for (int i = 0; i < NumSectors; i++) {
-        if (diskPages + i != 0x0) {
+        if (diskPages + i != NULL) {
             fprintf(stdout, "sector = %d, ram page = %d, ref count = %d, processes = ",
-                    i, diskPages[i].refCount, diskPages[i].ram_page);
+                    i, diskPages[i].refCount, diskPages[i].refCount);
             Process *process = diskPages[i].processes;
             while (process != NULL) {
-                fprintf(stdout, "%d, ", process->spaceId);
+                fprintf(stdout, "%d (vpn = %d), ", process->spaceId, process->user_page);
                 process = process->next;
             }
             fprintf(stdout, "\n");
@@ -56,9 +56,11 @@ int MemoryManager::AllocateDiskPage(int user_page) {
     return sector;
 }
 
+/**
+ * assumes diskPageLock is Acquired
+ */
 void MemoryManager::DeallocateDiskPage(int sector) {
     // if disk sector is in RAM make sure it isn't held there
-    diskPagesLock->Acquire();
 
     if (diskPages[sector].ram_page >= 0)
         ASSERT(!ramHeld->Test(diskPages[sector].ram_page));
@@ -68,7 +70,7 @@ void MemoryManager::DeallocateDiskPage(int sector) {
     DiskPageDescriptor *p = diskPages + sector;
 
     // can't deallocate shared sectors
-    ASSERT(p->refCount == 1);
+    ASSERT(p->refCount <= 1);
 
     // delete the RAM page if it exists
     if (p->ram_page > 0) {
@@ -81,8 +83,6 @@ void MemoryManager::DeallocateDiskPage(int sector) {
 
     // TODO: Garbage collect?
     p = NULL;
-
-    diskPagesLock->Release();
 
     diskBitmap->Clear(sector);
 }
@@ -119,9 +119,6 @@ void MemoryManager::evict(void) {
         pte->valid = false;
         process = process->next;
     }
-
-    //if ((int)pte == 0x20)
-    //    printDisk();
 
     // write the page to disk if it's been modified
     if (pte->dirty)
@@ -234,6 +231,8 @@ void MemoryManager::Decouple(int virtualPage) {
         process->next = p->next;
         process = p;
     }
+
+    int oldSector = sectorTable[virtualPage];
 
     // update sector table
     sectorTable[virtualPage] = sector;
