@@ -172,7 +172,7 @@ Initialize(int argc, char **argv)
     currentThread->spaceId = 0;
 #endif
 
-    synchDisk = new(std::nothrow) SynchDisk("DISK");
+    synchDisk = new(std::nothrow) SynchDisk((char *) "DISK");
 
 #ifdef FILESYS_NEEDED
     fileSystem = new(std::nothrow) FileSystem(format);

@@ -76,6 +76,7 @@ Scheduler::FindNextToRun ()
             return next;
         }
     }
+    return NULL;
 }
 
 //----------------------------------------------------------------------

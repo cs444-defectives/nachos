@@ -69,8 +69,7 @@ void HandleTLBFault(int vaddr)
 #endif
 
 /* if you're using this to debug, you're screwed */
-/*
-static void show_memory(void)
+void show_memory(void)
 {
     AddrSpace *space = currentThread->space;
     int size = space->size;
@@ -96,8 +95,6 @@ static void show_memory(void)
         printf("\n");
     }
 }
-*/
-
 
 /* brings a userspace integer into kernelspace */
 static int intimport(int virt_address)
