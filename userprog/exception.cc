@@ -3,7 +3,7 @@
  * of things that can cause control to transfer back to here from user code:
  *
  * syscall: The user code explicitly requests to call a procedure in the Nachos
- * kernel. Right now, the only function we support is "Halt".
+ * kernel.
  *
  * exceptions: The user code does something that the CPU can't handle. For
  * instance, accessing memory that doesn't exist, arithmetic errors, etc.

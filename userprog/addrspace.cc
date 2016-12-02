@@ -239,7 +239,7 @@ bool AddrSpace::Exec(OpenFile *executable) {
     threadBeingDestroyed = currentThread->spaceId;
     Deallocate();
     threadBeingDestroyedLock->Release();
-    delete pageTable;
+    delete[] pageTable;
 
     // calculating num pages must come after Deallocate because it clobbers the old numPages
     numPages = divRoundUp(size, PageSize);
@@ -369,7 +369,7 @@ AddrSpace::~AddrSpace()
 {
    Deallocate();
 #ifndef USE_TLB
-   delete pageTable;
+   delete[] pageTable;
 #endif
 }
 
