@@ -76,13 +76,12 @@ extern void ThreadPrint(int arg);
 //  that only run in the kernel have a NULL address space.
 
 class Thread {
-  private:
+  public:
     // NOTE: DO NOT CHANGE the order of these first two members.
     // THEY MUST be in this position for SWITCH to work.
     int* stackTop;			 // the current stack pointer
     int machineState[MachineStateSize];  // all registers except for stackTop
 
-  public:
     Thread(const char* debugName);		// initialize a Thread
     ~Thread(); 				// deallocate a Thread
 					// NOTE -- thread being deleted
@@ -112,12 +111,12 @@ class Thread {
     SpaceId parentSpaceId;
     bool done; // parent has joined or died
 
-  private:
     // some of the private data for this class is listed above
 
     int* stack; 	 		// Bottom of the stack
 					// NULL if this is the main thread
 					// (If NULL, don't deallocate stack)
+  private:
     ThreadStatus status;		// ready, running or blocked
     const char* name;
 

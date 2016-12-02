@@ -18,6 +18,7 @@
 #include "filesys.h"
 #include "synch.h"
 #include "synchconsole.h"
+#include "addrspace.h"
 #include <string.h>
 
 #define MAX_FILE_NAME 128
@@ -25,7 +26,9 @@
 #define MAX_ARGS 16
 #define SHELL_PATH "test/shell"
 #define SCRIPT_HEADER "#SCRIPT\n"
-#define LEN_SCRIPT_HEADER 8
+#define CHECKPOINT_HEADER "CHECKPT\n"
+#define CHECKPOINT_FOOTER "GOODBYE\n"
+#define LEN_MAGIC 8
 
 #ifdef USE_TLB
 
@@ -170,21 +173,21 @@ void forkCb(int _) {
     machine->Run();
 }
 
-static void _create(int filename_va)
+static bool _create(int filename_va)
 {
     char filename[MAX_FILE_NAME];
     int bytes_read = strimport(filename, MAX_FILE_NAME, filename_va);
 
     /* abort if we get a null string */
     if (bytes_read == -1)
-        return;
+        return false;
 
     /* don't create the file if the filename is too long */
     if (bytes_read == MAX_FILE_NAME)
-        return;
+        return false;
 
     DEBUG('a', "creating file: %s\n", filename);
-    fileSystem->Create(filename, 0);
+    return fileSystem->Create(filename, 0);
 }
 
 static int _read(int buf_va, int size, OpenFileId fid)
@@ -440,9 +443,9 @@ static int _join(SpaceId spaceId)
 
 static bool is_script(OpenFile *f)
 {
-    char script_header[LEN_SCRIPT_HEADER + 1];
-    f->ReadAt(script_header, LEN_SCRIPT_HEADER, 0);
-    script_header[LEN_SCRIPT_HEADER] = '\0';
+    char script_header[LEN_MAGIC + 1];
+    f->ReadAt(script_header, LEN_MAGIC, 0);
+    script_header[LEN_MAGIC] = '\0';
     return strcmp(script_header, (char *) SCRIPT_HEADER) == 0;
 }
 
@@ -451,12 +454,11 @@ static int _exec(int filename_va, int args_va)
     /* read in the name of the executable */
     char filename[MAX_FILE_NAME];
     int bytes_read = strimport(filename, MAX_FILE_NAME, filename_va);
-    char script_header[LEN_SCRIPT_HEADER];
+    char script_header[LEN_MAGIC];
 
     /* abort if we get a null string */
     if (bytes_read == -1)
         return -1;
-
 
     /* abort if the filename is too long */
     if (bytes_read == MAX_FILE_NAME)
@@ -484,7 +486,7 @@ static int _exec(int filename_va, int args_va)
         /* replace ConsoleInput with the script file, advancing past header */
         _close((int) ConsoleInput);
         _open(filename, strlen(filename));
-        currentThread->space->open_files[ConsoleInput]->Read(script_header, LEN_SCRIPT_HEADER);
+        currentThread->space->open_files[ConsoleInput]->Read(script_header, LEN_MAGIC);
         executable = fileSystem->Open((char *) SHELL_PATH);
         ASSERT(executable != NULL);
 
@@ -611,6 +613,69 @@ static int _dup(OpenFileId fid)
     return new_fid;
 }
 
+static int _checkPoint(int name_va)
+{
+    /* read in the filename */
+    char filename[MAX_FILE_NAME];
+    int bytes_read = strimport(filename, MAX_FILE_NAME, name_va);
+    AddrSpace *space = currentThread->space;
+
+    /* abort if we get a null string */
+    if (bytes_read == -1)
+        return -1;
+
+    /* abort if the filename is too long */
+    if (bytes_read == MAX_FILE_NAME)
+        return -1;
+
+    /* create the file, fail if we can't */
+    if (!_create(name_va))
+        return -1;
+
+    /*
+     * open the file as if we were a user program so we don't have to keep
+     * track of the current byte
+     */
+    int fid = _open(filename, bytes_read);
+    OpenFile *f = space->open_files[fid];
+
+    /* no no no, bad programmer */
+    IntStatus oldLevel = interrupt->SetLevel(IntOff);
+
+    /* 0-7: checkpoint header */
+    f->Write((char *) CHECKPOINT_HEADER, LEN_MAGIC);
+
+    /* 8-11: number of pages in addrspace */
+    f->Write((char *) &space->numPages, 4);
+
+    /* 12-15: how far we're into the stack */
+    int stack_depth = (int) currentThread->stack - (int) currentThread->stackTop;
+    fprintf(stderr, "%d\n", stack_depth);
+    f->Write((char *) &stack_depth, 4);
+
+    /* 16-87: the other 18 registers */
+    f->Write((char *) &currentThread->machineState, 4 * NumTotalRegs);
+
+    /* 88-8279: thread's stack */
+    f->Write((char *) &currentThread->stack, UserStackSize);
+
+    /* 8280: disk contents for each page in sector table */
+    char buf[SectorSize];
+    for (unsigned int i = 0; i < space->numPages; i++) {
+        synchDisk->ReadSector(space->sectorTable[i], buf);
+        f->Write(buf, SectorSize);
+    }
+
+    /* last eight bytes: a footer for sanity checking */
+    f->Write((char *) CHECKPOINT_FOOTER, LEN_MAGIC);
+
+    _close(fid);
+
+    /* bad bad bad bad bad programmer */
+    interrupt->SetLevel(oldLevel);
+    return 0;
+}
+
 /*
  * Entry point into the Nachos kernel. Called when a user program is executing,
  * and either does a syscall, or generates an addressing or arithmetic
@@ -671,6 +736,12 @@ void ExceptionHandler(ExceptionType which)
         case SC_Dup:
             DEBUG('a', "Dup, initiated by user thread <%s>\n", currentThread->getName());
             machine->WriteRegister(2, _dup(machine->ReadRegister(4)));
+            updatePC();
+            break;
+
+        case SC_CheckPoint:
+            DEBUG('a', "CheckPoint, initiated by user thread <%s>\n", currentThread->getName());
+            machine->WriteRegister(2, _checkPoint(machine->ReadRegister(4)));
             updatePC();
             break;
 

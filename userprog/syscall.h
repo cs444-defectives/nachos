@@ -34,6 +34,7 @@
 #define SC_Close	8
 #define SC_Fork		9
 #define SC_Dup		10
+#define SC_CheckPoint	11
 
 #ifndef IN_ASM
 
@@ -125,6 +126,20 @@ void Close(OpenFileId id);
  * denoted by the argument. The semantics should be the same as the Unix dup().
  */
 OpenFileId Dup(OpenFileId fid);
+
+/*
+ * CheckPoint saves the state of the execution of the current user program to a
+ * file with the given name. Later, you can Exec() the created file to get to
+ * this point. CheckPoint returns 0 if the checkpoint was succesfully saved, -1
+ * if something goes wrong, and 1 when being reinstantiated.
+ *
+ *     if (CheckPoint("ckptfile")) {
+ *         stuff to do if being reinstantiated
+ *     } else {
+ *         stuff to do if taking the checkpoint
+ *     }
+ */
+int CheckPoint(char *name);
 
 #endif /* IN_ASM */
 
