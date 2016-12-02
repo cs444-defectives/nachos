@@ -684,7 +684,8 @@ static int _checkPoint(int name_va)
     /* save state to state array */
     currentThread->SaveUserState();
 
-    /* TODO FIXME: force all ram pages to flush out to disk */
+    /* no no no, bad programmer */
+    IntStatus oldLevel = interrupt->SetLevel(IntOff);
 
     AddrSpace *space = currentThread->space;
 
@@ -710,9 +711,6 @@ static int _checkPoint(int name_va)
      */
     int fid = _open(filename, bytes_read);
     OpenFile *f = space->open_files[fid];
-
-    /* no no no, bad programmer */
-    IntStatus oldLevel = interrupt->SetLevel(IntOff);
 
     /* 0-7: checkpoint header */
     DEBUG('w', "writing checkpoint header\n");
@@ -740,11 +738,19 @@ static int _checkPoint(int name_va)
     }
 
     /* 16472: disk contents for each page in sector table */
-    DEBUG('w', "writing memory from disk\n");
+    DEBUG('w', "writing thread's memory pages\n");
     char buf[SectorSize];
     for (unsigned int i = 0; i < space->numPages; i++) {
-        synchDisk->ReadSector(space->sectorTable[i], buf);
-        f->Write(buf, SectorSize);
+
+        /* if the page is in RAM, write it from there */
+        if (space->pageTable[i].valid) {
+            f->Write(machine->mainMemory + space->pageTable[i].physicalPage * PageSize, PageSize);
+
+        /* if the page is not RAM-resident, read from disk then write */
+        } else {
+            synchDisk->ReadSector(space->sectorTable[i], buf);
+            f->Write(buf, SectorSize);
+        }
     }
 
     /* last eight bytes: a footer for sanity checking */
