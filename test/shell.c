@@ -18,14 +18,17 @@ static int get_args_from_line(char *line, char **args)
     /* split off the filename */
     args_left = split_string(line, ARG_SEPARATOR);
 
+    /* filename of the executable is conventionally the first argument */
+    args[0] = line;
+
     /* if there are no arguments */
     if (!args_left) {
-        args[0] = (char *) 0;
-        return 0;
+        args[1] = (char *) 0;
+        return 1;
     }
 
     /* chop each argument and add to the array */
-    for (arg = 0; arg < MAX_ARGS; arg++) {
+    for (arg = 1; arg < MAX_ARGS; arg++) {
         args[arg] = args_left;
 
         args_left = split_string(args_left, ARG_SEPARATOR);

@@ -621,12 +621,7 @@ static int _exec(int filename_va, int args_va)
 
     unsigned int argv[MAX_ARGS];
     unsigned int sp = machine->ReadRegister(StackReg);
-
-    /* put argv[0] (the filename) into the stack */
-    int len = strlen(filename) + 1;
-    sp -= len;
-    strexport(filename, len, sp);
-    argv[0] = sp;
+    int len;
 
     /* put each argument into the stack */
     for (int i = 0; i < num_args; i++) {
@@ -639,7 +634,7 @@ static int _exec(int filename_va, int args_va)
         strexport(arg_buf[i], len, sp);
 
         /* keep track of the address of the new argument for argv */
-        argv[i + 1] = sp;
+        argv[i] = sp;
     }
 
     /* align stack on quad boundary */
@@ -651,7 +646,7 @@ static int _exec(int filename_va, int args_va)
         intexport(argv[i], sp + i * sizeof(int));
 
     /* Put argc into R4 and the argv pointer in R5 */
-    machine->WriteRegister(4, num_args + 1);
+    machine->WriteRegister(4, num_args);
     machine->WriteRegister(5, sp);
 
     /* update the stack pointer so the process starts below the argc/argv stuff */
