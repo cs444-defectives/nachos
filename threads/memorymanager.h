@@ -13,7 +13,6 @@ struct Process {
 struct DiskPageDescriptor {
   Process *processes; // a linked list of processes using this sector
   int ram_page;
-  int user_page;
   int refCount;
 };
 

@@ -11,6 +11,9 @@ MemoryManager::MemoryManager() {
     last_evicted = 0;
 }
 
+/**
+ * DEBUG
+ */
 void MemoryManager::printDisk() {
     for (int i = 0; i < NumSectors; i++) {
         if (diskPages + i != NULL) {
@@ -78,10 +81,7 @@ void MemoryManager::DeallocateDiskPage(int sector) {
         p->ram_page = -1;
     }
 
-    //delete p->processes;
-    //p->processes = NULL;
-
-    // TODO: Garbage collect?
+    // TODO: Garbage collect? lol
     p = NULL;
 
     diskBitmap->Clear(sector);
@@ -202,7 +202,8 @@ void MemoryManager::Decouple(int virtualPage) {
 
     // no need to copy, this thread is the only one referencing this page
     if (diskPages[sectorTable[virtualPage]].refCount == 1) {
-        DEBUG('z', "Thread <%s>'s disk sector <%d> virtual page <%d> is not actually shared\n",
+        DEBUG('z', "Thread <%s>'s disk sector <%d> virtual "
+                "page <%d> is not actually shared\n",
                 currentThread->getName(), virtualPage, sectorTable[virtualPage]);
         diskPagesLock->Release();
         return;
@@ -210,7 +211,8 @@ void MemoryManager::Decouple(int virtualPage) {
 
     int sector = AllocateDiskPage(virtualPage);
 
-    DEBUG('z', "Copying RAM page <%d> to disk sector <%d> due to shared page write\n",
+    DEBUG('z', "Copying RAM page <%d> to disk sector "
+            "<%d> due to shared page write\n",
             pageTable[virtualPage].physicalPage, sector);
 
     // copy RAM page to newly allocated disk sector
@@ -231,8 +233,6 @@ void MemoryManager::Decouple(int virtualPage) {
         process->next = p->next;
         process = p;
     }
-
-    int oldSector = sectorTable[virtualPage];
 
     // update sector table
     sectorTable[virtualPage] = sector;

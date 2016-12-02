@@ -293,7 +293,8 @@ void AddrSpace::Deallocate() {
     for (unsigned int i = 0; i < numPages; i++) {
         // don't trash address space if you're sharing with someone
         memoryManager->diskPagesLock->Acquire();
-        if (!pageTable[i].readOnly || memoryManager->diskPages[sectorTable[i]].refCount == 1) {
+        if (!pageTable[i].readOnly
+                || memoryManager->diskPages[sectorTable[i]].refCount == 1) {
             memoryManager->DeallocateDiskPage(sectorTable[i]);
         } else {
             // remove yourself from list of processes sharing the page
