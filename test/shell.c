@@ -120,7 +120,7 @@ int main(int argc, char **argv)
         /* parse i/o redirects */
         while (1) {
             s = args[nargs - 2];
-            
+
             /* output to file */
             if (eq_string(s, OUTPUT_TO_FILE))
                 output_filename = args[nargs - 1];
@@ -163,6 +163,7 @@ int main(int argc, char **argv)
                 print_string("No such script or binary '");
                 print_string(line);
                 print_string("'!\n");
+                Exit(1);
             }
         }
     }
