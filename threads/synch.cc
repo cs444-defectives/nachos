@@ -50,7 +50,8 @@ Semaphore::~Semaphore()
  */
 void Semaphore::P()
 {
-    DEBUG('L', "%s P() on semaphore %s\n", currentThread->getName(), name);
+    DEBUG('L', "<%s (%d)> P() on semaphore %s\n",
+            currentThread->getName(), currentThread->spaceId, name);
     IntStatus oldLevel = interrupt->SetLevel(IntOff);
 
     /* go to sleep if semaphore isn't available */
@@ -72,7 +73,8 @@ void Semaphore::P()
  */
 void Semaphore::V()
 {
-    DEBUG('L', "%s V() on semaphore %s\n", currentThread->getName(), name);
+    DEBUG('L', "<%s (%d)> V() on semaphore %s\n",
+            currentThread->getName(), currentThread->spaceId, name);
     Thread *thread;
     IntStatus oldLevel = interrupt->SetLevel(IntOff);
 
@@ -107,16 +109,16 @@ void Lock::Acquire()
     IntStatus oldLevel = interrupt->SetLevel(IntOff);
 
     while (status == BUSY) {
-        DEBUG('L', "Thread '%s' couldn't get Lock '%s'\n",
-              currentThread->getName(), getName());
+        DEBUG('L', "Thread <%s (%d)> couldn't get Lock '%s'\n",
+              currentThread->getName(), currentThread->spaceId, getName());
         threads->Append(currentThread);
 
         /* Thread::Sleep() assumes that interrupts are already disabled */
         currentThread->Sleep();
     }
     status = BUSY;
-    DEBUG('L', "Thread '%s' got Lock '%s'\n",
-          currentThread->getName(), getName());
+    DEBUG('L', "Thread <%s (%d)> got Lock '%s'\n",
+          currentThread->getName(), currentThread->spaceId, getName());
 
     (void) interrupt->SetLevel(oldLevel);
 }
@@ -130,8 +132,8 @@ void Lock::Release()
     IntStatus oldLevel = interrupt->SetLevel(IntOff);
 
     status = FREE;
-    DEBUG('L', "Thread '%s' released Lock '%s'\n",
-          currentThread->getName(), getName());
+    DEBUG('L', "Thread <%s (%d)> released Lock '%s'\n",
+          currentThread->getName(), currentThread->spaceId, getName());
 
     Thread *t;
     while (!threads->IsEmpty()) {
@@ -182,8 +184,8 @@ void Condition::Wait(Lock* conditionLock)
 {
     IntStatus oldLevel = interrupt->SetLevel(IntOff);
 
-    DEBUG('L', "Thread '%s' is waiting on Condition '%s'\n",
-          currentThread->getName(), getName());
+    DEBUG('L', "Thread <%s (%d)> is waiting on Condition '%s'\n",
+          currentThread->getName(), currentThread->spaceId, getName());
 
     conditionLock->Release();
     threads->Append(currentThread);
@@ -219,8 +221,8 @@ void Condition::Signal(Lock* _)
 {
     IntStatus oldLevel = interrupt->SetLevel(IntOff);
 
-    DEBUG('L', "Thread '%s' signaled Condition '%s'\n",
-          currentThread->getName(), getName());
+    DEBUG('L', "Thread <%s (%d)> signaled Condition '%s'\n",
+          currentThread->getName(), currentThread->spaceId, getName());
 
     /* ReadyToRun assumes that interrupts are already disabled */
     if (!threads->IsEmpty())
@@ -239,8 +241,8 @@ void Condition::Broadcast(Lock* conditionLock)
 {
     IntStatus oldLevel = interrupt->SetLevel(IntOff);
 
-    DEBUG('L', "Thread '%s' broadcasted Condition '%s'\n",
-          currentThread->getName(), getName());
+    DEBUG('L', "Thread <%s (%d)> broadcasted Condition '%s'\n",
+          currentThread->getName(), currentThread->spaceId, getName());
 
     Thread *t;
     while (!threads->IsEmpty()) {

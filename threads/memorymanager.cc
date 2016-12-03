@@ -16,7 +16,7 @@ MemoryManager::MemoryManager() {
  */
 void MemoryManager::printDisk() {
     for (int i = 0; i < NumSectors; i++) {
-        if (diskPages[i].refCount != 0 && i == 62) {
+        if (diskPages[i].refCount != 0) {
             fprintf(stdout, "sector = %d, ram page = %d, ref count = %d, processes = ",
                     i, diskPages[i].refCount, diskPages[i].refCount);
             Process *process = diskPages[i].processes;

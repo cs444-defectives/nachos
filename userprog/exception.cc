@@ -774,16 +774,19 @@ void ExceptionHandler(ExceptionType which)
         switch (type) {
 
         case SC_Halt:
-            DEBUG('a', "Halt, intiated by user thread <%s>\n", currentThread->getName());
+            DEBUG('a', "Halt, intiated by user thread <%s (%d)>\n",
+                    currentThread->getName(), currentThread->spaceId);
             interrupt->Halt();
 
         case SC_Exit:
-            DEBUG('a', "Exit, initiated by user thread <%s>\n", currentThread->getName());
+            DEBUG('a', "Exit, initiated by user thread <%s (%d)>\n",
+                    currentThread->getName(), currentThread->spaceId);
             _exit(machine->ReadRegister(4));
             break;
 
         case SC_Create:
-            DEBUG('a', "Create, intiated by user thread <%s>\n", currentThread->getName());
+            DEBUG('a', "Create, intiated by user thread <%s (%d)>\n",
+                    currentThread->getName(), currentThread->spaceId);
             _create(machine->ReadRegister(4));
             updatePC();
             break;
