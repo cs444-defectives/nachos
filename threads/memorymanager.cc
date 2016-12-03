@@ -16,7 +16,7 @@ MemoryManager::MemoryManager() {
  */
 void MemoryManager::printDisk() {
     for (int i = 0; i < NumSectors; i++) {
-        if (diskPages + i != NULL) {
+        if (diskPages[i].refCount != 0 && i == 62) {
             fprintf(stdout, "sector = %d, ram page = %d, ref count = %d, processes = ",
                     i, diskPages[i].refCount, diskPages[i].refCount);
             Process *process = diskPages[i].processes;
@@ -192,9 +192,9 @@ void MemoryManager::Decouple(int virtualPage) {
     TranslationEntry *pageTable = currentThread->space->pageTable;
     int *sectorTable = currentThread->space->sectorTable;
 
-    DEBUG('z', "Thread <%s> wrote to shared sector <%d> virtual "
+    DEBUG('z', "Thread <%s (%d)> wrote to shared sector <%d> virtual "
             "page <%d> which is in RAM page <%d>\n",
-            currentThread->getName(), sectorTable[virtualPage],
+            currentThread->getName(), currentThread->spaceId, sectorTable[virtualPage],
             virtualPage, pageTable[virtualPage].physicalPage);
 
     // turn read only bit off
@@ -202,9 +202,10 @@ void MemoryManager::Decouple(int virtualPage) {
 
     // no need to copy, this thread is the only one referencing this page
     if (diskPages[sectorTable[virtualPage]].refCount == 1) {
-        DEBUG('z', "Thread <%s>'s disk sector <%d> virtual "
+        DEBUG('z', "Thread <%s (%d)>'s disk sector <%d> virtual "
                 "page <%d> is not actually shared\n",
-                currentThread->getName(), virtualPage, sectorTable[virtualPage]);
+                currentThread->getName(), currentThread->spaceId,
+                sectorTable[virtualPage], virtualPage);
         diskPagesLock->Release();
         return;
     }
@@ -225,7 +226,7 @@ void MemoryManager::Decouple(int virtualPage) {
     // remove from old sector processes list
     Process *process = diskPages[sectorTable[virtualPage]].processes;
     if (process->spaceId == currentThread->spaceId) {
-        diskPages[virtualPage].processes = process->next;
+        diskPages[sectorTable[virtualPage]].processes = process->next;
     } else {
         while (process->next->spaceId != currentThread->spaceId)
             process = process->next;
@@ -238,11 +239,12 @@ void MemoryManager::Decouple(int virtualPage) {
     sectorTable[virtualPage] = sector;
 
     // insert process descriptor into disk sector processes list
+    // FIXME: This introduces a memory leak
     process->next = NULL;
     diskPages[sector].processes = process;
 
     // set sector reference count
-    diskPages[sectorTable[virtualPage]].refCount = 1;
+    diskPages[sector].refCount = 1;
 
     // cause page fault so that the page can be
     // brought into RAM through exception handling

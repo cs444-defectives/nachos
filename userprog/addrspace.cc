@@ -110,9 +110,11 @@ AddrSpace::AddrSpace(OpenFile *executable)
         process->spaceId = currentThread->spaceId;
         process->next = NULL;
         process->user_page = i;
+        memoryManager->diskPagesLock->Acquire();
         memoryManager->diskPages[sectorTable[i]].processes = process;
         // initialize sector ref count
         memoryManager->diskPages[sectorTable[i]].refCount = 1;
+        memoryManager->diskPagesLock->Release();
     }
 #endif
 
@@ -174,9 +176,11 @@ AddrSpace::AddrSpace(int np)
         process->spaceId = currentThread->spaceId;
         process->next = NULL;
         process->user_page = i;
+        memoryManager->diskPagesLock->Acquire();
         memoryManager->diskPages[sectorTable[i]].processes = process;
         // initialize sector ref count
         memoryManager->diskPages[sectorTable[i]].refCount = 1;
+        memoryManager->diskPagesLock->Release();
     }
 }
 
@@ -272,7 +276,9 @@ bool AddrSpace::Exec(OpenFile *executable) {
         pageTable[i].readOnly = false;
 
         // initialize sector ref count
+        memoryManager->diskPagesLock->Acquire();
         memoryManager->diskPages[sectorTable[i]].refCount = 1;
+        memoryManager->diskPagesLock->Release();
     }
 
     DiskBuffer *diskBuffer = new(std::nothrow) DiskBuffer(sectorTable);
