@@ -529,26 +529,15 @@ static int _exec(int filename_va, int args_va)
         // disk content
         char sectorBuf[PageSize];
         for (int i = 0; i < numPages; i++) {
-            executable->ReadAt(sectorBuf, PageSize, 16472 + i * PageSize);
+            executable->ReadAt(sectorBuf, PageSize, 176 + i * PageSize);
             synchDisk->WriteSector(space->sectorTable[i], sectorBuf);
         }
 
         // make sure the file ends with GOODBYE
         char goodbye[9];
         goodbye[8] = '\0';
-        executable->ReadAt(goodbye, 8, 16472 + numPages * PageSize);
+        executable->ReadAt(goodbye, 8, 176 + numPages * PageSize);
         ASSERT(strcmp(goodbye, CHECKPOINT_FOOTER) == 0);
-
-        // stack
-        for (int i = 0, stack_element; i < StackSize; i++) {
-            executable->ReadAt((char *) &stack_element, sizeof(int), 88 + i * sizeof(int));
-            intexport(stack_element, i);
-        }
-
-        // stackTop
-        executable->ReadAt(intBuf, 4, 12);
-        int stackTop = (int)currentThread->stack + to_int(intBuf);
-        machine->WriteRegister(StackReg, stackTop);
 
         // swap address spaces
         AddrSpace *oldSpace = currentThread->space;
@@ -556,16 +545,15 @@ static int _exec(int filename_va, int args_va)
         delete oldSpace;
 
         // machineState
-        executable->ReadAt((char *) currentThread->machineState, MachineStateSize * 4, 16);
+        executable->ReadAt((char *) currentThread->userRegisters,
+                NumTotalRegs * sizeof(int), 16);
 
         // populate registers
         currentThread->RestoreUserState();
 
-        // invalidate all RAM
-        for (int i = 0; i < numPages; i++)
-            space->pageTable[i].valid = false;
+        updatePC();
 
-        return 0;
+        return -1;
 
     /*
      * If the filename passed to Exec is a true, blue NOFF binary, we need to
@@ -727,19 +715,11 @@ static int _checkPoint(int name_va)
     unsigned int sp = machine->ReadRegister(StackReg);
     f->Write((char *) &sp, 4);
 
-    /* 16-87: the other 18 registers */
+    /* 16-175: registers*/
     DEBUG('w', "writing machine registers\n");
-    f->Write((char *) currentThread->machineState, sizeof(int) * MachineStateSize);
+    f->Write((char *) currentThread->userRegisters, sizeof(int) * NumTotalRegs);
 
-    /* 88-16471: thread's stack */
-    DEBUG('w', "writing thread's stack\n");
-    int stack_element;
-    for (int i = 0; i < StackSize; i++) {
-        stack_element = intimport(i);
-        f->Write((char *) &stack_element, sizeof(int));
-    }
-
-    /* 16472: disk contents for each page in sector table */
+    /* 176-: disk contents for each page in sector table */
     DEBUG('w', "writing thread's memory pages\n");
     char buf[SectorSize];
     for (unsigned int i = 0; i < space->numPages; i++) {

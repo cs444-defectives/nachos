@@ -147,6 +147,20 @@ AddrSpace::AddrSpace(int np)
     pageTable = new(std::nothrow) TranslationEntry[numPages];
     sectorTable = new int[numPages];
 
+    /* allocate space for open files, plus console in/out cookies */
+    open_files = new OpenFile* [MAX_OPEN_FILES];
+    for (int i = 0; i < MAX_OPEN_FILES; i++)
+        open_files[i] = NULL;
+    num_open_files = new Semaphore("num_open_files", MAX_OPEN_FILES);
+
+    /* allocate a fake file object for console input */
+    open_files[ConsoleInput] = new OpenFile(false);
+    num_open_files->P();
+
+    /* allocate a fake file object for console output */
+    open_files[ConsoleOutput] = new OpenFile(true);
+    num_open_files->P();
+
     for (unsigned int i = 0; i < numPages; i++) {
         sectorTable[i] = memoryManager->AllocateDiskPage(i);
         pageTable[i].virtualPage = i;

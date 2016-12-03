@@ -305,7 +305,7 @@ void
 Thread::SaveUserState()
 {
     for (int i = 0; i < NumTotalRegs; i++)
-	userRegisters[i] = machine->ReadRegister(i);
+        userRegisters[i] = machine->ReadRegister(i);
 }
 
 //----------------------------------------------------------------------

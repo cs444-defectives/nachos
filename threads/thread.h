@@ -128,10 +128,10 @@ class Thread {
 // A thread running a user program actually has *two* sets of CPU registers --
 // one for its state while executing user code, one for its state
 // while executing kernel code.
-    int userRegisters[NumTotalRegs];	// user-level CPU register state
   public:
     void SaveUserState();		// save user-level register state
     void RestoreUserState();		// restore user-level register state
+    int userRegisters[NumTotalRegs];	// user-level CPU register state
 
     AddrSpace *space;			// User code this thread is running.
 #endif
