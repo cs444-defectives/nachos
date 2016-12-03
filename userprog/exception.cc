@@ -257,7 +257,7 @@ static void _write(int buf_va, int size, OpenFileId fid)
         c = machine->mainMemory[space->Translate((int) userland_str)];
         if (f->is_real_file)
             f->Write(&c, 1);
-        else;
+        else
             sconsole->WriteChar(c);
         userland_str++;
         size--;
