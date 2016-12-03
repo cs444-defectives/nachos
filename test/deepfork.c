@@ -15,7 +15,7 @@ main()
 
   print("PARENT exists\n");
   if ((kid=Fork()) == 0) {
-    Exec("test/deepkid1", (char **) 0);
+    Exec("deepkid1", (char **) 0);
     print("ERROR: exec failed\n");
     Halt();
   }

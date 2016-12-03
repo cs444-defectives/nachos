@@ -36,7 +36,7 @@ main()
     else {
       args[0] = "kid";
       args[1] = (char *)0;
-      Exec("test/kid", args);
+      Exec("kid", args);
       prints("ERROR: Exec failure\n", ConsoleOutput);
       Halt();
     }

@@ -20,7 +20,7 @@ main()
 
   prints("PARENT exists\n", ConsoleOutput);
   if ((kid = Fork()) == 0) {
-    Exec("test/argkid",args);
+    Exec("argkid",args);
     Halt();
   }
 

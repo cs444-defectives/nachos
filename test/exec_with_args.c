@@ -27,7 +27,7 @@ int main(int argc, char **argv)
         Join(pid);
         Halt();
     } else {
-        err = Exec("test/echo", args);
+        err = Exec("echo", args);
         print_string("Returned from exec in child with status ");
         print_int(err);
         print_string("\n");

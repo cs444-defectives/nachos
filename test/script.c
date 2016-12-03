@@ -2,6 +2,6 @@
 
 int main()
 {
-    Exec("test/script.txt", (char **) 0);
+    Exec("script.txt", (char **) 0);
     return 0;
 }
