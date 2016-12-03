@@ -27,7 +27,7 @@
 #define SHELL_PATH "test/shell"
 #define SCRIPT_HEADER "#SCRIPT\n"
 #define CHECKPOINT_HEADER "CHECKPT\n"
-#define CHECKPOINT_FOOTER "GOODBYE\n"
+#define CHECKPOINT_FOOTER "\nGOODBYE"
 #define LEN_MAGIC 8
 
 #ifdef USE_TLB
@@ -520,7 +520,7 @@ static int _exec(int filename_va, int args_va)
         char intBuf[4];
 
         // numPages
-        executable->ReadAt(intBuf, 4, 8);
+        executable->ReadAt(intBuf, sizeof(int), 8);
         int numPages = to_int(intBuf);
 
         // create the thread's AddrSpace
@@ -529,14 +529,14 @@ static int _exec(int filename_va, int args_va)
         // disk content
         char sectorBuf[PageSize];
         for (int i = 0; i < numPages; i++) {
-            executable->ReadAt(sectorBuf, PageSize, 176 + i * PageSize);
+            executable->ReadAt(sectorBuf, PageSize, 172 + i * PageSize);
             synchDisk->WriteSector(space->sectorTable[i], sectorBuf);
         }
 
         // make sure the file ends with GOODBYE
         char goodbye[9];
         goodbye[8] = '\0';
-        executable->ReadAt(goodbye, 8, 176 + numPages * PageSize);
+        executable->ReadAt(goodbye, LEN_MAGIC, 172 + numPages * PageSize);
         ASSERT(strcmp(goodbye, CHECKPOINT_FOOTER) == 0);
 
         // swap address spaces
@@ -546,7 +546,7 @@ static int _exec(int filename_va, int args_va)
 
         // machineState
         executable->ReadAt((char *) currentThread->userRegisters,
-                NumTotalRegs * sizeof(int), 16);
+                NumTotalRegs * sizeof(int), 12);
 
         // populate registers
         currentThread->RestoreUserState();
@@ -710,16 +710,11 @@ static int _checkPoint(int name_va)
     DEBUG('w', "writing number or pages in addrspace\n");
     f->Write((char *) &space->numPages, sizeof(int));
 
-    /* 12-15: the current userspace stack pointer */
-    DEBUG('w', "writing current userspace stack pointer\n");
-    unsigned int sp = machine->ReadRegister(StackReg);
-    f->Write((char *) &sp, 4);
-
-    /* 16-175: registers*/
+    /* 12-171: registers */
     DEBUG('w', "writing machine registers\n");
     f->Write((char *) currentThread->userRegisters, sizeof(int) * NumTotalRegs);
 
-    /* 176-: disk contents for each page in sector table */
+    /* 172-: disk contents for each page in sector table */
     DEBUG('w', "writing thread's memory pages\n");
     char buf[SectorSize];
     for (unsigned int i = 0; i < space->numPages; i++) {
