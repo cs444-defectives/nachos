@@ -49,7 +49,12 @@ executable name in the kernel; we have moved that responsibility to the shell
 
 ### RAM Eviction
 
-- The RAM eviction algorithm is kinda dumb...
+- We did not dwell on implementing a stellar RAM eviction algorithm. When we
+  need to bring a page into RAM, but all the pages of RAM are full, the
+  algorithm starts at the RAM page 0 and walks through the page array looking
+  for the first evictable (not held) page. We save the number of the page we
+  decide to evict and begin our search at the page after that next time we need
+  to evict.
 
 ### COW
 
