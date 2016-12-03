@@ -1,4 +1,4 @@
 #SCRIPT
-test/echo hello world
-test/echo goodbye world
-test/halt
+echo hello world
+echo goodbye world
+halt

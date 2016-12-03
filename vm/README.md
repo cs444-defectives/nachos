@@ -53,3 +53,21 @@ COW
   the sectors `processes` linked list and add it the new
   sectors list, and set the page table's `readOnly = false`
 
+## Caveats
+
+Tests, specifically #SCRIPT tests, MUST BE run from the test directory. For
+example:
+
+    $ cd submissions/g3/nachos
+    $ vm/nachos -x test/shell
+    defectives> test/script.txt
+
+WILL NOT WORK. Instead, do this:
+
+    $ cd submissions/g3/nachos/test
+    $ ../vm/nachos -x shell
+    defectives> script.txt
+
+This is because Nachos needs to know where the shell binary lives, so that it
+can Exec() thes shell under the hood and shove the OpenFile of the script into
+where shell expects ConsoleInput to be.

@@ -24,7 +24,7 @@
 #define MAX_FILE_NAME 128
 #define MAX_ARG_LEN 128
 #define MAX_ARGS 16
-#define SHELL_PATH "test/shell"
+#define SHELL_PATH "shell"
 #define SCRIPT_HEADER "#SCRIPT\n"
 #define CHECKPOINT_HEADER "CHECKPT\n"
 #define CHECKPOINT_FOOTER "\nGOODBYE"
